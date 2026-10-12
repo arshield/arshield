@@ -2,14 +2,14 @@ import * as constants from './constants';
 import { deriveSeedsFromRandomness, deriveSeedsFromWalletSignature, assertEoaSignatureShape } from './kdf';
 import { keysFromSeeds } from './keys';
 import { sign, verify } from './crypto';
-import type { QuantSafeKeyPair } from './types';
+import type { ArShieldKeyPair } from './types';
 
-export function identityFromWalletSignature(signatureHex: string): QuantSafeKeyPair {
+export function identityFromWalletSignature(signatureHex: string): ArShieldKeyPair {
   assertEoaSignatureShape(signatureHex);
   return keysFromSeeds(deriveSeedsFromWalletSignature(signatureHex));
 }
 
-export function ephemeralIdentity(): QuantSafeKeyPair {
+export function ephemeralIdentity(): ArShieldKeyPair {
   return keysFromSeeds(deriveSeedsFromRandomness());
 }
 
@@ -21,4 +21,4 @@ export function verifyX402(publicKey: Uint8Array, payload: Uint8Array, signature
   return verify(publicKey, payload, signature, constants.X402_CONTEXT);
 }
 
-export { QSAFE_DERIVATION_MESSAGE } from './constants';
+export { ARSHIELD_DERIVATION_MESSAGE } from './constants';

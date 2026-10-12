@@ -1,10 +1,10 @@
 import { x25519 } from '@noble/curves/ed25519';
 import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem.js';
-import type { QuantSafeKeyPair, QuantSafeSeeds } from './types';
+import type { ArShieldKeyPair, ArShieldSeeds } from './types';
 
-/** Deterministically expand the three seeds into an QuantSafe keypair. */
-export function keysFromSeeds(seeds: QuantSafeSeeds): QuantSafeKeyPair {
+/** Deterministically expand the three seeds into an ArShield keypair. */
+export function keysFromSeeds(seeds: ArShieldSeeds): ArShieldKeyPair {
   const mlkem = ml_kem768.keygen(seeds.mlkem);
   const mldsa = ml_dsa65.keygen(seeds.mldsa);
   const x25519Pub = x25519.getPublicKey(seeds.x25519);

@@ -54,7 +54,7 @@ export function DocsLayout({ children }: { children: React.ReactNode }) {
       <div className="relative min-h-screen">
         <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020610]/80 backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-            <Link href="/" aria-label="QuantSafe home"><Logo /></Link>
+            <Link href="/" aria-label="ArShield home"><Logo /></Link>
             <div className="flex items-center gap-5 text-[13px]">
               <Link href="/docs" className="text-[#9aa3b2] hover:text-white">Docs</Link>
               <Link href="/app" className="text-brand-gold hover:text-[#e9c35f]">Open App</Link>

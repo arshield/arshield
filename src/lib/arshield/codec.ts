@@ -1,9 +1,9 @@
 import * as constants from './constants';
 import { CorruptFileError } from './types';
-import type { QuantSafeContainer } from './types';
+import type { ArShieldContainer } from './types';
 
 /**
- * Binary layout of a .qsafe container:
+ * Binary layout of a .arshield container:
  *
  *   [ MAGIC(5) | version u16 | algoId u16 | kemCtPq(1088) | kemCtCls(32)
  *     | nonce(12) | aeadLen u64 | aeadPayload(aeadLen) | sigLen u16 | signature(sigLen) ]
@@ -52,8 +52,8 @@ export function buildHeaderAad(container: HeaderInput): Uint8Array {
   return out;
 }
 
-/** Encode a container into the on-disk .qsafe byte string. */
-export function encode(container: Omit<QuantSafeContainer, 'version' | 'algoId'> & {
+/** Encode a container into the on-disk .arshield byte string. */
+export function encode(container: Omit<ArShieldContainer, 'version' | 'algoId'> & {
   version: number;
   algoId: number;
 }): Uint8Array {
@@ -91,14 +91,14 @@ export function encode(container: Omit<QuantSafeContainer, 'version' | 'algoId'>
   return out;
 }
 
-/** Parse and validate a .qsafe byte string. */
-export function decode(bytes: Uint8Array): QuantSafeContainer {
+/** Parse and validate a .arshield byte string. */
+export function decode(bytes: Uint8Array): ArShieldContainer {
   if (bytes.length < HEADER_FIXED_LEN + 2) {
-    throw new CorruptFileError('Input too short for .qsafe header');
+    throw new CorruptFileError('Input too short for .arshield header');
   }
   for (let i = 0; i < constants.MAGIC_LEN; i++) {
     if (bytes[i] !== constants.MAGIC[i]) {
-      throw new CorruptFileError('Bad magic bytes (not a .qsafe file)');
+      throw new CorruptFileError('Bad magic bytes (not a .arshield file)');
     }
   }
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

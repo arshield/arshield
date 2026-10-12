@@ -4,7 +4,7 @@ import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 import { ml_kem768 } from '@noble/post-quantum/ml-kem.js';
 import * as constants from './constants';
 import { hkdfDerive } from './hkdf';
-import type { QuantSafeKeyPair, QuantSafePublicKey, QuantSafeSecretKey } from './types';
+import type { ArShieldKeyPair, ArShieldPublicKey, ArShieldSecretKey } from './types';
 
 const utf8 = new TextEncoder();
 
@@ -34,7 +34,7 @@ function combineSharedSecrets(ssPq: Uint8Array, ssCls: Uint8Array): Uint8Array {
 }
 
 /** Hybrid encapsulation: an attacker must break both ML-KEM-768 and X25519. */
-export function hybridEncapsulate(recipient: QuantSafePublicKey): EncapResult {
+export function hybridEncapsulate(recipient: ArShieldPublicKey): EncapResult {
   const pq = ml_kem768.encapsulate(recipient.mlkem);
   const ephSk = randomBytes(constants.X25519_SK_LEN);
   const ephPk = x25519.getPublicKey(ephSk);
@@ -45,7 +45,7 @@ export function hybridEncapsulate(recipient: QuantSafePublicKey): EncapResult {
 
 /** Recover the AES key from the two ciphertexts and the recipient secret key. */
 export function hybridDecapsulate(
-  sk: QuantSafeSecretKey,
+  sk: ArShieldSecretKey,
   kemCtPq: Uint8Array,
   kemCtCls: Uint8Array,
 ): Uint8Array {
@@ -69,4 +69,4 @@ export function verify(
   return mlDsa.verify(signature, msg, publicKey, { context: utf8.encode(context) });
 }
 
-export type { QuantSafeKeyPair };
+export type { ArShieldKeyPair };

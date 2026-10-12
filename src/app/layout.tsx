@@ -15,16 +15,16 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'QuantSafe | Post-Quantum Security Infrastructure on Robinhood Chain',
+  title: 'ArShield | Post-Quantum Security Infrastructure on Robinhood Chain',
   description:
     'The post-quantum layer for data, messages and agents. Hybrid ML-KEM-768 + X25519 encryption, ML-DSA-65 signatures, zero backend. Built for Robinhood Chain.',
-  metadataBase: new URL('https://quantsafe.tech'),
+  metadataBase: new URL('https://arc-shield.xyz'),
   openGraph: {
     title: 'The post-quantum layer for data, messages and agents.',
     description:
-      'QuantSafe seals it post-quantum, on your device. Your agents too. ML-KEM-768 + X25519 hybrid, ML-DSA-65 signed, MCP-native, built for Robinhood Chain.',
-    url: 'https://quantsafe.tech',
-    siteName: 'QuantSafe',
+      'ArShield seals it post-quantum, on your device. Your agents too. ML-KEM-768 + X25519 hybrid, ML-DSA-65 signed, MCP-native, built for Robinhood Chain.',
+    url: 'https://arc-shield.xyz',
+    siteName: 'ArShield',
     type: 'website',
     images: ['/seo/opengraph-image.png'],
   },
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'The post-quantum layer for data, messages and agents.',
     description:
-      'QuantSafe seals it post-quantum, on your device. Your agents too. ML-KEM-768 + X25519 hybrid, ML-DSA-65 signed, MCP-native.',
+      'ArShield seals it post-quantum, on your device. Your agents too. ML-KEM-768 + X25519 hybrid, ML-DSA-65 signed, MCP-native.',
     images: ['/seo/twitter-image.png'],
   },
   icons: {

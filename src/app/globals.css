@@ -84,7 +84,7 @@
     backdrop-filter: blur(8px);
   }
 
-  /* ---- Gold treatments (exact from QuantSafe) ---- */
+  /* ---- Gold treatments (exact from ArShield) ---- */
   .text-gradient-gold {
     background-image: linear-gradient(135deg, #f5daa2, #d1a413 55%, #b68708);
     -webkit-background-clip: text;
@@ -142,7 +142,7 @@
   }
 }
 
-/* ---- Keyframes (from QuantSafe + template) ---- */
+/* ---- Keyframes (from ArShield + template) ---- */
 @keyframes accordion-down {
   from { height: 0; }
   to { height: var(--radix-accordion-content-height); }
