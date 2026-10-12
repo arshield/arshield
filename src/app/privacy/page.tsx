@@ -73,7 +73,7 @@ export default function PrivacyPage() {
               <h2 className="text-[16px] font-semibold text-[#e6e9ef]">Blockchain reads</h2>
               <p className="mt-2 text-[14.5px] leading-relaxed text-[#8a93a3]">
                 Once the $arshield token is live, connecting a wallet makes the app read your token balance via a
-                Robinhood Chain RPC endpoint to determine your tier. This read is unauthenticated and is
+                ARC RPC endpoint to determine your tier. This read is unauthenticated and is
                 identical to querying any block explorer: the RPC endpoint sees the address it is asked about.
                 No wallet address is stored by us. Pages you visit without connecting a wallet or submitting a
                 Seal send nothing to the chain.

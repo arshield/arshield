@@ -42,7 +42,7 @@ export function Footer() {
             <Logo />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#7b8493]">
               Security between agents. Post-quantum envelopes for files and messages, signatures for
-              x402 receipts. MCP-native. Built for Robinhood Chain.
+              x402 receipts. MCP-native. Built for ARC.
             </p>
             <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#5b6474]">
               arc-shield.xyz
@@ -71,7 +71,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-white/[0.06] pt-6 text-[13px] text-[#5b6474] sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 ArShield. Built for Robinhood Chain. Built on open-source noble cryptography.</p>
+          <p>© 2026 ArShield. Built for ARC. Built on open-source noble cryptography.</p>
           <p className="font-semibold uppercase tracking-[0.18em] text-[#7b8493]">
             Holders encrypt more.
           </p>

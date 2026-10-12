@@ -20,7 +20,7 @@ const SHIPPED = [
 
 const NEXT = [
   { title: 'Multi-recipient envelopes', body: 'One payload, several authorised wallet addresses.' },
-  { title: 'On-chain attestations', body: 'Optionally anchor a Seal hash on Robinhood Chain.' },
+  { title: 'On-chain attestations', body: 'Optionally anchor a Seal hash on ARC.' },
   { title: 'Team workspaces', body: 'Shared key material for a group, with no server custody.' },
   { title: 'Hardware-key identity', body: 'Derive identity from a hardware wallet or FIDO2 key.' },
   { title: '$arshield tier thresholds', body: 'Published capacity limits, decided with the token launch.' },
