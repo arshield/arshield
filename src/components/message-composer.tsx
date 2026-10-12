@@ -7,7 +7,7 @@ import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
 import { Button } from '@/components/button';
 import { Reveal } from '@/components/reveal';
-import { encryptFile, buildMessageUrl, ephemeralIdentity } from '@/lib/qsafe';
+import { encryptFile, buildMessageUrl, ephemeralIdentity } from '@/lib/arshield';
 import { cn } from '@/lib/utils';
 
 const MAX = 65536;
@@ -40,7 +40,7 @@ export function MessageComposer() {
       <div className="relative min-h-screen">
         <header className="border-b border-white/[0.06] bg-[#020610]/70 backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
-            <Link href="/" aria-label="QuantSafe home"><Logo /></Link>
+            <Link href="/" aria-label="ArShield home"><Logo /></Link>
             <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] text-[#9aa3b2] hover:text-white">
               <ArrowLeft className="h-3.5 w-3.5" /> Back to site
             </Link>
@@ -80,7 +80,7 @@ export function MessageComposer() {
                 <div className="grid gap-2 sm:grid-cols-2">
                   {([
                     { id: 'anyone', label: 'Anyone with link', desc: 'Self-decrypting · the link carries the key' },
-                    { id: 'specific', label: 'Specific recipient', desc: 'Paste their QuantSafe public key' },
+                    { id: 'specific', label: 'Specific recipient', desc: 'Paste their ArShield public key' },
                   ] as const).map((o) => (
                     <button
                       key={o.id}

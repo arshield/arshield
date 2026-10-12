@@ -4,7 +4,7 @@ import { buildHeaderAad, decode, encode } from './codec';
 import * as constants from './constants';
 import { hybridDecapsulate, hybridEncapsulate, sign, verify } from './crypto';
 import { SignatureError } from './types';
-import type { QuantSafeKeyPair, QuantSafePublicKey, QuantSafeSecretKey } from './types';
+import type { ArShieldKeyPair, ArShieldPublicKey, ArShieldSecretKey } from './types';
 
 const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder('utf-8', { fatal: true });
@@ -63,12 +63,12 @@ export type EncryptResult = {
   bytes: Uint8Array;
 };
 
-/** Seal bytes into an .qsafe container addressed to `recipient`, signed by `signer`. */
+/** Seal bytes into an .arshield container addressed to `recipient`, signed by `signer`. */
 export async function encryptFile(
   fileBytes: Uint8Array,
   filename: string,
-  recipient: QuantSafePublicKey,
-  signer: QuantSafeSecretKey,
+  recipient: ArShieldPublicKey,
+  signer: ArShieldSecretKey,
 ): Promise<Uint8Array> {
   const { kemCtPq, kemCtCls, aesKey } = hybridEncapsulate(recipient);
   const nonce = randomBytes(constants.NONCE_LEN);
@@ -104,15 +104,15 @@ export type DecryptResult = {
 };
 
 /**
- * Open an .qsafe container. Verifies the ML-DSA signature against `expectedSigner`
+ * Open an .arshield container. Verifies the ML-DSA signature against `expectedSigner`
  * before touching the ciphertext, then decapsulates and decrypts.
  */
 export async function decryptFile(
-  qsafeBytes: Uint8Array,
-  recipient: QuantSafeSecretKey,
+  arshieldBytes: Uint8Array,
+  recipient: ArShieldSecretKey,
   expectedSigner: { mldsa: Uint8Array },
 ): Promise<DecryptResult> {
-  const container = decode(qsafeBytes);
+  const container = decode(arshieldBytes);
   const header = buildHeaderAad({
     version: container.version,
     algoId: container.algoId,
@@ -132,4 +132,4 @@ export async function decryptFile(
   return unpackAeadPlaintext(plaintext);
 }
 
-export type { QuantSafeKeyPair };
+export type { ArShieldKeyPair };

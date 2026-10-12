@@ -1,16 +1,16 @@
 import * as constants from './constants';
-import type { QuantSafePublicKey, QuantSafeSecretKey } from './types';
+import type { ArShieldPublicKey, ArShieldSecretKey } from './types';
 
 /**
  * Shareable encrypted message URLs. The ciphertext lives in the URL #fragment, which
  * browsers never send to a server — so the host serves only a static page.
  *
- *   https://quantsafe.tech/m/#v1.<blob>.<signerPublic>
+ *   https://arc-shield.xyz/m/#v1.<blob>.<signerPublic>
  *
  * When the sender used an ephemeral identity, the secret key is embedded so the
  * recipient can decrypt without any prior setup:
  *
- *   https://quantsafe.tech/m/#v1.<blob>.<signerPublic>.<embedSk>.<embedPk>
+ *   https://arc-shield.xyz/m/#v1.<blob>.<signerPublic>.<embedSk>.<embedPk>
  */
 
 function b64urlEncode(bytes: Uint8Array): string {
@@ -83,23 +83,23 @@ function decodeKey(
 
 export type ParsedMessageUrl = {
   blob: Uint8Array;
-  signerPublic: QuantSafePublicKey;
-  ephemeralSecret?: QuantSafeSecretKey;
-  ephemeralPublic?: QuantSafePublicKey;
+  signerPublic: ArShieldPublicKey;
+  ephemeralSecret?: ArShieldSecretKey;
+  ephemeralPublic?: ArShieldPublicKey;
 };
 
 export function buildMessageUrl(
   blob: Uint8Array,
-  signerPublic: QuantSafePublicKey,
-  embed?: { sk: QuantSafeSecretKey; pk: QuantSafePublicKey },
+  signerPublic: ArShieldPublicKey,
+  embed?: { sk: ArShieldSecretKey; pk: ArShieldPublicKey },
 ): string {
   const parts = [
     constants.MESSAGE_URL_PREFIX + b64urlEncode(blob),
-    encodeKey(signerPublic as unknown as KeyShape<QuantSafePublicKey>),
+    encodeKey(signerPublic as unknown as KeyShape<ArShieldPublicKey>),
   ];
   if (embed) {
-    parts.push(encodeKey(embed.sk as unknown as KeyShape<QuantSafeSecretKey>));
-    parts.push(encodeKey(embed.pk as unknown as KeyShape<QuantSafePublicKey>));
+    parts.push(encodeKey(embed.sk as unknown as KeyShape<ArShieldSecretKey>));
+    parts.push(encodeKey(embed.pk as unknown as KeyShape<ArShieldPublicKey>));
   }
   return constants.MESSAGE_URL_BASE + parts.join('.');
 }
@@ -117,12 +117,12 @@ export function parseMessageUrl(url: string): ParsedMessageUrl {
     throw new Error('Malformed message URL');
   }
   const blob = b64urlDecode(segs[0], 'envelope');
-  const signerPublic = decodeKey(segs[1], 'signer key', PUBLIC_KEY_LENGTHS) as unknown as QuantSafePublicKey;
+  const signerPublic = decodeKey(segs[1], 'signer key', PUBLIC_KEY_LENGTHS) as unknown as ArShieldPublicKey;
   if (segs.length === 2) {
     return { blob, signerPublic };
   }
-  const ephemeralSecret = decodeKey(segs[2], 'embedded secret key', SECRET_KEY_LENGTHS) as unknown as QuantSafeSecretKey;
-  const ephemeralPublic = decodeKey(segs[3], 'embedded public key', PUBLIC_KEY_LENGTHS) as unknown as QuantSafePublicKey;
+  const ephemeralSecret = decodeKey(segs[2], 'embedded secret key', SECRET_KEY_LENGTHS) as unknown as ArShieldSecretKey;
+  const ephemeralPublic = decodeKey(segs[3], 'embedded public key', PUBLIC_KEY_LENGTHS) as unknown as ArShieldPublicKey;
   return { blob, signerPublic, ephemeralSecret, ephemeralPublic };
 }
 

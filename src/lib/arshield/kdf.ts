@@ -1,7 +1,7 @@
 import { randomBytes } from '@noble/hashes/utils';
 import * as constants from './constants';
 import { hkdfDerive } from './hkdf';
-import type { QuantSafeSeeds } from './types';
+import type { ArShieldSeeds } from './types';
 
 function hexToBytes(hex: string): Uint8Array {
   const clean = hex.startsWith('0x') || hex.startsWith('0X') ? hex.slice(2) : hex;
@@ -19,8 +19,8 @@ function hexToBytes(hex: string): Uint8Array {
   return out;
 }
 
-/** Stretch an IKM into the three independent seeds QuantSafe needs. */
-export function deriveSeedsFromIkm(ikm: Uint8Array): QuantSafeSeeds {
+/** Stretch an IKM into the three independent seeds ArShield needs. */
+export function deriveSeedsFromIkm(ikm: Uint8Array): ArShieldSeeds {
   if (ikm.length === 0) {
     throw new Error('IKM must be non-empty');
   }
@@ -51,13 +51,13 @@ export function assertEoaSignatureShape(signatureHex: string): void {
  * exactly as the wallet returned them, recovery byte included — normalizing them would
  * give one identity in the browser and a different one over MCP.
  */
-export function deriveSeedsFromWalletSignature(signatureHex: string): QuantSafeSeeds {
+export function deriveSeedsFromWalletSignature(signatureHex: string): ArShieldSeeds {
   assertEoaSignatureShape(signatureHex);
   return deriveSeedsFromIkm(hexToBytes(signatureHex));
 }
 
 /** Fresh random seeds for an ephemeral (one-off) identity. */
-export function deriveSeedsFromRandomness(): QuantSafeSeeds {
+export function deriveSeedsFromRandomness(): ArShieldSeeds {
   return {
     mlkem: randomBytes(constants.ML_KEM_SEED_LEN),
     x25519: randomBytes(constants.X25519_SK_LEN),

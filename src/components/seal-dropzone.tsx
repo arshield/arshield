@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 /**
  * Quantum Seal drop zone.
  * Drag-and-drop or click to pick a Seal PNG, inspect its unsigned metadata fields,
- * and optionally cross-check the SHA-256 of a companion .qsafe envelope.
+ * and optionally cross-check the SHA-256 of a companion .arshield envelope.
  *
  * Read-only: everything happens locally in the browser via FileReader.
  */
@@ -55,7 +55,7 @@ async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
 }
 
 function readPngMetadata(bytes: ArrayBuffer): SealMetadata {
-  // Parse PNG tEXt / iTXt chunks for the qsafe keys we care about.
+  // Parse PNG tEXt / iTXt chunks for the arshield keys we care about.
   const view = new DataView(bytes);
   const meta: SealMetadata = {};
   const known = new Set([
@@ -276,7 +276,7 @@ export function SealDropzone({ className }: { className?: string }) {
           {result.valid && result.metadata.file_hash && (
             <p className="mt-5 flex items-start gap-2 text-[12.5px] leading-relaxed text-emerald-300/90">
               <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none" />
-              To confirm integrity, decrypt the matching .qsafe envelope: the server checks that the
+              To confirm integrity, decrypt the matching .arshield envelope: the server checks that the
               envelope&apos;s SHA-256 matches this Seal&apos;s file_hash.
             </p>
           )}

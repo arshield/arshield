@@ -8,7 +8,7 @@ import { Eyebrow } from '@/components/button';
 import { SealDropzone } from '@/components/seal-dropzone';
 
 export const metadata: Metadata = {
-  title: 'QuantSafe | Post-Quantum Security Infrastructure on Robinhood Chain',
+  title: 'ArShield | Post-Quantum Security Infrastructure on Robinhood Chain',
   description: 'Verify a Quantum Seal: read its unsigned metadata fields and cross-check the file hash.',
 };
 
@@ -27,7 +27,7 @@ const FIELDS = [
   },
   {
     label: 'file_hash',
-    body: 'SHA-256 of the .qsafe envelope this Seal belongs to. Match it against the envelope to confirm nothing changed.',
+    body: 'SHA-256 of the .arshield envelope this Seal belongs to. Match it against the envelope to confirm nothing changed.',
   },
   {
     label: 'wallet',
@@ -50,7 +50,7 @@ const STEPS = [
   },
   {
     title: 'Match the hash',
-    body: 'Hash the .qsafe envelope the Seal describes and compare it to the Seal’s file_hash. A mismatch means the file changed after it was sealed.',
+    body: 'Hash the .arshield envelope the Seal describes and compare it to the Seal’s file_hash. A mismatch means the file changed after it was sealed.',
   },
   {
     title: 'Confirm the signer',

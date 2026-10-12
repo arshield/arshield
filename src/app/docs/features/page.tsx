@@ -3,19 +3,19 @@ import { DocsLayout, DocTitle, DocH2, DocP } from '@/components/layout-docs';
 import { Reveal } from '@/components/reveal';
 
 export const metadata: Metadata = {
-  title: 'Features | QuantSafe Docs',
-  description: 'Everything available in QuantSafe today, and what is on the roadmap.',
+  title: 'Features | ArShield Docs',
+  description: 'Everything available in ArShield today, and what is on the roadmap.',
 };
 
 const TODAY = [
-  { title: 'File encryption', body: 'Drop any file, get an encrypted payload plus a .qsafe envelope. Hybrid post-quantum, entirely client-side.' },
-  { title: 'File decryption', body: 'Open a .qsafe envelope with your wallet, key file, or passphrase and recover the original file in your browser.' },
+  { title: 'File encryption', body: 'Drop any file, get an encrypted payload plus a .arshield envelope. Hybrid post-quantum, entirely client-side.' },
+  { title: 'File decryption', body: 'Open a .arshield envelope with your wallet, key file, or passphrase and recover the original file in your browser.' },
   { title: 'Quantum Seal PNG', body: 'Export a shareable PNG Seal carrying version, timestamp, algorithm, and file hash in its tEXt chunks.' },
   { title: 'Seal verification', body: 'Drop a Philips Seal PNG to parse its tEXt chunks locally and inspect the embedded metadata.' },
   { title: 'Wallet-derived identity', body: 'No accounts. A single signing message derives your deterministic identity key pair on first use.' },
   { title: 'Encrypted messages', body: 'Send short encrypted messages through a link, with the plaintext never leaving your device.' },
-  { title: 'MCP server', body: 'Drive QuantSafe from an AI agent over the Model Context Protocol, with the wallet as identity.' },
-  { title: 'Signed x402 receipts', body: 'Optional receipts that record a paid action and travel inside the .qsafe envelope.' },
+  { title: 'MCP server', body: 'Drive ArShield from an AI agent over the Model Context Protocol, with the wallet as identity.' },
+  { title: 'Signed x402 receipts', body: 'Optional receipts that record a paid action and travel inside the .arshield envelope.' },
 ];
 
 const NEXT = [
@@ -30,7 +30,7 @@ export default function FeaturesPage() {
     <DocsLayout>
       <DocTitle eyebrow="Features">Everything available today, and what is next</DocTitle>
       <p className="mb-10 max-w-2xl text-[14.5px] leading-relaxed text-[#8a93a3]">
-        QuantSafe ships small and focuses on getting the cryptography right. Here is exactly what
+        ArShield ships small and focuses on getting the cryptography right. Here is exactly what
         works right now, followed by what is planned.
       </p>
 

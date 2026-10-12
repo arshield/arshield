@@ -4,7 +4,7 @@ import { aeadDecrypt, aeadEncrypt } from './aead';
 import * as constants from './constants';
 import { hkdfDerive } from './hkdf';
 import { InvalidPassphraseError } from './types';
-import type { QuantSafeKeyPair, QuantSafeKeyfile } from './types';
+import type { ArShieldKeyPair, ArShieldKeyfile } from './types';
 
 const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder();
@@ -23,7 +23,7 @@ const b64 = {
   },
 };
 
-function serializeKeypair(kp: QuantSafeKeyPair): Uint8Array {
+function serializeKeypair(kp: ArShieldKeyPair): Uint8Array {
   return utf8Encoder.encode(
     JSON.stringify({
       pk: {
@@ -40,7 +40,7 @@ function serializeKeypair(kp: QuantSafeKeyPair): Uint8Array {
   );
 }
 
-function deserializeKeypair(bytes: Uint8Array): QuantSafeKeyPair {
+function deserializeKeypair(bytes: Uint8Array): ArShieldKeyPair {
   const obj = JSON.parse(utf8Decoder.decode(bytes));
   return {
     publicKey: {
@@ -77,10 +77,10 @@ async function deriveWrapKey(
 
 /** Wrap a keypair under a passphrase (Argon2id + AES-256-GCM) into a portable keyfile. */
 export async function wrapKeyfile(
-  kp: QuantSafeKeyPair,
+  kp: ArShieldKeyPair,
   passphrase: string,
   params: { t: number; m: number; p: number } = constants.ARGON2ID_PARAMS_PROD,
-): Promise<QuantSafeKeyfile> {
+): Promise<ArShieldKeyfile> {
   if (!passphrase || passphrase.length === 0) {
     throw new Error('Passphrase must be non-empty');
   }
@@ -105,9 +105,9 @@ export async function wrapKeyfile(
 
 /** Open a keyfile with its passphrase. Wrong passphrase -> InvalidPassphraseError. */
 export async function unwrapKeyfile(
-  kf: QuantSafeKeyfile,
+  kf: ArShieldKeyfile,
   passphrase: string,
-): Promise<QuantSafeKeyPair> {
+): Promise<ArShieldKeyPair> {
   if (kf.v !== 1) {
     throw new Error(`Unsupported keyfile version ${kf.v}`);
   }

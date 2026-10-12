@@ -4,19 +4,19 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service · QuantSafe',
-  description: 'QuantSafe Terms of Service.',
+  title: 'Terms of Service · ArShield',
+  description: 'ArShield Terms of Service.',
 };
 
 const SECTIONS: [string, string][] = [
-  ['1. Acceptance', 'These Terms govern your access to and use of QuantSafe, a post-quantum encryption tool available at quantsafe.tech, including its web application and MCP server. By using QuantSafe you agree to these Terms.'],
-  ['2. What QuantSafe is', 'QuantSafe is a client-side encryption tool. All cryptographic operations run entirely in your browser. No file content, key material, or personal data is ever transmitted to our servers: because we have no servers that process your data.'],
-  ['3. Your keys, your responsibility', 'You are responsible for the security of your wallet, key file and passphrase. QuantSafe cannot recover them, and cannot decrypt your files. You must not use the Service where prohibited by law.'],
-  ['4. Beta software', 'QuantSafe is pre-launch software. Features may change, break, or be withdrawn. Do not rely on it as the sole copy of anything irreplaceable.'],
+  ['1. Acceptance', 'These Terms govern your access to and use of ArShield, a post-quantum encryption tool available at arc-shield.xyz, including its web application and MCP server. By using ArShield you agree to these Terms.'],
+  ['2. What ArShield is', 'ArShield is a client-side encryption tool. All cryptographic operations run entirely in your browser. No file content, key material, or personal data is ever transmitted to our servers: because we have no servers that process your data.'],
+  ['3. Your keys, your responsibility', 'You are responsible for the security of your wallet, key file and passphrase. ArShield cannot recover them, and cannot decrypt your files. You must not use the Service where prohibited by law.'],
+  ['4. Beta software', 'ArShield is pre-launch software. Features may change, break, or be withdrawn. Do not rely on it as the sole copy of anything irreplaceable.'],
   ['5. Prohibited use', 'Do not use the Service to violate any law, to infringe the rights of others, or to interfere with the Service or its users.'],
-  ['6. Limitation of liability', 'The Service is provided "as is", without warranty of any kind. To the fullest extent permitted by law, QuantSafe is not liable for any loss of data, keys, or funds arising from your use of the Service.'],
+  ['6. Limitation of liability', 'The Service is provided "as is", without warranty of any kind. To the fullest extent permitted by law, ArShield is not liable for any loss of data, keys, or funds arising from your use of the Service.'],
   ['7. Changes', 'We may update these Terms. Continued use after a change constitutes acceptance of the revised Terms.'],
-  ['8. Contact', 'Questions about these Terms: hello@quantsafe.tech'],
+  ['8. Contact', 'Questions about these Terms: hello@arc-shield.xyz'],
 ];
 
 export default function TermsPage() {

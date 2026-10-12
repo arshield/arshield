@@ -19,27 +19,27 @@ const STANDARDS = [
   ['NIST SP 800-38D', 'AES-256-GCM'],
   ['MCP', 'AGENT INTERFACE'],
   ['x402', 'AGENT PAYMENTS'],
-  ['Robinhood Chain', '$QSAFE TIERS'],
+  ['Robinhood Chain', '$ARSHIELD TIERS'],
   ['noble', 'OPEN-SOURCE CRYPTO'],
 ];
 
 const TIERS = [
-  { name: 'Free', req: 'No $qsafe needed', blurb: 'For first envelopes and the occasional file.', enc: '3 / 24h', size: '25 MB', cta: 'Start free' },
-  { name: 'Holder', req: '≥ $20 in $qsafe', blurb: 'For daily use: more files a day, and bigger ones.', enc: '25 / 24h', size: '100 MB', badge: 'FIRST HOLDER TIER', cta: 'How tiers work' },
-  { name: 'Pro', req: '≥ $100 in $qsafe', blurb: 'For heavy daily use and large archives.', enc: '250 / 24h', size: '1 GB', cta: 'How tiers work' },
-  { name: 'Whale', req: '≥ $1,000 in $qsafe', blurb: 'No daily cap and no tier cap on file size.', enc: 'Unlimited', size: 'No tier cap', cta: 'How tiers work' },
+  { name: 'Free', req: 'No $arshield needed', blurb: 'For first envelopes and the occasional file.', enc: '3 / 24h', size: '25 MB', cta: 'Start free' },
+  { name: 'Holder', req: '≥ $20 in $arshield', blurb: 'For daily use: more files a day, and bigger ones.', enc: '25 / 24h', size: '100 MB', badge: 'FIRST HOLDER TIER', cta: 'How tiers work' },
+  { name: 'Pro', req: '≥ $100 in $arshield', blurb: 'For heavy daily use and large archives.', enc: '250 / 24h', size: '1 GB', cta: 'How tiers work' },
+  { name: 'Whale', req: '≥ $1,000 in $arshield', blurb: 'No daily cap and no tier cap on file size.', enc: 'Unlimited', size: 'No tier cap', cta: 'How tiers work' },
 ];
 
 const FAQS = [
-  { q: 'Who is QuantSafe for, humans or agents?', a: "Both. Humans use the web app at /app: drag a file, get a .qsafe envelope. Agents use the MCP server, a local stdio process that Claude Desktop, Cursor or your own runtime calls as qsafe_encrypt_file, qsafe_sign_x402 and four more tools. Same crypto, same envelope, same .qsafe binary format." },
-  { q: 'What is bunker mode, and where does QuantSafe fit?', a: 'Bunker mode is a plan being discussed across crypto: move coins to addresses whose public key has never been revealed, in case elliptic curves fall early, to AI or to quantum computers. It protects coins. It does nothing for data: a file copied today stays copied. QuantSafe seals your files post-quantum, on your device. Seal them to a freshly generated key file and a copy taken today still needs ML-KEM-768 broken to open.' },
-  { q: 'What’s x402?', a: 'HTTP 402 Payment Required, brought back by Coinbase as a protocol for agents to pay APIs in stablecoins. The MCP tool qsafe_sign_x402 signs any x402 payment payload with ML-DSA-65 under its own context, so anyone holding the agent’s public key and the payload can check which key signed a receipt; /mcp documents the exact bytes that are signed and where the signing key sits in the public key. Sealing every paid call on its own is what Shield is for, and Shield is on the roadmap.' },
-  { q: 'How do I use the MCP server?', a: 'The server runs over stdio inside your own agent runtime and exposes six tools: qsafe_encrypt_file, qsafe_decrypt_file, qsafe_send_message, qsafe_decrypt_message, qsafe_verify_seal and qsafe_sign_x402. Keys come from a passphrase-protected key file (keyfile_path, which the server reads from disk, or keyfile_json, plus its passphrase), or from signature_hex plus the address that made it: your EOA wallet’s 65-byte signature of the QuantSafe derivation message, passed only over local stdio. So a file you encrypt in /app with your wallet opens in your agent with that wallet’s signature, no key export needed.' },
-  { q: 'What does quantum-safe actually mean?', a: 'It means the cryptography is designed to resist attacks from both classical and quantum computers. QuantSafe uses ML-KEM-768 and ML-DSA-65, the standards chosen by NIST in FIPS 203 and 204. To guard against unknown weaknesses in any single algorithm, we combine ML-KEM with classical X25519 in a hybrid scheme, an attacker has to break both.' },
+  { q: 'Who is ArShield for, humans or agents?', a: "Both. Humans use the web app at /app: drag a file, get a .arshield envelope. Agents use the MCP server, a local stdio process that Claude Desktop, Cursor or your own runtime calls as arshield_encrypt_file, arshield_sign_x402 and four more tools. Same crypto, same envelope, same .arshield binary format." },
+  { q: 'What is bunker mode, and where does ArShield fit?', a: 'Bunker mode is a plan being discussed across crypto: move coins to addresses whose public key has never been revealed, in case elliptic curves fall early, to AI or to quantum computers. It protects coins. It does nothing for data: a file copied today stays copied. ArShield seals your files post-quantum, on your device. Seal them to a freshly generated key file and a copy taken today still needs ML-KEM-768 broken to open.' },
+  { q: 'What’s x402?', a: 'HTTP 402 Payment Required, brought back by Coinbase as a protocol for agents to pay APIs in stablecoins. The MCP tool arshield_sign_x402 signs any x402 payment payload with ML-DSA-65 under its own context, so anyone holding the agent’s public key and the payload can check which key signed a receipt; /mcp documents the exact bytes that are signed and where the signing key sits in the public key. Sealing every paid call on its own is what Shield is for, and Shield is on the roadmap.' },
+  { q: 'How do I use the MCP server?', a: 'The server runs over stdio inside your own agent runtime and exposes six tools: arshield_encrypt_file, arshield_decrypt_file, arshield_send_message, arshield_decrypt_message, arshield_verify_seal and arshield_sign_x402. Keys come from a passphrase-protected key file (keyfile_path, which the server reads from disk, or keyfile_json, plus its passphrase), or from signature_hex plus the address that made it: your EOA wallet’s 65-byte signature of the ArShield derivation message, passed only over local stdio. So a file you encrypt in /app with your wallet opens in your agent with that wallet’s signature, no key export needed.' },
+  { q: 'What does quantum-safe actually mean?', a: 'It means the cryptography is designed to resist attacks from both classical and quantum computers. ArShield uses ML-KEM-768 and ML-DSA-65, the standards chosen by NIST in FIPS 203 and 204. To guard against unknown weaknesses in any single algorithm, we combine ML-KEM with classical X25519 in a hybrid scheme, an attacker has to break both.' },
   { q: 'Do I need a wallet?', a: 'No. A wallet is the fastest path, and it’s what powers token-gated tiers and Seal anchoring on Robinhood Chain. Your keys come from one wallet signature, so they can be reproduced only if the wallet signs the same way every time. The first time an address derives keys on a device, the app asks for two signatures and refuses if they differ, which is how MPC and threshold signers show up. Those keys rest on your wallet’s curve. For files that must outlast it, generate a passphrase-protected key file instead: its keys are random and never touch your wallet’s signature, so if curves fall, an attacker still has to break ML-KEM-768 too. Agents pass a key file, or the same wallet signature, to the MCP server.' },
-  { q: 'Can QuantSafe read my files?', a: 'No. The web app is a static site and the MCP server runs in your own agent runtime. Every byte is encrypted and decrypted on your device, and no server of ours ever receives your files, their names or your keys. We hold no plaintext and no keys, so there is nothing to hand over. Like any web app, the browser side is only as safe as the code our site serves.' },
+  { q: 'Can ArShield read my files?', a: 'No. The web app is a static site and the MCP server runs in your own agent runtime. Every byte is encrypted and decrypted on your device, and no server of ours ever receives your files, their names or your keys. We hold no plaintext and no keys, so there is nothing to hand over. Like any web app, the browser side is only as safe as the code our site serves.' },
   { q: 'What happens if I lose my wallet or key?', a: 'Without the wallet or the key file, your files are unrecoverable. There is no server copy and no reset, that’s the whole point of zero-knowledge. If you use a wallet, save a key file backup from /app (Back up keys) after you first derive your keys: it holds the same keys, wrapped with a passphrase you choose. Store that file and its passphrase somewhere safe.' },
-  { q: 'Why a token?', a: 'Holding $qsafe on Robinhood Chain raises the two limits the web app enforces: from 3 encryptions a day on Free to 25, 250 or no daily cap, and from 25 MB files to 100 MB, 1 GB or no tier cap. Encryption, Quantum Seals, messages, the MCP server and wallet or key file mode are open to every tier. No subscriptions, no accounts, just a wallet balance. Until the token launches, every wallet is on the Free tier.' },
+  { q: 'Why a token?', a: 'Holding $arshield on Robinhood Chain raises the two limits the web app enforces: from 3 encryptions a day on Free to 25, 250 or no daily cap, and from 25 MB files to 100 MB, 1 GB or no tier cap. Encryption, Quantum Seals, messages, the MCP server and wallet or key file mode are open to every tier. No subscriptions, no accounts, just a wallet balance. Until the token launches, every wallet is on the Free tier.' },
 ];
 
 const CONTRACT = '0xad4d04cb9DaBA0FD0472e11EB8a9DB0D3318eFC8';
@@ -93,7 +93,7 @@ function Hero() {
 
         <HeroItem delay={0.3}>
           <p className="mt-6 max-w-xl text-balance text-[15px] leading-relaxed text-[#8a93a3] sm:text-base">
-            Coins can run to a fresh address. Your data can’t. QuantSafe seals it post-quantum, on your
+            Coins can run to a fresh address. Your data can’t. ArShield seals it post-quantum, on your
             device. Your agents too.
           </p>
         </HeroItem>
@@ -171,7 +171,7 @@ function WhyNow() {
               The bunker for your data
             </div>
             <p className="text-[15px] leading-relaxed text-[#8a93a3]">
-              QuantSafe seals what you can&apos;t move. Every .qsafe envelope is sealed with ML-KEM-768, the
+              ArShield seals what you can&apos;t move. Every .arshield envelope is sealed with ML-KEM-768, the
               NIST post-quantum standard, on top of X25519, and signed with ML-DSA-65. On your device.
             </p>
             <p className="mt-4 text-[15px] leading-relaxed text-[#8a93a3]">
@@ -197,7 +197,7 @@ function Layer() {
   ];
   return (
     <Section
-      eyebrow="QuantSafe"
+      eyebrow="ArShield"
       title="The post-quantum security layer for autonomous finance."
       subtitle="A unified infrastructure protecting agent identities, encrypted communications and payment authorization."
     >
@@ -226,15 +226,15 @@ function Layer() {
 
 function ThreeSurfaces() {
   const items = [
-    { n: '01', t: 'Humans', tag: 'WEB APP · /APP', b: 'Drop a file in the browser. Out comes a .qsafe envelope that only your wallet or your key file can open, plus a Quantum Seal receipt. Store it anywhere and open it on any device with the same keys.', cta: 'Launch app', href: '/app' },
-    { n: '02', t: 'Agents (MCP)', tag: 'MCP · STDIO', b: 'Call qsafe_encrypt_file from Claude, Cursor, or any MCP-aware agent. Same envelope, same crypto, same signer model. Zero browser.', cta: 'MCP server', href: '/mcp' },
-    { n: '03', t: 'Payments (x402)', tag: 'MCP · QSAFE_SIGN_X402', b: 'Agents sign x402 payment payloads with ML-DSA-65 over MCP, under their own context, so anyone holding the agent’s post-quantum public key can check which key signed. One Quantum Seal for every paid call is Shield, on the roadmap.', cta: 'See qsafe_sign_x402', href: '/mcp' },
+    { n: '01', t: 'Humans', tag: 'WEB APP · /APP', b: 'Drop a file in the browser. Out comes a .arshield envelope that only your wallet or your key file can open, plus a Quantum Seal receipt. Store it anywhere and open it on any device with the same keys.', cta: 'Launch app', href: '/app' },
+    { n: '02', t: 'Agents (MCP)', tag: 'MCP · STDIO', b: 'Call arshield_encrypt_file from Claude, Cursor, or any MCP-aware agent. Same envelope, same crypto, same signer model. Zero browser.', cta: 'MCP server', href: '/mcp' },
+    { n: '03', t: 'Payments (x402)', tag: 'MCP · ARSHIELD_SIGN_X402', b: 'Agents sign x402 payment payloads with ML-DSA-65 over MCP, under their own context, so anyone holding the agent’s post-quantum public key can check which key signed. One Quantum Seal for every paid call is Shield, on the roadmap.', cta: 'See arshield_sign_x402', href: '/mcp' },
   ];
   return (
     <Section
       eyebrow="One envelope, three surfaces"
       title="Humans drop files. Agents call tools. Receipts get signed."
-      subtitle="QuantSafe runs entirely in your browser or in your agent runtime. There is no backend that sees plaintext, not ours, not anyone’s."
+      subtitle="ArShield runs entirely in your browser or in your agent runtime. There is no backend that sees plaintext, not ours, not anyone’s."
     >
       <div className="grid gap-4 md:grid-cols-3">
         {items.map((it, i) => (
@@ -260,7 +260,7 @@ function Technology() {
   const cards = [
     { t: 'Hybrid post-quantum', b: 'ML-KEM-768 combined with X25519 via HKDF-SHA256. Attackers have to break both. The same defence-in-depth used by Signal, Chrome, and Cloudflare.', tag: 'FIPS 203 · FIPS 204' },
     { t: 'MCP-native interface', b: 'Six PQC tools exposed over the Model Context Protocol, encrypt files, sign x402 receipts, message agents. Same crypto core as the web app. Agent-ready.', tag: 'MCP · STDIO · 6 TOOLS' },
-    { t: 'Built for Robinhood Chain', b: 'The USD value of your $qsafe on Robinhood Chain sets your tier, priced on-chain from its Uniswap v4 pool and Chainlink ETH / USD. Wallets connect as injected browser wallets only, with no relay in between.', tag: 'ROBINHOOD CHAIN · $QSAFE TIERS · X402' },
+    { t: 'Built for Robinhood Chain', b: 'The USD value of your $arshield on Robinhood Chain sets your tier, priced on-chain from its Uniswap v4 pool and Chainlink ETH / USD. Wallets connect as injected browser wallets only, with no relay in between.', tag: 'ROBINHOOD CHAIN · $ARSHIELD TIERS · X402' },
   ];
   return (
     <Section
@@ -290,7 +290,7 @@ function Technology() {
 }
 
 function BunkerAgents() {
-  const tools = ['qsafe_encrypt_file', 'qsafe_decrypt_file', 'qsafe_send_message', 'qsafe_decrypt_message', 'qsafe_verify_seal', 'qsafe_sign_x402'];
+  const tools = ['arshield_encrypt_file', 'arshield_decrypt_file', 'arshield_send_message', 'arshield_decrypt_message', 'arshield_verify_seal', 'arshield_sign_x402'];
   const [copied, setCopied] = useState(false);
   return (
     <Section
@@ -302,10 +302,10 @@ function BunkerAgents() {
         <div className="panel mx-auto max-w-2xl p-6">
           <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#5b6474]">Install</div>
           <div className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#03070f] px-4 py-3">
-            <code className="font-mono text-sm text-brand-gold">$ npx -y @quantsafe/mcp</code>
+            <code className="font-mono text-sm text-brand-gold">$ npx -y @arshield/mcp</code>
             <button
               onClick={() => {
-                navigator.clipboard?.writeText('npx -y @quantsafe/mcp');
+                navigator.clipboard?.writeText('npx -y @arshield/mcp');
                 setCopied(true);
                 setTimeout(() => setCopied(false), 1500);
               }}
@@ -327,8 +327,8 @@ function BunkerAgents() {
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         {[
-          { icon: ShieldIcon, t: 'One identity, two doors.', b: 'Seal a file in /app, open it in your agent with the same key file or wallet signature. Same keys, same .qsafe format.' },
-          { icon: Terminal, t: 'Runs on your machine.', b: 'A local stdio server that reads your key file from disk: it never enters the chat, only its passphrase does. No QuantSafe server, no network calls, no telemetry.' },
+          { icon: ShieldIcon, t: 'One identity, two doors.', b: 'Seal a file in /app, open it in your agent with the same key file or wallet signature. Same keys, same .arshield format.' },
+          { icon: Terminal, t: 'Runs on your machine.', b: 'A local stdio server that reads your key file from disk: it never enters the chat, only its passphrase does. No ArShield server, no network calls, no telemetry.' },
           { icon: ScrollText, t: 'Signs what agents pay.', b: 'x402 payment payloads signed with ML-DSA-65, under their own context.' },
         ].map((c, i) => (
           <Reveal key={c.t} delay={i * 0.08}>
@@ -347,7 +347,7 @@ function BunkerAgents() {
             See the MCP server
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
-          <a href="https://www.npmjs.com/package/@quantsafe/mcp" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-[#5b6474] transition-colors hover:text-[#9aa3b2]">
+          <a href="https://www.npmjs.com/package/@arshield/mcp" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-[#5b6474] transition-colors hover:text-[#9aa3b2]">
             npm · v0.1.1
             <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
@@ -362,9 +362,9 @@ function Tiers() {
   return (
     <Section
       id="tiers"
-      eyebrow="$QSAFE"
+      eyebrow="$ARSHIELD"
       title={<>Holders encrypt more.<br className="hidden sm:block" /> The quantum-safe token on Robinhood Chain.</>}
-      subtitle="The envelope is post-quantum. $qsafe sets how much you seal: the USD value of your balance on Robinhood Chain raises encryptions per day and maximum file size in the web app. Seals, messages and the MCP server are the same on every tier. No subscriptions, no accounts: your balance is your tier."
+      subtitle="The envelope is post-quantum. $arshield sets how much you seal: the USD value of your balance on Robinhood Chain raises encryptions per day and maximum file size in the web app. Seals, messages and the MCP server are the same on every tier. No subscriptions, no accounts: your balance is your tier."
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {TIERS.map((t, i) => (
@@ -398,7 +398,7 @@ function Tiers() {
 
       <Reveal delay={0.1}>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 text-[13px] text-[#5b6474]">
-          <span>The only $qsafe that sets your tier:</span>
+          <span>The only $arshield that sets your tier:</span>
           <code className="rounded-md border border-white/[0.08] bg-white/[0.02] px-2 py-1 font-mono text-[11px] text-[#9aa3b2]">{CONTRACT}</code>
           <span>on Robinhood Chain ·</span>
           <button
@@ -428,13 +428,13 @@ function Shield() {
     <Section
       id="shield"
       eyebrow="On the roadmap"
-      title="QuantSafe Shield: PQ Gateway for x402."
+      title="ArShield Shield: PQ Gateway for x402."
     >
       <div className="grid gap-8 md:grid-cols-2 md:items-center">
         <Reveal>
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-gold/25 bg-brand-gold/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-gold">
             <ShieldIcon className="h-3 w-3" />
-            QuantSafe Shield
+            ArShield Shield
           </div>
           <h3 className="text-2xl font-bold text-[#e6e9ef]">
             A post-quantum tunnel for every x402 endpoint your agents pay.
@@ -448,7 +448,7 @@ function Shield() {
             {[
               'Hybrid ML-KEM + X25519 tunnel: drop-in proxy in front of any x402 endpoint.',
               'Every paid call emits a Quantum Seal PNG with endpoint, amount, and transaction hash.',
-              'Reserved capacity for $qsafe holders: Pro and Whale tiers get priority lanes.',
+              'Reserved capacity for $arshield holders: Pro and Whale tiers get priority lanes.',
               'One endpoint swap. No code rewrites. MCP-native. Agent-ready.',
             ].map((li) => (
               <li key={li} className="flex items-start gap-2.5">
@@ -483,7 +483,7 @@ function Shield() {
               <p className="mt-2 text-[13px] leading-relaxed text-[#8a93a3]">
                 A first cohort of x402 endpoints, chosen from applications. No date set. The application form
                 goes up when the gateway is ready for that cohort. Questions until then:{' '}
-                <a href="mailto:hello@quantsafe.tech" className="text-brand-gold hover:underline">write to us</a>.
+                <a href="mailto:hello@arc-shield.xyz" className="text-brand-gold hover:underline">write to us</a>.
               </p>
             </div>
           </div>

@@ -1,30 +1,30 @@
-/** Typed error hierarchy for QuantSafe. Every failure mode is a named class so
+/** Typed error hierarchy for ArShield. Every failure mode is a named class so
  * callers and agents can branch on `.code` instead of matching message text. */
 
-export class QsafeError extends Error {
+export class ArShieldError extends Error {
   code: string;
   constructor(message: string, code: string) {
     super(message);
     this.code = code;
-    this.name = 'QsafeError';
+    this.name = 'ArShieldError';
   }
 }
 
-export class InvalidPassphraseError extends QsafeError {
+export class InvalidPassphraseError extends ArShieldError {
   constructor() {
     super('Wrong passphrase or corrupted key file', 'INVALID_PASSPHRASE');
     this.name = 'InvalidPassphraseError';
   }
 }
 
-export class CorruptFileError extends QsafeError {
+export class CorruptFileError extends ArShieldError {
   constructor(detail: string) {
-    super(`Corrupt or invalid .qsafe file: ${detail}`, 'CORRUPT_FILE');
+    super(`Corrupt or invalid .arshield file: ${detail}`, 'CORRUPT_FILE');
     this.name = 'CorruptFileError';
   }
 }
 
-export class SignatureError extends QsafeError {
+export class SignatureError extends ArShieldError {
   constructor() {
     super('Signature verification failed', 'SIGNATURE_FAILED');
     this.name = 'SignatureError';
@@ -34,31 +34,31 @@ export class SignatureError extends QsafeError {
 /* --- Key shapes --- */
 export type MlKemKeyPair = { publicKey: Uint8Array; secretKey: Uint8Array };
 
-export type QuantSafePublicKey = {
+export type ArShieldPublicKey = {
   mlkem: Uint8Array;
   x25519: Uint8Array;
   mldsa: Uint8Array;
 };
 
-export type QuantSafeSecretKey = {
+export type ArShieldSecretKey = {
   mlkem: Uint8Array;
   x25519: Uint8Array;
   mldsa: Uint8Array;
 };
 
-export type QuantSafeKeyPair = {
-  publicKey: QuantSafePublicKey;
-  secretKey: QuantSafeSecretKey;
+export type ArShieldKeyPair = {
+  publicKey: ArShieldPublicKey;
+  secretKey: ArShieldSecretKey;
 };
 
-export type QuantSafeSeeds = {
+export type ArShieldSeeds = {
   mlkem: Uint8Array;
   x25519: Uint8Array;
   mldsa: Uint8Array;
 };
 
-/** The parsed .qsafe container. */
-export type QuantSafeContainer = {
+/** The parsed .arshield container. */
+export type ArShieldContainer = {
   version: number;
   algoId: number;
   kemCtPq: Uint8Array;
@@ -69,7 +69,7 @@ export type QuantSafeContainer = {
 };
 
 /** The wrapped keyfile JSON structure. */
-export type QuantSafeKeyfile = {
+export type ArShieldKeyfile = {
   v: 1;
   kdf: 'argon2id';
   kdfParams: { t: number; m: number; p: number };

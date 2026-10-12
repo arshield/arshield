@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 function Logo({ className = '' }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
-      {/* QuantSafe logo mark: gold rounded shield with darker inset */}
+      {/* ArShield logo mark: gold rounded shield with darker inset */}
       <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden>
         <defs>
           <linearGradient id="logo-grad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
@@ -30,7 +30,7 @@ function Logo({ className = '' }: { className?: string }) {
         />
         <path d="M11.5 16.2l3 3 6-6.5" stroke="#F5DA99" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       </svg>
-      <span className="text-[15px] font-medium tracking-tight text-[#e6e9ef]">QuantSafe</span>
+      <span className="text-[15px] font-medium tracking-tight text-[#e6e9ef]">ArShield</span>
     </span>
   );
 }
@@ -50,7 +50,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020610]/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" aria-label="QuantSafe home" className="flex items-center gap-2">
+        <Link href="/" aria-label="ArShield home" className="flex items-center gap-2">
           <Logo />
         </Link>
 

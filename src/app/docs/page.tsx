@@ -5,9 +5,9 @@ import { DocsLayout, DocTitle } from '@/components/layout-docs';
 import { Reveal } from '@/components/reveal';
 
 export const metadata: Metadata = {
-  title: 'QuantSafe Docs',
+  title: 'ArShield Docs',
   description:
-    'Documentation for QuantSafe: the hybrid post-quantum stack, the .qsafe container, wallet-derived identity, and how $qsafe gates encryption capacity.',
+    'Documentation for ArShield: the hybrid post-quantum stack, the .arshield container, wallet-derived identity, and how $arshield gates encryption capacity.',
 };
 
 const CARDS = [
@@ -20,7 +20,7 @@ const CARDS = [
   {
     href: '/docs/architecture',
     label: 'Architecture',
-    desc: 'The hybrid post-quantum stack, the .qsafe container, and wallet-derived identity.',
+    desc: 'The hybrid post-quantum stack, the .arshield container, and wallet-derived identity.',
     icon: Boxes,
   },
   {
@@ -44,7 +44,7 @@ const CARDS = [
   {
     href: '/docs/tokenomics',
     label: 'Token Utility',
-    desc: 'How $qsafe gates encryption capacity. Hold more, encrypt more.',
+    desc: 'How $arshield gates encryption capacity. Hold more, encrypt more.',
     icon: Coins,
   },
   {
@@ -58,9 +58,9 @@ const CARDS = [
 export default function DocsIndexPage() {
   return (
     <DocsLayout>
-      <DocTitle eyebrow="Documentation">QuantSafe Docs</DocTitle>
+      <DocTitle eyebrow="Documentation">ArShield Docs</DocTitle>
       <p className="mb-10 max-w-2xl text-[14.5px] leading-relaxed text-[#8a93a3]">
-        Everything you need to understand and use QuantSafe, from your first encrypted file to the
+        Everything you need to understand and use ArShield, from your first encrypted file to the
         post-quantum primitives underneath.
       </p>
 

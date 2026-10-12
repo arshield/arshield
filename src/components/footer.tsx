@@ -28,7 +28,7 @@ const COLS = [
     links: [
       { href: '/terms', label: 'Terms' },
       { href: '/privacy', label: 'Privacy' },
-      { href: 'mailto:hello@quantsafe.tech', label: 'Contact' },
+      { href: 'mailto:hello@arc-shield.xyz', label: 'Contact' },
     ],
   },
 ];
@@ -45,7 +45,7 @@ export function Footer() {
               x402 receipts. MCP-native. Built for Robinhood Chain.
             </p>
             <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#5b6474]">
-              QuantSafe.tech
+              arc-shield.xyz
             </p>
           </div>
 
@@ -71,7 +71,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-white/[0.06] pt-6 text-[13px] text-[#5b6474] sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 QuantSafe. Built for Robinhood Chain. Built on open-source noble cryptography.</p>
+          <p>© 2026 ArShield. Built for Robinhood Chain. Built on open-source noble cryptography.</p>
           <p className="font-semibold uppercase tracking-[0.18em] text-[#7b8493]">
             Holders encrypt more.
           </p>

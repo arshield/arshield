@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 type Meta = { label: string; value: string };
 
 const META: Meta[] = [
-  { label: 'PACKAGE', value: '@quantsafe/mcp' },
+  { label: 'PACKAGE', value: '@arshield/mcp' },
   { label: 'VERSION', value: '0.1.1' },
   { label: 'TRANSPORT', value: 'stdio' },
   { label: 'RUNTIME', value: 'Node.js 20+' },
@@ -31,33 +31,33 @@ type Tool = {
 
 const TOOLS: Tool[] = [
   {
-    name: 'qsafe_encrypt_file',
+    name: 'arshield_encrypt_file',
     description: 'Encrypt bytes under ML-KEM-768 + X25519 + ML-DSA-65.',
     inputs: 'bytes_base64, recipient_pubkey_base64, signer?: keyfile | signature + address',
     outputs: 'blob_base64, seal_png_base64, signer_pubkey_base64',
   },
   {
-    name: 'qsafe_decrypt_file',
-    description: 'Decrypt a .qsafe blob with a keyfile or wallet signature.',
+    name: 'arshield_decrypt_file',
+    description: 'Decrypt a .arshield blob with a keyfile or wallet signature.',
     inputs:
       'blob_base64, (keyfile_path or keyfile_json + passphrase | signature_hex + address), expected_signer_pubkey_base64 (required unless self-signed)',
     outputs: 'plaintext_base64, signer_pubkey_base64, filename',
   },
   {
-    name: 'qsafe_send_message',
+    name: 'arshield_send_message',
     description: 'Wrap text in a shareable encrypted URL, optionally signed by your wallet.',
     inputs: 'text, recipient_pubkey_base64?, signer?: keyfile | signature + address',
     outputs: 'url, mode',
   },
   {
-    name: 'qsafe_decrypt_message',
-    description: 'Recover plaintext + signer from a QuantSafe message URL.',
+    name: 'arshield_decrypt_message',
+    description: 'Recover plaintext + signer from a ArShield message URL.',
     inputs:
       'url, (keyfile_path or keyfile_json + passphrase | signature_hex + address)?, expected_signer_pubkey_base64?',
     outputs: 'text, signer_pubkey_base64',
   },
   {
-    name: 'qsafe_verify_seal',
+    name: 'arshield_verify_seal',
     description:
       'Read the unsigned fields of a Quantum Seal PNG. Given the envelope, check that its SHA-256 matches the Seal file_hash.',
     inputs: 'png_base64, blob_base64?',
@@ -65,8 +65,8 @@ const TOOLS: Tool[] = [
       'valid, metadata { version, timestamp, algo, file_hash, wallet?, x402?, anchor? }, file_hash_matches?',
   },
   {
-    name: 'qsafe_sign_x402',
-    description: 'Sign an x402 payload with ML-DSA-65 under context qsafe-v1-x402.',
+    name: 'arshield_sign_x402',
+    description: 'Sign an x402 payload with ML-DSA-65 under context arshield-v1-x402.',
     inputs:
       'payload_json (JSON object), (keyfile_path or keyfile_json + passphrase | signature_hex + address)',
     outputs: 'signature_base64, signer_pubkey_base64',
@@ -77,48 +77,48 @@ const CONFIG_CARDS = [
   {
     eyebrow: 'CLAUDE CODE',
     title: 'Terminal',
-    code: 'claude mcp add qsafe -- npx -y @quantsafe/mcp',
+    code: 'claude mcp add arshield -- npx -y @arshield/mcp',
     caption: 'One line adds the server to Claude Code over stdio.',
   },
   {
     eyebrow: 'CLAUDE DESKTOP',
     title: 'claude_desktop_config.json',
-    code: '{"mcpServers":{"qsafe":{"command":"npx","args":["-y","@quantsafe/mcp"]}}}',
+    code: '{"mcpServers":{"arshield":{"command":"npx","args":["-y","@arshield/mcp"]}}}',
     caption:
-      'Drop this snippet into your config and restart the client. QuantSafe tools appear in the tools picker.',
+      'Drop this snippet into your config and restart the client. ArShield tools appear in the tools picker.',
   },
   {
     eyebrow: 'CURSOR',
     title: '~/.cursor/mcp.json',
-    code: '{"mcpServers":{"qsafe":{"command":"npx","args":["-y","@quantsafe/mcp"]}}}',
+    code: '{"mcpServers":{"arshield":{"command":"npx","args":["-y","@arshield/mcp"]}}}',
     caption: 'Same shape, same server.',
   },
   {
     eyebrow: 'ANY MCP CLIENT',
     title: 'stdio command',
-    code: 'command: npx\nargs: -y @quantsafe/mcp',
+    code: 'command: npx\nargs: -y @arshield/mcp',
     caption: 'Works with any client that speaks Model Context Protocol over stdio.',
   },
 ];
 
 const KEYFILE_CODE = `{
   "mcpServers": {
-    "qsafe": {
+    "arshield": {
       "command": "npx",
-      "args": ["-y", "@quantsafe/mcp"],
+      "args": ["-y", "@arshield/mcp"],
       "env": {
-        "QSAFE_KEYFILE": "/home/you/.quantsafe/agent.key.json",
-        "QSAFE_KEYFILE_PASSPHRASE": "${'${QSAFE_KEYFILE_PASSPHRASE}'}"
+        "ARSHIELD_KEYFILE": "/home/you/.arshield/agent.key.json",
+        "ARSHIELD_KEYFILE_PASSPHRASE": "${'${ARSHIELD_KEYFILE_PASSPHRASE}'}"
       }
     }
   }
 }
 
-// qsafe_encrypt_file
+// arshield_encrypt_file
 {
   "bytes_base64": "<base64 file bytes>",
   "recipient_pubkey_base64": "<recipient ML-KEM pubkey>",
-  "signer": { "keyfile_path": "/home/you/.quantsafe/agent.key.json" }
+  "signer": { "keyfile_path": "/home/you/.arshield/agent.key.json" }
 }`;
 
 const X402_CODE = `payload_json:
@@ -133,25 +133,25 @@ const X402_CODE = `payload_json:
 }
 
 // signed over the canonical JSON of payload_json,
-// context string "qsafe-v1-x402", ML-DSA-65
+// context string "arshield-v1-x402", ML-DSA-65
 signature_base64: "<detached signature>"`;
 
 const WALLET_CODE = `import { privateKeyToAccount } from 'viem/accounts';
 
-const QSAFE_SIGN_MESSAGE = [
-  'QuantSafe keypair derivation v1',
+const ARSHIELD_SIGN_MESSAGE = [
+  'ArShield keypair derivation v1',
   '',
   'This signature derives your personal post-quantum encryption keypair.',
   'It grants no permissions and costs no gas.',
   '',
-  'Domain: quantsafe.tech',
+  'Domain: arc-shield.xyz',
 ].join('\\n');
 
 const account = privateKeyToAccount(process.env.AGENT_PRIVATE_KEY);
-const signature = await account.signMessage({ message: QSAFE_SIGN_MESSAGE });
+const signature = await account.signMessage({ message: ARSHIELD_SIGN_MESSAGE });
 
 // Then pass it to the server over local stdio:
-// qsafe_decrypt_file {
+// arshield_decrypt_file {
 //   blob_base64, address: account.address,
 //   signature_hex: signature, expected_signer_pubkey_base64
 // }`;
@@ -225,7 +225,7 @@ export default function McpPage() {
         <Section
           eyebrow="INSTALL"
           title="One command."
-          subtitle="Node.js 20 or later runs the server over stdio. It is published as @quantsafe/mcp, under the @quantsafe scope that only QuantSafe can publish to."
+          subtitle="Node.js 20 or later runs the server over stdio. It is published as @arshield/mcp, under the @arshield scope that only ArShield can publish to."
         >
           <Reveal>
             <div className="mx-auto max-w-3xl">
@@ -234,10 +234,10 @@ export default function McpPage() {
                   <pre className="no-scrollbar overflow-x-auto whitespace-pre font-mono text-[13.5px] text-[#e6e9ef]">
                     <code>
                       <span className="mr-2 select-none text-brand-gold">$</span>
-                      npx -y @quantsafe/mcp
+                      npx -y @arshield/mcp
                     </code>
                   </pre>
-                  <CopyButton value="npx -y @quantsafe/mcp" className="shrink-0 self-start sm:self-auto" />
+                  <CopyButton value="npx -y @arshield/mcp" className="shrink-0 self-start sm:self-auto" />
                 </div>
               </div>
 
@@ -255,7 +255,7 @@ export default function McpPage() {
 
               <div className="mt-5 text-center">
                 <Link
-                  href="https://www.npmjs.com/package/@quantsafe/mcp"
+                  href="https://www.npmjs.com/package/@arshield/mcp"
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-brand-gold transition-colors hover:text-[#e9c35f]"
@@ -356,12 +356,12 @@ export default function McpPage() {
         </Section>
 
         {/* B — x402 */}
-        <Section title="What qsafe_sign_x402 signs.">
+        <Section title="What arshield_sign_x402 signs.">
           <Reveal>
             <div className="mx-auto max-w-3xl">
               <p className="text-[14.5px] leading-relaxed text-[#8a93a3]">
-                qsafe_sign_x402 produces a detached ML-DSA-65 signature under the context string
-                <span className="mx-1 font-mono text-[13px] text-[#e6e9ef]">qsafe-v1-x402</span>. The signed
+                arshield_sign_x402 produces a detached ML-DSA-65 signature under the context string
+                <span className="mx-1 font-mono text-[13px] text-[#e6e9ef]">arshield-v1-x402</span>. The signed
                 bytes are the canonical JSON encoding of the payload_json object you pass in: the scheme,
                 network, asset, amount, payTo, nonce and validity fields exactly as serialized, with keys in
                 sorted order and no extra whitespace. Nothing outside that object is covered, and the
@@ -387,8 +387,8 @@ export default function McpPage() {
                 different signature every time; the browser catches them by asking for two signatures the
                 first time an address derives keys on a device. The server runs the same check when you pass
                 a second signature as signature_hex_repeat the first time you use a wallet, and it refuses a
-                signature that does not recover to the address you name. Sign the QuantSafe message only in
-                your own agent or on quantsafe.tech: anyone who gets the signature can open your files. For
+                signature that does not recover to the address you name. Sign the ArShield message only in
+                your own agent or on arc-shield.xyz: anyone who gets the signature can open your files. For
                 a durable copy, /app wraps the same keypair as a passphrase-protected keyfile (Back up
                 keys). A wallet-derived identity rests on the wallet&apos;s curve: for anything that must
                 outlast it, use a generated key file.
