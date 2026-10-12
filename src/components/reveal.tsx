@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 
 /**
- * QuantSafe's Reveal: motion.div fade-up on scroll-into-view.
+ * ArShield's Reveal: motion.div fade-up on scroll-into-view.
  * initial { opacity: 0, y: 20 } → whileInView { opacity: 1, y: 0 }
  * duration 0.6, ease cubic [0.22, 1, 0.36, 1], once, margin -80px.
  */

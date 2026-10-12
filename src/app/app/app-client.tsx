@@ -9,10 +9,10 @@ import { Reveal } from '@/components/reveal';
 import { Button } from '@/components/button';
 import { AppWorkspace } from '@/components/app-workspace';
 import { useWallet } from '@/lib/use-wallet';
-import { ephemeralIdentity, unwrapKeyfile, wrapKeyfile, type QuantSafeKeyPair } from '@/lib/qsafe';
+import { ephemeralIdentity, unwrapKeyfile, wrapKeyfile, type ArShieldKeyPair } from '@/lib/arshield';
 import { cn } from '@/lib/utils';
 
-type KeySource = { kind: 'wallet'; label: string; kp: QuantSafeKeyPair } | { kind: 'keyfile'; label: string; kp: QuantSafeKeyPair } | null;
+type KeySource = { kind: 'wallet'; label: string; kp: ArShieldKeyPair } | { kind: 'keyfile'; label: string; kp: ArShieldKeyPair } | null;
 
 export function AppClient() {
   const { wallet, deriving, error: walletError, mounted, connect, disconnect, deriveIdentity } = useWallet();
@@ -50,13 +50,13 @@ export function AppClient() {
     setBusy(true);
     try {
       const kp = ephemeralIdentity();
-      const pw = genPass || 'quantsafe-generated-key';
+      const pw = genPass || 'arshield-generated-key';
       const kf = await wrapKeyfile(kp, pw, { t: 2, m: 16384, p: 1 });
       const blob = new Blob([JSON.stringify(kf, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'quantsafe-keyfile.json';
+      a.download = 'arshield-keyfile.json';
       a.click();
       URL.revokeObjectURL(url);
       setSource({ kind: 'keyfile', label: 'keyfile (generated)', kp });
@@ -93,7 +93,7 @@ export function AppClient() {
         {/* App header */}
         <header className="border-b border-white/[0.06] bg-[#020610]/70 backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-            <Link href="/" aria-label="QuantSafe home"><Logo /></Link>
+            <Link href="/" aria-label="ArShield home"><Logo /></Link>
             <div className="flex items-center gap-3">
               <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] text-[#9aa3b2] hover:text-white">
                 <ArrowLeft className="h-3.5 w-3.5" /> Back to site

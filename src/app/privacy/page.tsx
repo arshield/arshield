@@ -4,8 +4,8 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy · QuantSafe',
-  description: 'QuantSafe Privacy Policy.',
+  title: 'Privacy Policy · ArShield',
+  description: 'ArShield Privacy Policy.',
 };
 
 const NOT_COLLECTED = [
@@ -31,7 +31,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-[16px] font-semibold text-[#e6e9ef]">The short version</h2>
               <p className="mt-2 text-[14.5px] leading-relaxed text-[#8a93a3]">
-                QuantSafe is built so that we cannot see your data even if we wanted to. Encryption and
+                ArShield is built so that we cannot see your data even if we wanted to. Encryption and
                 decryption happen in your browser. Files, keys, and message plaintext never reach us.
               </p>
             </section>
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-[16px] font-semibold text-[#e6e9ef]">Blockchain reads</h2>
               <p className="mt-2 text-[14.5px] leading-relaxed text-[#8a93a3]">
-                Once the $qsafe token is live, connecting a wallet makes the app read your token balance via a
+                Once the $arshield token is live, connecting a wallet makes the app read your token balance via a
                 Robinhood Chain RPC endpoint to determine your tier. This read is unauthenticated and is
                 identical to querying any block explorer: the RPC endpoint sees the address it is asked about.
                 No wallet address is stored by us. Pages you visit without connecting a wallet or submitting a
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
               <h2 className="text-[16px] font-semibold text-[#e6e9ef]">Contact</h2>
               <p className="mt-2 text-[14.5px] leading-relaxed text-[#8a93a3]">
                 Questions about privacy, or a security report:{' '}
-                <a href="mailto:hello@quantsafe.tech" className="text-brand-gold hover:underline">hello@quantsafe.tech</a>
+                <a href="mailto:hello@arc-shield.xyz" className="text-brand-gold hover:underline">hello@arc-shield.xyz</a>
               </p>
             </section>
           </div>

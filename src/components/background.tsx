@@ -1,6 +1,6 @@
 /**
  * Fixed full-page background: near-black navy with blue + gold radial glows and a
- * faint grid, matching QuantSafe. Two drifting orbs give the cinematic motion.
+ * faint grid, matching ArShield. Two drifting orbs give the cinematic motion.
  */
 export function Background() {
   return (

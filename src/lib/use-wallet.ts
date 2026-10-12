@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { QSAFE_DERIVATION_MESSAGE, identityFromWalletSignature, type QuantSafeKeyPair } from '@/lib/qsafe';
-import { RH_CHAIN_ID_HEX } from '@/lib/qsafe/constants';
+import { ARSHIELD_DERIVATION_MESSAGE, identityFromWalletSignature, type ArShieldKeyPair } from '@/lib/arshield';
+import { RH_CHAIN_ID_HEX } from '@/lib/arshield/constants';
 
 type Eip1193 = { request: (a: { method: string; params?: unknown[] }) => Promise<unknown> };
 
@@ -15,7 +15,7 @@ export type WalletState = { address: string; chainId: string } | null;
 
 /**
  * Minimal EIP-1193 hook. Reads chain, requests accounts, and personal_signs the fixed
- * QuantSafe derivation message. On Robinhood Chain (0x1237 = 4663) only.
+ * ArShield derivation message. On Robinhood Chain (0x1237 = 4663) only.
  */
 export function useWallet() {
   const [wallet, setWallet] = useState<WalletState>(null);
@@ -47,7 +47,7 @@ export function useWallet() {
 
   const disconnect = useCallback(() => setWallet(null), []);
 
-  const deriveIdentity = useCallback(async (): Promise<QuantSafeKeyPair> => {
+  const deriveIdentity = useCallback(async (): Promise<ArShieldKeyPair> => {
     const provider = getInjected();
     if (!provider) throw new Error('No wallet found');
     const accounts = (await provider.request({ method: 'eth_accounts' })) as string[];
@@ -56,7 +56,7 @@ export function useWallet() {
     try {
       const signatureHex = (await provider.request({
         method: 'personal_sign',
-        params: [QSAFE_DERIVATION_MESSAGE, accounts[0]],
+        params: [ARSHIELD_DERIVATION_MESSAGE, accounts[0]],
       })) as string;
       return identityFromWalletSignature(signatureHex);
     } finally {

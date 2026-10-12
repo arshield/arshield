@@ -10,8 +10,8 @@ import {
   encryptFile,
   decryptFile,
   buildMessageUrl,
-  type QuantSafeKeyPair,
-} from '@/lib/qsafe';
+  type ArShieldKeyPair,
+} from '@/lib/arshield';
 
 const MB = 1024 * 1024;
 const FREE_MAX = 25 * MB;
@@ -37,7 +37,7 @@ async function buildSealPng(fileHash: string, filename: string, address?: string
   ctx.fillStyle = '#d1a413'; ctx.font = 'bold 30px ui-monospace, monospace';
   ctx.fillText('QUANTUM SEAL', 56, 96);
   ctx.fillStyle = '#8a93a3'; ctx.font = '15px ui-monospace, monospace';
-  ctx.fillText('QuantSafe · post-quantum receipt', 56, 128);
+  ctx.fillText('ArShield · post-quantum receipt', 56, 128);
   ctx.fillStyle = '#e6e9ef'; ctx.font = '14px ui-monospace, monospace';
   const lines = [
     `file      ${filename}`,
@@ -54,7 +54,7 @@ async function buildSealPng(fileHash: string, filename: string, address?: string
 
   const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/png'));
   const buf = new Uint8Array(await blob!.arrayBuffer());
-  return injectTextChunk(buf, 'quantsafe', JSON.stringify({ version: 1, timestamp: new Date().toISOString(), algo: 'ML-KEM-768+X25519/ML-DSA-65', file_hash: fileHash, wallet: address ?? null }));
+  return injectTextChunk(buf, 'arshield', JSON.stringify({ version: 1, timestamp: new Date().toISOString(), algo: 'ML-KEM-768+X25519/ML-DSA-65', file_hash: fileHash, wallet: address ?? null }));
 }
 
 /** Insert a tEXt chunk right after IHDR so /verify can parse file_hash. */
@@ -94,7 +94,7 @@ export function AppWorkspace({
   source,
   onReset,
 }: {
-  source: { kind: 'wallet' | 'keyfile'; label: string; kp: QuantSafeKeyPair };
+  source: { kind: 'wallet' | 'keyfile'; label: string; kp: ArShieldKeyPair };
   onReset: () => void;
 }) {
   const [file, setFile] = useState<{ name: string; bytes: Uint8Array } | null>(null);
@@ -112,7 +112,7 @@ export function AppWorkspace({
     void f.arrayBuffer().then((b) => {
       const bytes = new Uint8Array(b);
       setFile({ name: f.name, bytes });
-      setMode(f.name.endsWith('.qsafe') ? 'decrypt' : 'encrypt');
+      setMode(f.name.endsWith('.arshield') ? 'decrypt' : 'encrypt');
       setResult(null);
       setStatus(null);
       if (bytes.length > FREE_MAX) {
@@ -128,7 +128,7 @@ export function AppWorkspace({
       const container = await encryptFile(file.bytes, file.name, source.kp.publicKey, source.kp.secretKey);
       const hash = await sha256Hex(container);
       const seal = await buildSealPng(hash, file.name);
-      setResult({ name: file.name + '.qsafe', bytes: container, seal, hash });
+      setResult({ name: file.name + '.arshield', bytes: container, seal, hash });
       setStatus('Quantum-Sealed · Ready to download');
     } catch (e) {
       setStatus(e instanceof Error ? e.message : String(e));
@@ -167,7 +167,7 @@ export function AppWorkspace({
       <div className="relative min-h-screen">
         <header className="border-b border-white/[0.06] bg-[#020610]/70 backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
-            <Link href="/" aria-label="QuantSafe home"><Logo /></Link>
+            <Link href="/" aria-label="ArShield home"><Logo /></Link>
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] px-3 py-1 text-[11px] font-medium text-emerald-300">
                 <ShieldCheck className="h-3.5 w-3.5" />
@@ -200,7 +200,7 @@ export function AppWorkspace({
             ) : (
               <div>
                 <FileLock2 className="mx-auto h-8 w-8 text-brand-gold" />
-                <div className="mt-3 font-semibold text-[#e6e9ef]">Drop a .qsafe file to decrypt</div>
+                <div className="mt-3 font-semibold text-[#e6e9ef]">Drop a .arshield file to decrypt</div>
                 <div className="mt-1 text-[12.5px] text-[#8a93a3]">or any file to encrypt · filename sealed inside</div>
               </div>
             )}
@@ -210,7 +210,7 @@ export function AppWorkspace({
             <div className="mt-4 flex gap-3">
               <Button variant="primary" className="flex-1" onClick={doEncrypt} disabled={busy}>
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                Encrypt → .qsafe
+                Encrypt → .arshield
               </Button>
               <Button variant="ghost" className="flex-1" onClick={doDecrypt} disabled={busy}>
                 Decrypt
@@ -229,10 +229,10 @@ export function AppWorkspace({
               <div className="flex flex-wrap gap-2">
                 <Button variant="ghost" size="sm" onClick={() => download(result.bytes, result.name)}>
                   <Download className="h-3.5 w-3.5" />
-                  {result.seal ? 'Download .qsafe' : 'Download file'}
+                  {result.seal ? 'Download .arshield' : 'Download file'}
                 </Button>
                 {result.seal && (
-                  <Button variant="ghost" size="sm" onClick={() => download(result.seal!, result.name.replace(/\.qsafe$/, '') + '.seal.png', 'image/png')}>
+                  <Button variant="ghost" size="sm" onClick={() => download(result.seal!, result.name.replace(/\.arshield$/, '') + '.seal.png', 'image/png')}>
                     <Download className="h-3.5 w-3.5" /> Download Seal
                   </Button>
                 )}
@@ -252,7 +252,7 @@ export function AppWorkspace({
           {/* Message composer */}
           <div className="panel mt-6 p-5">
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5b6474]">Compose</div>
-            <h3 className="text-[15px] font-semibold text-[#e6e9ef]">Share via .qsafe message</h3>
+            <h3 className="text-[15px] font-semibold text-[#e6e9ef]">Share via .arshield message</h3>
             <textarea
               value={msgText}
               onChange={(e) => setMsgText(e.target.value.slice(0, 65536))}

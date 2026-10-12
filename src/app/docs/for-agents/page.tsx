@@ -2,17 +2,17 @@ import type { Metadata } from 'next';
 import { DocsLayout, DocTitle, DocH2, DocP } from '@/components/layout-docs';
 
 export const metadata: Metadata = {
-  title: 'For Agents · QuantSafe Docs',
-  description: 'The QuantSafe MCP server: install, configure, and use the six post-quantum tools.',
+  title: 'For Agents · ArShield Docs',
+  description: 'The ArShield MCP server: install, configure, and use the six post-quantum tools.',
 };
 
 const TOOLS: [string, string][] = [
-  ['qsafe_encrypt_file', 'Encrypt bytes under ML-KEM-768 + X25519 + ML-DSA-65.'],
-  ['qsafe_decrypt_file', 'Decrypt a .qsafe blob with a keyfile or wallet signature.'],
-  ['qsafe_send_message', 'Wrap text in a shareable encrypted URL, optionally signed by your wallet.'],
-  ['qsafe_decrypt_message', 'Recover plaintext + signer from a QuantSafe message URL.'],
-  ['qsafe_verify_seal', 'Read the unsigned fields of a Quantum Seal PNG and compare SHA-256.'],
-  ['qsafe_sign_x402', 'Sign an x402 payload with ML-DSA-65 under context qsafe-v1-x402.'],
+  ['arshield_encrypt_file', 'Encrypt bytes under ML-KEM-768 + X25519 + ML-DSA-65.'],
+  ['arshield_decrypt_file', 'Decrypt a .arshield blob with a keyfile or wallet signature.'],
+  ['arshield_send_message', 'Wrap text in a shareable encrypted URL, optionally signed by your wallet.'],
+  ['arshield_decrypt_message', 'Recover plaintext + signer from a ArShield message URL.'],
+  ['arshield_verify_seal', 'Read the unsigned fields of a Quantum Seal PNG and compare SHA-256.'],
+  ['arshield_sign_x402', 'Sign an x402 payload with ML-DSA-65 under context arshield-v1-x402.'],
 ];
 
 export default function ForAgentsPage() {
@@ -28,9 +28,9 @@ export default function ForAgentsPage() {
       <DocP>Claude Desktop, Claude Code, Cursor or any MCP client. Requires Node.js 20+.</DocP>
       <div className="mb-4 whitespace-pre rounded-xl border border-white/[0.08] bg-[#03070f] px-4 py-3 font-mono text-[12.5px] text-[#c7cdd8]">{`{
   "mcpServers": {
-    "qsafe": {
+    "arshield": {
       "command": "npx",
-      "args": ["-y", "@quantsafe/mcp"]
+      "args": ["-y", "@arshield/mcp"]
     }
   }
 }`}</div>
@@ -49,7 +49,7 @@ export default function ForAgentsPage() {
       <DocP>
         A tool that signs or decrypts takes one key source: a passphrase-protected key file
         (keyfile_path, read from disk, or keyfile_json, plus its passphrase), or signature_hex plus the
-        address that made it: your EOA wallet&apos;s 65-byte signature of the QuantSafe derivation message,
+        address that made it: your EOA wallet&apos;s 65-byte signature of the ArShield derivation message,
         passed only over local stdio. A keyfile without its passphrase — or a signature without its
         address — returns an error. When every signer field is omitted, encrypting tools sign with a fresh
         ephemeral identity.
