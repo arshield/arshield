@@ -51,6 +51,6 @@ export const MESSAGE_URL_PREFIX = 'v1.';
 
 // No $arshield token is deployed yet. Replace with the real address when it launches.
 export const ARSHIELD_CONTRACT: string | null = null;
-export const RH_CHAIN_ID = 4663;
-export const RH_CHAIN_ID_HEX = '0x1237';
-export const RH_RPC = 'https://rpc.mainnet.chain.robinhood.com';
+export const ARC_CHAIN_ID = 5042;
+export const ARC_CHAIN_ID_HEX = '0x13b2';
+export const ARC_RPC = 'https://rpc.mainnet.arc.io';

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 const TIERS = [
   { name: 'Free', hold: '—', limit: 'A handful of file encryptions per day', note: 'No token, no wallet required to try it.' },
-  { name: 'Holder', hold: 'Hold $arshield', limit: 'A higher daily encryption capacity', note: 'Read from Robinhood Chain at connect time.' },
+  { name: 'Holder', hold: 'Hold $arshield', limit: 'A higher daily encryption capacity', note: 'Read from ARC at connect time.' },
   { name: 'Deep', hold: 'Hold more $arshield', limit: 'A materially higher daily capacity', note: 'Same mechanism, larger allowance.' },
 ];
 
@@ -47,7 +47,7 @@ export default function TokenomicsPage() {
       <DocH2>How the check works</DocH2>
       <DocP>
         Once the $arshield token is live, connecting a wallet makes the app read your token balance via
-        a Robinhood Chain RPC endpoint to determine your tier. This read is unauthenticated and is
+        an ARC RPC endpoint to determine your tier. This read is unauthenticated and is
         identical to querying any block explorer: the RPC endpoint sees the address it is asked
         about. No wallet address is stored by us. Pages you visit without connecting a wallet or
         submitting a Seal send nothing to the chain.

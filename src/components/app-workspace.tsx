@@ -46,7 +46,7 @@ async function buildSealPng(fileHash: string, filename: string, address?: string
     `${fileHash.slice(40, 72)}`,
     `time      ${new Date().toISOString()}`,
     address ? `wallet    ${address}` : `signer    ephemeral`,
-    `chain     Robinhood (4663)`,
+    `chain     ARC (5042)`,
   ];
   lines.forEach((l, i) => ctx.fillText(l, 56, 190 + i * 30));
   ctx.fillStyle = 'rgba(209,164,19,0.6)'; ctx.font = '11px ui-monospace, monospace';

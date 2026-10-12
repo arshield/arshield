@@ -15,14 +15,14 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'ArShield | Post-Quantum Security Infrastructure on Robinhood Chain',
+  title: 'ArShield | Post-Quantum Security Infrastructure on ARC',
   description:
-    'The post-quantum layer for data, messages and agents. Hybrid ML-KEM-768 + X25519 encryption, ML-DSA-65 signatures, zero backend. Built for Robinhood Chain.',
+    'The post-quantum layer for data, messages and agents. Hybrid ML-KEM-768 + X25519 encryption, ML-DSA-65 signatures, zero backend. Built for ARC.',
   metadataBase: new URL('https://arc-shield.xyz'),
   openGraph: {
     title: 'The post-quantum layer for data, messages and agents.',
     description:
-      'ArShield seals it post-quantum, on your device. Your agents too. ML-KEM-768 + X25519 hybrid, ML-DSA-65 signed, MCP-native, built for Robinhood Chain.',
+      'ArShield seals it post-quantum, on your device. Your agents too. ML-KEM-768 + X25519 hybrid, ML-DSA-65 signed, MCP-native, built for ARC.',
     url: 'https://arc-shield.xyz',
     siteName: 'ArShield',
     type: 'website',
