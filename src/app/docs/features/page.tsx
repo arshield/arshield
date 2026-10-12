@@ -20,7 +20,7 @@ const TODAY = [
 
 const NEXT = [
   { title: 'Multi-recipient envelopes', body: 'Encrypt once, allow several wallet addresses to open the same payload.' },
-  { title: 'On-chain attestations', body: 'Optionally anchor a Seal hash on Robinhood Chain for a public, timestamped proof.' },
+  { title: 'On-chain attestations', body: 'Optionally anchor a Seal hash on ARC for a public, timestamped proof.' },
   { title: 'Team workspaces', body: 'Shared key material within a group, without introducing a server that holds it.' },
   { title: 'Hardware-key support', body: 'Derive identity from a hardware wallet or FIDO2 authenticator.' },
 ];
