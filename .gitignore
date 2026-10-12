@@ -3,3 +3,7 @@ node_modules/
 out/
 *.log
 .DS_Store
+
+# monorepo packages
+packages/*/node_modules/
+packages/*/dist/
