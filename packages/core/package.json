@@ -1,0 +1,31 @@
+{
+  "name": "@arshield/core",
+  "version": "0.1.0",
+  "description": "ArShield post-quantum cryptographic core: hybrid ML-KEM-768 + X25519 encryption, ML-DSA-65 signatures, AES-256-GCM, Argon2id keyfiles.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@noble/curves": "^1.8.1",
+    "@noble/hashes": "^1.7.1",
+    "@noble/post-quantum": "^0.4.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  },
+  "license": "MIT"
+}
