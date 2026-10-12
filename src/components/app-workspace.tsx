@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Check, Copy, Download, FileLock2, FileText, Loader2, RotateCcw, ShieldCheck, X } from 'lucide-react';
+import { Check, Copy, Download, FileLock2, FileText, Loader2, RotateCcw, ShieldCheck } from 'lucide-react';
 import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
 import { Button } from '@/components/button';
@@ -12,16 +12,10 @@ import {
   buildMessageUrl,
   type QuantSafeKeyPair,
 } from '@/lib/qsafe';
-import { cn } from '@/lib/utils';
 
 const MB = 1024 * 1024;
 const FREE_MAX = 25 * MB;
 
-function b64(bytes: Uint8Array) {
-  let bin = '';
-  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-  return btoa(bin);
-}
 
 function download(bytes: Uint8Array, name: string, type = 'application/octet-stream') {
   const blob = new Blob([bytes as unknown as BlobPart], { type });
