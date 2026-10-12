@@ -8,7 +8,6 @@ import { Footer } from '@/components/footer';
 import { Background } from '@/components/background';
 import { HeroOrbit } from '@/components/hero-orbit';
 import { Reveal, HeroItem } from '@/components/reveal';
-import { Button, Eyebrow } from '@/components/button';
 import { Section } from '@/components/section';
 import { cn } from '@/lib/utils';
 
