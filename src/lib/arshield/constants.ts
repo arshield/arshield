@@ -49,7 +49,8 @@ export const ARSHIELD_DERIVATION_MESSAGE =
 export const MESSAGE_URL_BASE = 'https://arc-shield.xyz/m/#';
 export const MESSAGE_URL_PREFIX = 'v1.';
 
-export const ARSHIELD_CONTRACT = '0xad4d04cb9DaBA0FD0472e11EB8a9DB0D3318eFC8';
+// No $arshield token is deployed yet. Replace with the real address when it launches.
+export const ARSHIELD_CONTRACT: string | null = null;
 export const RH_CHAIN_ID = 4663;
 export const RH_CHAIN_ID_HEX = '0x1237';
 export const RH_RPC = 'https://rpc.mainnet.chain.robinhood.com';

@@ -42,8 +42,6 @@ const FAQS = [
   { q: 'Why a token?', a: 'Holding $arshield on Robinhood Chain raises the two limits the web app enforces: from 3 encryptions a day on Free to 25, 250 or no daily cap, and from 25 MB files to 100 MB, 1 GB or no tier cap. Encryption, Quantum Seals, messages, the MCP server and wallet or key file mode are open to every tier. No subscriptions, no accounts, just a wallet balance. Until the token launches, every wallet is on the Free tier.' },
 ];
 
-const CONTRACT = '0xad4d04cb9DaBA0FD0472e11EB8a9DB0D3318eFC8';
-
 /* ---------- Page ---------- */
 export default function HomePage() {
   return (
@@ -358,7 +356,6 @@ function BunkerAgents() {
 }
 
 function Tiers() {
-  const [copied, setCopied] = useState(false);
   return (
     <Section
       id="tiers"
@@ -399,24 +396,11 @@ function Tiers() {
       <Reveal delay={0.1}>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-2 gap-y-3 text-[13px] text-[#5b6474]">
           <span>The only $arshield that sets your tier:</span>
-          <code className="rounded-md border border-white/[0.08] bg-white/[0.02] px-2 py-1 font-mono text-[11px] text-[#9aa3b2]">{CONTRACT}</code>
-          <span>on Robinhood Chain ·</span>
-          <button
-            onClick={() => { navigator.clipboard?.writeText(CONTRACT); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-            className="inline-flex items-center gap-1 text-brand-gold hover:text-[#e9c35f]"
-          >
-            <Copy className="h-3 w-3" />{copied ? 'Copied' : 'Copy'}
-          </button>
-          <span>·</span>
-          <a
-            href={`https://explorer.robinhood.com/address/${CONTRACT}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-brand-gold hover:text-[#e9c35f]"
-          >
-            View on explorer
-            <ArrowUpRight className="h-3 w-3" />
-          </a>
+          <span className="inline-flex items-center gap-2 rounded-md border border-brand-gold/25 bg-brand-gold/[0.06] px-3 py-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold">
+            <span className="animate-soft-pulse h-1.5 w-1.5 rounded-full bg-brand-gold" />
+            Coming soon
+          </span>
+          <span>on Robinhood Chain</span>
         </div>
       </Reveal>
     </Section>
