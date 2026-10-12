@@ -10,7 +10,12 @@ import { useMemo } from 'react';
 export function HeroOrbit() {
   const particles = useMemo(() => {
     const out: { cx: number; cy: number; r: number; o: number }[] = [];
-    // Place particles along three ellipses centered near (600, 340).
+    // Deterministic pseudo-random so SSR and client render identically (no hydration drift).
+    const rnd = (n: number) => {
+      const s = Math.sin(n * 12.9898) * 43758.5453;
+      return s - Math.floor(s);
+    };
+    let k = 0;
     const ellipses = [
       { rx: 560, ry: 190, rot: 0, count: 16, cy: 320 },
       { rx: 430, ry: 150, rot: -8, count: 10, cy: 300 },
@@ -21,7 +26,7 @@ export function HeroOrbit() {
         const t = (i / e.count) * Math.PI * 2 + e.rot * 0.05;
         const x = 600 + e.rx * Math.cos(t);
         const y = e.cy + e.ry * Math.sin(t);
-        out.push({ cx: x, cy: y, r: 2.6 + Math.random() * 1.6, o: 0.35 + Math.random() * 0.6 });
+        out.push({ cx: x, cy: y, r: 2.6 + rnd(k++) * 1.6, o: 0.35 + rnd(k++) * 0.6 });
       }
     }
     return out;
