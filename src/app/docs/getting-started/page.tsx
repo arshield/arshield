@@ -1,10 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Background } from '@/components/background';
-import { Header } from '@/components/header';
-import { Footer } from '@/components/footer';
 import { DocsLayout, DocTitle, DocH2, DocP } from '@/components/layout-docs';
-import { Section } from '@/components/section';
 
 export const metadata: Metadata = {
   title: 'Getting Started · QuantSafe Docs',
