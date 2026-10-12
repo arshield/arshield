@@ -3,13 +3,13 @@ import { DocsLayout, DocTitle, DocH2, DocP } from '@/components/layout-docs';
 import { Reveal } from '@/components/reveal';
 
 export const metadata: Metadata = {
-  title: 'Roadmap | QuantSafe Docs',
-  description: 'What ships in QuantSafe today, and what is next. The honest plan, with no dates.',
+  title: 'Roadmap | ArShield Docs',
+  description: 'What ships in ArShield today, and what is next. The honest plan, with no dates.',
 };
 
 const SHIPPED = [
   'Hybrid post-quantum encryption in the browser (ML-KEM-768 + X25519, ML-DSA-65 + Ed25519, AES-256-GCM)',
-  'The .qsafe envelope container',
+  'The .arshield envelope container',
   'Quantum Seal PNG export with embedded tEXt-chunk metadata',
   'Local Seal verification by dropping a PNG',
   'Wallet-derived identity from a single signing message',
@@ -23,7 +23,7 @@ const NEXT = [
   { title: 'On-chain attestations', body: 'Optionally anchor a Seal hash on Robinhood Chain.' },
   { title: 'Team workspaces', body: 'Shared key material for a group, with no server custody.' },
   { title: 'Hardware-key identity', body: 'Derive identity from a hardware wallet or FIDO2 key.' },
-  { title: '$qsafe tier thresholds', body: 'Published capacity limits, decided with the token launch.' },
+  { title: '$arshield tier thresholds', body: 'Published capacity limits, decided with the token launch.' },
   { title: 'Independent audit', body: 'A third-party review of the crypto core and the browser implementation.' },
 ];
 

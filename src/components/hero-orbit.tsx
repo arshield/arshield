@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 
 /**
  * Hero orbital backdrop: elliptical data-route curves with gold particles ("neutrons")
- * sitting along them, over a faint dotted orbital grid. Matches QuantSafe's hero SVG
+ * sitting along them, over a faint dotted orbital grid. Matches ArShield's hero SVG
  * (viewBox 0 0 1200 640, circles filled with a gold radial gradient).
  */
 export function HeroOrbit() {

@@ -4,7 +4,7 @@ import { Reveal } from './reveal';
 
 /**
  * Standard section wrapper with a gold eyebrow, centered heading and optional subtitle.
- * Matches QuantSafe's `Section` primitive (eyebrow / title / subtitle).
+ * Matches ArShield's `Section` primitive (eyebrow / title / subtitle).
  */
 export function Section({
   id,

@@ -4,9 +4,9 @@ import { DocsLayout, DocTitle, DocH2, DocP } from '@/components/layout-docs';
 import { Reveal } from '@/components/reveal';
 
 export const metadata: Metadata = {
-  title: 'Security | QuantSafe Docs',
+  title: 'Security | ArShield Docs',
   description:
-    'Five guarantees QuantSafe makes about your data. Zero-knowledge, NIST-standardized.',
+    'Five guarantees ArShield makes about your data. Zero-knowledge, NIST-standardized.',
 };
 
 const GUARANTEES = [
@@ -18,7 +18,7 @@ const GUARANTEES = [
   {
     icon: ServerOff,
     title: 'No custody, no control',
-    body: 'QuantSafe has no ability to decrypt, access, or modify your files at any time. There is no server that processes your data.',
+    body: 'ArShield has no ability to decrypt, access, or modify your files at any time. There is no server that processes your data.',
   },
   {
     icon: KeyRound,
@@ -43,7 +43,7 @@ export default function SecurityPage() {
       <DocTitle eyebrow="Security">Five guarantees about your data</DocTitle>
       <p className="mb-10 max-w-2xl text-[14.5px] leading-relaxed text-[#8a93a3]">
         Security claims are only useful when they are specific. These are the five properties
-        QuantSafe is built to preserve, and how each one is enforced.
+        ArShield is built to preserve, and how each one is enforced.
       </p>
 
       <div className="flex flex-col gap-3">
@@ -76,8 +76,8 @@ export default function SecurityPage() {
       <DocH2>Reporting a vulnerability</DocH2>
       <DocP>
         If you believe you have found a security issue, email{' '}
-        <a href="mailto:hello@quantsafe.tech" className="text-brand-gold hover:underline">
-          hello@quantsafe.tech
+        <a href="mailto:hello@arc-shield.xyz" className="text-brand-gold hover:underline">
+          hello@arc-shield.xyz
         </a>
         . Please include reproduction steps and, where possible, a minimal proof of concept.
       </DocP>
