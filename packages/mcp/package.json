@@ -1,0 +1,32 @@
+{
+  "name": "@arshield/mcp",
+  "version": "0.1.0",
+  "description": "ArShield MCP server — post-quantum encryption for AI agents: hybrid ML-KEM-768 + X25519, ML-DSA-65 signatures, run fully local via stdio.",
+  "type": "module",
+  "bin": {
+    "arshield-mcp": "dist/server.js"
+  },
+  "main": "./dist/server.js",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup src/server.ts --format esm --clean",
+    "dev": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@arshield/core": "file:../core",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "license": "MIT"
+}
