@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { ARSHIELD_DERIVATION_MESSAGE, identityFromWalletSignature, type ArShieldKeyPair } from '@/lib/arshield';
-import { RH_CHAIN_ID_HEX } from '@/lib/arshield/constants';
+import { ARC_CHAIN_ID, ARC_CHAIN_ID_HEX, ARC_RPC } from '@/lib/arshield/constants';
 
 type Eip1193 = { request: (a: { method: string; params?: unknown[] }) => Promise<unknown> };
 
@@ -13,9 +13,24 @@ export function getInjected(): Eip1193 | null {
 
 export type WalletState = { address: string; chainId: string } | null;
 
+/** Params for wallet_addEthereumChain — ARC uses native USDC as its gas token. */
+const ARC_CHAIN_PARAMS = {
+  chainId: ARC_CHAIN_ID_HEX,
+  chainName: 'ARC',
+  nativeCurrency: { name: 'USD Coin', symbol: 'USDC', decimals: 6 },
+  rpcUrls: [ARC_RPC],
+  blockExplorerUrls: ['https://explorer.arc.network'],
+};
+
+function isArc(chainId: string | undefined | null): boolean {
+  if (!chainId) return false;
+  return chainId.toLowerCase() === ARC_CHAIN_ID_HEX || chainId === String(ARC_CHAIN_ID);
+}
+
 /**
- * Minimal EIP-1193 hook. Reads chain, requests accounts, and personal_signs the fixed
- * ArShield derivation message. On Robinhood Chain (0x1237 = 4663) only.
+ * Minimal EIP-1193 hook. Requests accounts, makes sure the wallet is on ARC
+ * (adding the chain if it is unknown), then personal_signs the fixed ArShield
+ * derivation message. Wallet-derived keys are only valid on ARC.
  */
 export function useWallet() {
   const [wallet, setWallet] = useState<WalletState>(null);
@@ -25,25 +40,42 @@ export function useWallet() {
 
   useEffect(() => setMounted(true), []);
 
+  const ensureArc = useCallback(async (provider: Eip1193): Promise<void> => {
+    let chainId = (await provider.request({ method: 'eth_chainId' })) as string;
+    if (isArc(chainId)) return;
+    try {
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ARC_CHAIN_ID_HEX }] });
+    } catch (e) {
+      // 4902 = chain not added to the wallet yet.
+      const code = (e as { code?: number })?.code;
+      if (code === 4902 || code === -32603) {
+        await provider.request({ method: 'wallet_addEthereumChain', params: [ARC_CHAIN_PARAMS] });
+      } else {
+        throw e;
+      }
+    }
+    chainId = (await provider.request({ method: 'eth_chainId' })) as string;
+    if (!isArc(chainId)) {
+      throw new Error(`Switch to ARC (${ARC_CHAIN_ID}). Current: ${chainId}`);
+    }
+  }, []);
+
   const connect = useCallback(async () => {
     setError(null);
     const provider = getInjected();
     if (!provider) {
-      setError('No injected wallet found. Install MetaMask and add Robinhood Chain.');
+      setError('No injected wallet found. Install MetaMask, then connect to add ARC automatically.');
       return;
     }
     try {
       const accounts = (await provider.request({ method: 'eth_requestAccounts' })) as string[];
+      await ensureArc(provider);
       const chainId = (await provider.request({ method: 'eth_chainId' })) as string;
-      if (chainId !== RH_CHAIN_ID_HEX && chainId !== '4663') {
-        setError(`Switch to Robinhood Chain (4663). Current: ${chainId}`);
-        return;
-      }
       setWallet({ address: accounts[0], chainId });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, []);
+  }, [ensureArc]);
 
   const disconnect = useCallback(() => setWallet(null), []);
 
@@ -52,6 +84,7 @@ export function useWallet() {
     if (!provider) throw new Error('No wallet found');
     const accounts = (await provider.request({ method: 'eth_accounts' })) as string[];
     if (!accounts?.[0]) throw new Error('Wallet not connected');
+    await ensureArc(provider);
     setDeriving(true);
     try {
       const signatureHex = (await provider.request({
@@ -62,7 +95,7 @@ export function useWallet() {
     } finally {
       setDeriving(false);
     }
-  }, []);
+  }, [ensureArc]);
 
   useEffect(() => {
     const provider = getInjected();

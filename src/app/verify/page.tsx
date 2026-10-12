@@ -8,7 +8,7 @@ import { Eyebrow } from '@/components/button';
 import { SealDropzone } from '@/components/seal-dropzone';
 
 export const metadata: Metadata = {
-  title: 'ArShield | Post-Quantum Security Infrastructure on Robinhood Chain',
+  title: 'ArShield | Post-Quantum Security Infrastructure on ARC',
   description: 'Verify a Quantum Seal: read its unsigned metadata fields and cross-check the file hash.',
 };
 
