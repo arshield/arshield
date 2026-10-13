@@ -56,6 +56,10 @@ async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
 
 function readPngMetadata(bytes: ArrayBuffer): SealMetadata {
   // Parse PNG tEXt / iTXt chunks for the arshield keys we care about.
+  //
+  // Two shapes exist in the wild and both must read:
+  //  1) one JSON blob under the keyword "arshield-seal" (what /app writes)
+  //  2) one keyword per field: version, file_hash, ... (hand-authored seals)
   const view = new DataView(bytes);
   const meta: SealMetadata = {};
   const known = new Set([
@@ -80,9 +84,25 @@ function readPngMetadata(bytes: ArrayBuffer): SealMetadata {
       const raw = decoder.decode(new Uint8Array(bytes, dataStart, length));
       const sep = raw.indexOf('\u0000');
       if (sep > 0) {
-        const key = raw.slice(0, sep);
+        const key = raw.slice(0, sep).replace(/\0/g, '').trim();
         const value = raw.slice(sep + 1).replace(/\u0000/g, '').trim();
-        if (known.has(key)) {
+
+        // Shape 1: a single JSON payload under an arshield keyword.
+        // /app writes "arshield"; accept the explicit variants too.
+        if (key === 'arshield' || key === 'arshield-seal' || key === 'arshield_seal') {
+          try {
+            const obj = JSON.parse(value) as Record<string, unknown>;
+            for (const k of Object.keys(obj)) {
+              if (!known.has(k)) continue;
+              const v = obj[k];
+              if (v === null || v === undefined) continue;
+              (meta as Record<string, string>)[k] = String(v);
+            }
+          } catch {
+            /* not JSON — ignore */
+          }
+        } else if (known.has(key)) {
+          // Shape 2: one keyword per field.
           (meta as Record<string, string>)[key] = value;
         }
       }

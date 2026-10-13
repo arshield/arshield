@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { MessageComposer } from '@/components/message-composer';
+import { MessagePage } from './message-page';
 
 export const metadata: Metadata = {
   title: 'ArShield | Post-Quantum Security Infrastructure on ARC',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function MessagesPage() {
-  return <MessageComposer />;
+  return <MessagePage />;
 }
