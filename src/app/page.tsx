@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Check, Copy, ScrollText, Shield as ShieldIcon, ShieldCheck, Terminal } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check, Copy, Shield as ShieldIcon, ShieldCheck, Terminal } from 'lucide-react';
 import { useState } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
@@ -45,7 +45,7 @@ const FAQS = [
   { q: 'What does quantum-safe actually mean?', a: 'It means the cryptography is designed to resist attacks from both classical and quantum computers. ArShield uses ML-KEM-768 and ML-DSA-65, the standards chosen by NIST in FIPS 203 and 204. To guard against unknown weaknesses in any single algorithm, we combine ML-KEM with classical X25519 in a hybrid scheme, an attacker has to break both.' },
   { q: 'Do I need a wallet?', a: 'No. A wallet is the fastest path, and it’s what powers token-gated tiers and Seal anchoring on ARC. Your keys come from one wallet signature, so they can be reproduced only if the wallet signs the same way every time — the app reads the signature back and refuses if it does not recover to the connected address. MPC and threshold signers that produce a different signature each time will fail that check, which is the intended behaviour. For files that must outlast your wallet’s curve, generate a passphrase-protected key file instead: its keys are random and never touch your wallet’s signature, so if curves fall, an attacker still has to break ML-KEM-768 too. Agents pass a key file, or the same wallet signature, to the MCP server.' },
   { q: 'Can ArShield read my files?', a: 'No. The web app is a static site and the MCP server runs in your own agent runtime. Every byte is encrypted and decrypted on your device, and no server of ours ever receives your files, their names or your keys. We hold no plaintext and no keys, so there is nothing to hand over. Like any web app, the browser side is only as safe as the code our site serves.' },
-  { q: 'What happens if I lose my wallet or key?', a: 'Without the wallet or the key file, your files are unrecoverable. There is no server copy and no reset, that’s the whole point of zero-knowledge. If you use a wallet, save a key file backup from /app (Back up keys) after you first derive your keys: it holds the same keys, wrapped with a passphrase you choose. Store that file and its passphrase somewhere safe.' },
+  { q: 'What happens if I lose my wallet or key?', a: 'Without the wallet or the key file, your files are unrecoverable. There is no server copy and no reset, that’s the whole point of zero-knowledge. A wallet-derived key comes back from the same wallet signature, so the practical backup of the wallet path is the wallet itself. If you would rather not depend on that, generate a passphrase-protected key file from the key-source screen: it holds random keys and opens your files on its own. Store the file and its passphrase somewhere safe.' },
   { q: 'Why a token?', a: 'Holding $arshield on ARC raises the two limits the web app enforces: from 3 encryptions a day on Free to 25, 250 or no daily cap, and from 25 MB files to 100 MB, 1 GB or no tier cap. Encryption, Quantum Seals, messages, the MCP server and wallet or key file mode are open to every tier. No subscriptions, no accounts, just a wallet balance. Until the token launches, every wallet is on the Free tier.' },
 ];
 
@@ -60,14 +60,11 @@ export default function HomePage() {
         <Standards />
         <WhyNow />
         <Protocol />
-        <Journey />
         <PaperBand />
-        <Layer />
         <ThreeSurfaces />
-        <Technology />
-        <BunkerAgents />
-        <Tiers />
         <Bento />
+        <Tiers />
+        <McpInstall />
         <Shield />
         <Faq />
       </main>
@@ -226,38 +223,22 @@ function WhyNow() {
   );
 }
 
-function Layer() {
-  const cards = [
-    { t: 'Encrypted communications', b: 'Files and messages sealed with ML-KEM-768 + X25519 and signed with ML-DSA-65, on your device.', live: true },
-    { t: 'Agent identities', b: 'One post-quantum identity for your browser and your agents: the same keys open the same envelopes over MCP.' },
-    { t: 'Payment authorization', b: 'Agents sign x402 payment payloads with ML-DSA-65 under their own context, so anyone can check which key signed.' },
-  ];
+function CopyButton({ text }: { text: string }) {
+  const [done, setDone] = useState(false);
   return (
-    <Section
-      eyebrow="ArShield"
-      title="The post-quantum security layer for autonomous finance."
-      subtitle="A unified infrastructure protecting agent identities, encrypted communications and payment authorization."
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard?.writeText(text);
+        setDone(true);
+        setTimeout(() => setDone(false), 1500);
+      }}
+      className="inline-flex flex-none items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#9aa3b2] transition-colors hover:border-brand-gold/40 hover:text-brand-gold"
+      aria-label="Copy to clipboard"
     >
-      <div className="grid gap-4 md:grid-cols-3">
-        {cards.map((c, i) => (
-          <Reveal key={c.t} delay={i * 0.08}>
-            <div className="panel group h-full p-6 transition-colors hover:border-brand-gold/25">
-              <div className="mb-4 flex items-center justify-between">
-                <ShieldIcon className="h-5 w-5 text-brand-gold" />
-                {c.live && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
-                    <span className="animate-soft-pulse h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    Live
-                  </span>
-                )}
-              </div>
-              <h3 className="text-[15px] font-semibold text-[#e6e9ef]">{c.t}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#8a93a3]">{c.b}</p>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-    </Section>
+      {done ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+      {done ? 'Copied' : 'Copy'}
+    </button>
   );
 }
 
@@ -265,129 +246,84 @@ function ThreeSurfaces() {
   const items = [
     { n: '01', t: 'Humans', tag: 'WEB APP · /APP', b: 'Drop a file in the browser. Out comes a .arshield envelope that only your wallet or your key file can open, plus a Quantum Seal receipt. Store it anywhere and open it on any device with the same keys.', cta: 'Launch app', href: '/app' },
     { n: '02', t: 'Agents (MCP)', tag: 'MCP · STDIO', b: 'Call arshield_encrypt_file from Claude, Cursor, or any MCP-aware agent. Same envelope, same crypto, same signer model. Zero browser.', cta: 'MCP server', href: '/mcp' },
-    { n: '03', t: 'Payments (x402)', tag: 'MCP · arshield_sign_x402', b: 'Agents sign x402 payment payloads with ML-DSA-65 over MCP, under their own context, so anyone holding the agent’s post-quantum public key can check which key signed. One Quantum Seal for every paid call is Shield, on the roadmap.', cta: 'See arshield_sign_x402', href: '/mcp' },
+    { n: '03', t: 'Payments (x402)', tag: 'MCP · arshield_sign_x402', b: 'Agents sign x402 payment payloads with ML-DSA-65 over MCP, under their own context, so anyone holding the agent’s post-quantum public key can check which key signed. Every paid call gets its own Seal once Shield ships.', cta: 'See arshield_sign_x402', href: '/mcp' },
   ];
   return (
-    <Section
-      eyebrow="One envelope, three surfaces"
-      title="Humans drop files. Agents call tools. Receipts get signed."
-      subtitle="ArShield runs entirely in your browser or in your agent runtime. There is no backend that sees plaintext, not ours, not anyone’s."
-    >
-      <div className="grid gap-4 md:grid-cols-3">
-        {items.map((it, i) => (
-          <Reveal key={it.n} delay={i * 0.08}>
-            <div className="panel h-full p-6">
-              <div className="mb-4 font-mono text-3xl font-bold text-white/10">{it.n}</div>
-              <h3 className="text-lg font-semibold text-[#e6e9ef]">{it.t}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-[#8a93a3]">{it.b}</p>
-              <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#5b6474]">{it.tag}</div>
-              <Link href={it.href} className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-gold hover:gap-2.5 transition-all">
-                {it.cta}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+    // Full-bleed: this section breaks out of the shared container and puts the
+    // heading on the left with the cards in a wide rail, so it does not read
+    // as the same "centred heading + three cards" beat as everything else.
+    <section id="surfaces" className="relative my-16 border-y border-white/[0.05] bg-white/[0.012] py-16 sm:py-20">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_1fr] lg:gap-14">
+          <div>
+            <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-brand-gold">
+              One envelope, three surfaces
             </div>
-          </Reveal>
-        ))}
+            <h2 className="text-balance text-3xl font-bold leading-[1.15] tracking-tight text-[#e6e9ef] sm:text-[2.35rem]">
+              Humans drop files. Agents call tools. Receipts get signed.
+            </h2>
+            <p className="mt-4 text-[14.5px] leading-relaxed text-[#8a93a3]">
+              ArShield runs entirely in your browser or in your agent runtime. There is no backend that
+              sees plaintext, not ours, not anyone&apos;s.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {items.map((it, i) => (
+              <Reveal key={it.n} delay={i * 0.08} className="h-full">
+                <div className="panel flex h-full flex-col p-6">
+                  <div className="mb-4 font-mono text-3xl font-bold text-white/10">{it.n}</div>
+                  <h3 className="text-lg font-semibold text-[#e6e9ef]">{it.t}</h3>
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-[#8a93a3]">{it.b}</p>
+                  <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#5b6474]">{it.tag}</div>
+                  <Link href={it.href} className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand-gold transition-all hover:gap-2.5">
+                    {it.cta}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
       </div>
-    </Section>
+    </section>
   );
 }
 
-function Technology() {
-  const cards = [
-    { t: 'Hybrid post-quantum', b: 'ML-KEM-768 combined with X25519 via HKDF-SHA256. Attackers have to break both. The same defence-in-depth used by Signal, Chrome, and Cloudflare.', tag: 'FIPS 203 · FIPS 204' },
-    { t: 'MCP-native interface', b: 'Six PQC tools exposed over the Model Context Protocol: encrypt files, sign x402 receipts, message agents. Same crypto core as the web app. Agent-ready.', tag: 'MCP · STDIO · 6 TOOLS' },
-    { t: 'Built for ARC', b: 'Your $arshield balance on ARC will set your tier, read on-chain against native USDC once the token is live. Wallets connect as injected browser wallets only, with no relay in between.', tag: 'ARC · $ARSHIELD TIERS · X402' },
-  ];
-  return (
-    <Section
-      id="technology"
-      eyebrow="Technology"
-      title="Built on the standards securing the next decade."
-      subtitle="NIST-grade post-quantum cryptography, wired into MCP for agents and built for ARC. Same envelope, every surface."
-    >
-      <div className="grid gap-4 md:grid-cols-3">
-        {cards.map((c, i) => (
-          <Reveal key={c.t} delay={i * 0.08}>
-            <div className="panel h-full p-6">
-              <h3 className="text-[15px] font-semibold text-[#e6e9ef]">{c.t}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-[#8a93a3]">{c.b}</p>
-              <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.2em] text-[#5b6474]">{c.tag}</div>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-      <Reveal delay={0.2}>
-        <p className="mt-8 text-center font-mono text-[11px] uppercase tracking-[0.24em] text-[#5b6474]">
-          NIST FIPS 203 + 204 · MCP · ARC · X402
-        </p>
-      </Reveal>
-    </Section>
-  );
-}
-
-function BunkerAgents() {
+function McpInstall() {
   const tools = ['arshield_encrypt_file', 'arshield_decrypt_file', 'arshield_send_message', 'arshield_decrypt_message', 'arshield_verify_seal', 'arshield_sign_x402'];
-  const [copied, setCopied] = useState(false);
   return (
     <Section
+      id="mcp"
+      align="left"
       eyebrow="Live on npm"
       title="Bunker mode for agents."
-      subtitle="Agents hold keys and sign on curves all day. The same post-quantum envelope ships as six MCP tools for Claude, Cursor and any MCP client."
+      subtitle="The same post-quantum envelope, shipped as six MCP tools for Claude, Cursor and any MCP client. It runs on your machine, so the keys never enter the chat."
     >
       <Reveal>
-        <div className="panel mx-auto max-w-2xl p-6">
-          <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#5b6474]">Install</div>
+        <div className="panel p-6">
+          <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#5b6474]">Install</div>
           <div className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#03070f] px-4 py-3">
             <code className="font-mono text-sm text-brand-gold">$ npx -y @arshield/mcp</code>
-            <button
-              onClick={() => {
-                navigator.clipboard?.writeText('npx -y @arshield/mcp');
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1500);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-[#9aa3b2] transition-colors hover:border-brand-gold/40 hover:text-brand-gold"
-            >
-              <Copy className="h-3 w-3" />
-              {copied ? 'Copied' : 'Copy'}
-            </button>
+            <CopyButton text="npx -y @arshield/mcp" />
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {tools.map((t) => (
-              <div key={t} className="rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2 font-mono text-[10.5px] text-[#9aa3b2]">
+              <div key={t} className="truncate rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2 font-mono text-[10.5px] text-[#9aa3b2]">
                 {t}
               </div>
             ))}
           </div>
-        </div>
-      </Reveal>
-
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {[
-          { icon: ShieldIcon, t: 'One identity, two doors.', b: 'Seal a file in /app, open it in your agent with the same key file or wallet signature. Same keys, same .arshield format.' },
-          { icon: Terminal, t: 'Runs on your machine.', b: 'A local stdio server that reads your key file from disk: it never enters the chat, only its passphrase does. No ArShield server, no network calls, no telemetry.' },
-          { icon: ScrollText, t: 'Signs what agents pay.', b: 'x402 payment payloads signed with ML-DSA-65, under their own context.' },
-        ].map((c, i) => (
-          <Reveal key={c.t} delay={i * 0.08}>
-            <div className="panel h-full p-6">
-              <c.icon className="mb-4 h-5 w-5 text-brand-gold" />
-              <h3 className="text-[15px] font-semibold text-[#e6e9ef]">{c.t}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#8a93a3]">{c.b}</p>
-            </div>
-          </Reveal>
-        ))}
-      </div>
-
-      <Reveal delay={0.2}>
-        <div className="mt-8 flex items-center justify-center gap-6">
-          <Link href="/mcp" className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-gold transition-colors hover:text-[#e9c35f]">
-            See the MCP server
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </Link>
-          <a href="https://www.npmjs.com/package/@arshield/mcp" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-[#5b6474] transition-colors hover:text-[#9aa3b2]">
-            npm · v0.1.0
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </a>
+          <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Link href="/mcp" className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-gold transition-colors hover:text-[#e9c35f]">
+              See the MCP server
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+            <a href="https://www.npmjs.com/package/@arshield/mcp" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-[#5b6474] transition-colors hover:text-[#9aa3b2]">
+              npm · v0.1.0
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
         </div>
       </Reveal>
     </Section>
@@ -522,44 +458,15 @@ function Protocol() {
       id="protocol"
       align="left"
       eyebrow="How it works"
-      title="Five steps, no servers."
-      subtitle="Every envelope is built locally, one primitive at a time. Nothing in the chain is optional: a copy taken today still needs all four broken to open."
-    >
-      <ProtocolDiagram />
-    </Section>
-  );
-}
-
-function Journey() {
-  return (
-    <Section
-      id="journey"
-      eyebrow="What actually happens"
       title="A file goes in. An unopenable envelope comes out."
-      subtitle="One route, four stops. Nothing on this path touches a server of ours."
+      subtitle="Five steps, one primitive at a time, all in your browser. Nothing in the chain is optional: a copy taken today needs every one of them broken to open."
     >
       <Reveal>
-        <div className="rounded-[1.5rem] border border-white/[0.07] bg-[#03070f]/60 p-4 sm:p-8">
+        <div className="mb-10 rounded-[1.5rem] border border-white/[0.07] bg-[#03070f]/60 p-4 sm:p-8">
           <EnvelopeFlow />
         </div>
       </Reveal>
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {[
-          ['You pick a file', 'It is read into memory in the browser. It is never sent anywhere.'],
-          ['It gets wrapped', 'ML-KEM-768 + X25519 agree a key; AES-256-GCM seals the bytes with it.'],
-          ['It gets signed', 'ML-DSA-65 signs the whole envelope, so a later edit breaks it visibly.'],
-        ].map(([t, d], i) => (
-          <Reveal key={t} delay={i * 0.06}>
-            <div className="h-full rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
-              <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-progress)]">
-                step {i + 1}
-              </div>
-              <div className="text-[14.5px] font-semibold text-[#eef1f6]">{t}</div>
-              <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#8a93a3]">{d}</p>
-            </div>
-          </Reveal>
-        ))}
-      </div>
+      <ProtocolDiagram />
     </Section>
   );
 }

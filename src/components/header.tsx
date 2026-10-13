@@ -45,7 +45,7 @@ const NAV = [
   { href: '/mcp', label: 'MCP' },
   { href: '/m', label: 'Messages' },
   { href: '/verify', label: 'Verify' },
-  { href: '/#technology', label: 'Technology' },
+  { href: '/#protocol', label: 'How it works' },
   { href: '/#tiers', label: 'Tiers' },
   { href: '/#shield', label: 'Shield' },
   { href: '/#faq', label: 'FAQ' },
