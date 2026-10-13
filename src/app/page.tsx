@@ -346,7 +346,7 @@ function BunkerAgents() {
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
           <a href="https://www.npmjs.com/package/@arshield/mcp" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-[#5b6474] transition-colors hover:text-[#9aa3b2]">
-            npm · v0.1.1
+            npm · v0.1.0
             <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         </div>
