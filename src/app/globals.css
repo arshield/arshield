@@ -22,10 +22,35 @@
   --color-card: var(--card);
   --color-brand-gold: #d1a413;
   --color-brand-ink: #031020;
-  /* Second accent: a calm teal used for "verified / safe / done" states.
-     Keeps gold for action and gives the eye somewhere to rest. */
-  --color-verify: #6ee7a8;
-  --color-verify-dim: #3f8f66;
+
+  /* ---- Semantic state colors ----------------------------------------
+     Before this the gold token did every job (brand, CTA, progress,
+     decoration, success), so the eye had no way to read state. Now each
+     hue means exactly one thing:
+
+       action   (gold)  : things you can click / the brand
+       verified (teal)  : a cryptographic check passed
+       progress (amber) : work in flight
+       danger   (red)   : a check failed or something is wrong
+       idle     (slate) : nothing happening / disabled / pending
+
+     Gold is no longer allowed to mean success, and teal is no longer a
+     hairline outline — it fills the row it belongs to.
+     ------------------------------------------------------------------ */
+  --color-action: #d1a413;
+  --color-action-soft: rgba(209, 164, 19, 0.1);
+  --color-verified: #4ade9b;
+  --color-verified-soft: rgba(74, 222, 155, 0.12);
+  --color-progress: #e5a23c;
+  --color-progress-soft: rgba(229, 162, 60, 0.12);
+  --color-danger: #f87171;
+  --color-danger-soft: rgba(248, 113, 113, 0.12);
+  --color-idle: #7c889c;
+
+  /* Raised surface for the one light-on-dark inversion used mid-page. */
+  --color-paper: #f2f0ea;
+  --color-paper-ink: #12131a;
+
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
   --radius-sm: calc(var(--radius) * 0.5);
