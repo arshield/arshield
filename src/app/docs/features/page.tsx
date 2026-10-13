@@ -11,7 +11,7 @@ const TODAY = [
   { title: 'File encryption', body: 'Drop any file, get an encrypted payload plus a .arshield envelope. Hybrid post-quantum, entirely client-side.' },
   { title: 'File decryption', body: 'Open a .arshield envelope with your wallet, key file, or passphrase and recover the original file in your browser.' },
   { title: 'Quantum Seal PNG', body: 'Export a shareable PNG Seal carrying version, timestamp, algorithm, and file hash in its tEXt chunks.' },
-  { title: 'Seal verification', body: 'Drop a Philips Seal PNG to parse its tEXt chunks locally and inspect the embedded metadata.' },
+  { title: 'Seal verification', body: 'Drop a Quantum Seal PNG to parse its tEXt chunks locally and inspect the embedded metadata.' },
   { title: 'Wallet-derived identity', body: 'No accounts. A single signing message derives your deterministic identity key pair on first use.' },
   { title: 'Encrypted messages', body: 'Send short encrypted messages through a link, with the plaintext never leaving your device.' },
   { title: 'MCP server', body: 'Drive ArShield from an AI agent over the Model Context Protocol, with the wallet as identity.' },

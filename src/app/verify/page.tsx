@@ -53,8 +53,8 @@ const STEPS = [
     body: 'Hash the .arshield envelope the Seal describes and compare it to the Seal’s file_hash. A mismatch means the file changed after it was sealed.',
   },
   {
-    title: 'Confirm the signer',
-    body: 'Check the signature against the signer’s public key. The Seal names the wallet; the signature proves the envelope came from it.',
+    title: 'Confirm with the envelope',
+    body: 'The Seal is unsigned, so it cannot prove anything on its own. Its file_hash is only useful once it matches a real envelope — decrypt that envelope to verify the ML-DSA-65 signature against the signer key.',
   },
 ];
 
