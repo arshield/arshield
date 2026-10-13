@@ -7,7 +7,7 @@ import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
 import { Button } from '@/components/button';
 import { Reveal } from '@/components/reveal';
-import { encryptFile, buildMessageUrl, ephemeralIdentity } from '@/lib/arshield';
+import { encryptFile, buildMessageUrl, ephemeralIdentity, parsePublicKey } from '@/lib/arshield';
 import { cn } from '@/lib/utils';
 
 const MAX = 65536;
@@ -24,11 +24,24 @@ export function MessageComposer() {
   const build = async () => {
     setErr(null); setBusy(true);
     try {
-      const id = ephemeralIdentity();
       const bytes = new TextEncoder().encode(text.slice(0, MAX));
-      const blob = await encryptFile(bytes, 'message.txt', id.publicKey, id.secretKey);
-      const u = buildMessageUrl(blob, id.publicKey, { sk: id.secretKey, pk: id.publicKey });
-      setUrl(u);
+      const id = ephemeralIdentity();
+
+      if (recipient === 'specific') {
+        if (!recipientKey.trim()) throw new Error('Paste the recipient’s public key first.');
+        const recipientPk = parsePublicKey(recipientKey.trim());
+        // Encrypt TO the recipient's key; sign with our ephemeral id so the
+        // recipient can verify who sealed it. The URL carries only the envelope
+        // + signer key (2 segments) — only the recipient's key can open it.
+        const blob = await encryptFile(bytes, 'message.txt', recipientPk, id.secretKey);
+        const u = buildMessageUrl(blob, id.publicKey);
+        setUrl(u);
+      } else {
+        // Self-decrypting: ephemeral key is embedded in the URL (4 segments).
+        const blob = await encryptFile(bytes, 'message.txt', id.publicKey, id.secretKey);
+        const u = buildMessageUrl(blob, id.publicKey, { sk: id.secretKey, pk: id.publicKey });
+        setUrl(u);
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally { setBusy(false); }

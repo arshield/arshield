@@ -127,3 +127,20 @@ export function parseMessageUrl(url: string): ParsedMessageUrl {
 }
 
 export { b64urlEncode, b64urlDecode };
+
+/**
+ * Serialize a public key into the shareable form ("Copy my public key").
+ * base64url of JSON { mlkem, x25519, mldsa } — same shape encodeKey uses.
+ */
+export function encodePublicKey(pk: ArShieldPublicKey): string {
+  return encodeKey(pk as unknown as KeyShape<ArShieldPublicKey>);
+}
+
+/**
+ * Parse a public key from its base64url JSON form. Throws if the shape or
+ * any key length is wrong. Used to encrypt a message to a specific recipient.
+ */
+export function parsePublicKey(s: string): ArShieldPublicKey {
+  const out = decodeKey(s, 'recipient public key', PUBLIC_KEY_LENGTHS);
+  return out as unknown as ArShieldPublicKey;
+}

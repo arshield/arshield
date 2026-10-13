@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run lint && npm run typecheck && npm run build",
     "mcp:build": "npm --prefix packages/core run build && npm --prefix packages/mcp run build",
-    "mcp:interop": "node scripts/interop-test.mjs"
+    "mcp:interop": "node scripts/interop-test.mjs",
+    "mcp:recipient": "node scripts/recipient-e2e.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
