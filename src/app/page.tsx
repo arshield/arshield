@@ -10,6 +10,8 @@ import { HeroOrbit } from '@/components/hero-orbit';
 import { HeroPanel } from '@/components/hero-panel';
 import { ProtocolDiagram } from '@/components/protocol-diagram';
 import { BentoFeatures } from '@/components/bento-features';
+import { Counter, Magnetic } from '@/components/motion-bits';
+import { useParallax } from '@/lib/use-parallax';
 import { Reveal, HeroItem } from '@/components/reveal';
 import { Section } from '@/components/section';
 import { cn } from '@/lib/utils';
@@ -71,6 +73,15 @@ export default function HomePage() {
 }
 
 /* ---------- Sections ---------- */
+function ParallaxWrap({ children }: { children: React.ReactNode }) {
+  const ref = useParallax(14);
+  return (
+    <div ref={ref} className="will-change-transform">
+      {children}
+    </div>
+  );
+}
+
 function Hero() {
   return (
     <section className="relative overflow-hidden">
@@ -105,27 +116,33 @@ function Hero() {
 
           <HeroItem delay={0.45}>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-              <Link href="/app" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'bg-gold-gradient text-brand-ink shadow-gold-glow hover:-translate-y-[1px] hover:shadow-gold-glow-lg')}>
-                Launch app
-                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-              </Link>
-              <Link href="/mcp" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'border border-white/10 bg-white/[0.02] text-[#e6e9ef] hover:border-white/20 hover:bg-white/[0.05]')}>
-                <Terminal className="h-4 w-4" />
-                MCP server
-              </Link>
+              <Magnetic strength={5}>
+                <Link href="/app" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'bg-gold-gradient text-brand-ink shadow-gold-glow hover:shadow-gold-glow-lg')}>
+                  Launch app
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                </Link>
+              </Magnetic>
+              <Magnetic strength={4}>
+                <Link href="/mcp" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'border border-white/10 bg-white/[0.02] text-[#e6e9ef] hover:border-white/20 hover:bg-white/[0.05]')}>
+                  <Terminal className="h-4 w-4" />
+                  MCP server
+                </Link>
+              </Magnetic>
             </div>
           </HeroItem>
 
           <HeroItem delay={0.6}>
             <div className="mt-9 flex items-center justify-center gap-6 lg:justify-start">
               {[
-                ['6', 'MCP tools'],
-                ['3', 'surfaces'],
-                ['0', 'servers'],
+                [6, 'MCP tools', ''],
+                [3, 'surfaces', ''],
+                [0, 'servers', ''],
               ].map(([n, l]) => (
-                <div key={l} className="text-left">
-                  <div className="font-mono text-xl font-semibold text-[#e6e9ef]">{n}</div>
-                  <div className="text-[11px] uppercase tracking-[0.14em] text-[#5b6474]">{l}</div>
+                <div key={l as string} className="text-left">
+                  <div className="font-mono text-xl font-semibold text-[#e6e9ef]">
+                    <Counter to={n as number} />
+                  </div>
+                  <div className="text-[11px] uppercase tracking-[0.14em] text-[#5b6474]">{l as string}</div>
                 </div>
               ))}
             </div>
@@ -134,7 +151,9 @@ function Hero() {
 
         {/* Right column: the product working, not decoration. */}
         <HeroItem delay={0.5} className="w-full">
-          <HeroPanel />
+          <ParallaxWrap>
+            <HeroPanel />
+          </ParallaxWrap>
         </HeroItem>
       </div>
     </section>
@@ -499,6 +518,7 @@ function Protocol() {
   return (
     <Section
       id="protocol"
+      align="left"
       eyebrow="How it works"
       title="Five steps, no servers."
       subtitle="Every envelope is built locally, one primitive at a time. Nothing in the chain is optional: a copy taken today still needs all four broken to open."
@@ -511,6 +531,7 @@ function Protocol() {
 function Bento() {
   return (
     <Section
+      align="left"
       eyebrow="Why ArShield"
       title="Built to keep working when the rest doesn't."
       subtitle="Post-quantum by default, portable by design, and verifiable offline."
@@ -521,7 +542,7 @@ function Bento() {
 }
 
 function Faq() {
-  const [open, setOpen] = useState<number | null>(null);
+  const [open, setOpen] = useState<number | null>(0);
   return (
     <Section
       id="faq"
