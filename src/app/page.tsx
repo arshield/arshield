@@ -88,7 +88,7 @@ function Hero() {
     <section className="relative overflow-hidden">
       <HeroOrbit />
       {/* Asymmetric hero: copy on the left, a live sealing panel on the right. */}
-      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-28 lg:pt-24">
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pb-14 pt-12 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-16 lg:pt-20">
         <div className="text-center lg:text-left">
           <HeroItem delay={0}>
             <Link
@@ -252,7 +252,7 @@ function ThreeSurfaces() {
     // Full-bleed: this section breaks out of the shared container and puts the
     // heading on the left with the cards in a wide rail, so it does not read
     // as the same "centred heading + three cards" beat as everything else.
-    <section id="surfaces" className="relative my-16 border-y border-white/[0.05] bg-white/[0.012] py-16 sm:py-20">
+    <section id="surfaces" className="relative my-10 border-y border-white/[0.05] bg-white/[0.012] py-16 sm:py-20">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_1fr] lg:gap-14">
           <div>

@@ -13,7 +13,7 @@ import { Reveal } from './reveal';
  */
 export function PaperBand() {
   return (
-    <section className="relative my-4">
+    <section className="relative my-2">
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         <Reveal>
           <div className="relative overflow-hidden rounded-[1.75rem] bg-[var(--color-paper)] px-6 py-12 sm:px-12 sm:py-16">

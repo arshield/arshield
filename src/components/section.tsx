@@ -30,10 +30,13 @@ export function Section({
   const titleAlign = isLeft ? 'text-left' : 'mx-auto text-center';
 
   return (
-    <section id={id} className={cn('relative scroll-mt-20 py-20 sm:py-24', className)}>
+    // Vertical rhythm: 64px on small screens, 80px from sm up. Section padding
+    // stacks (bottom of one + top of the next), so this lands the
+    // content-to-heading gap near 200px — roomy without feeling empty.
+    <section id={id} className={cn('relative scroll-mt-20 py-16 sm:py-20', className)}>
       <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
         {(eyebrow || title) && (
-          <div className={cn('mb-10', isLeft ? 'max-w-2xl' : '', headerAlign)}>
+          <div className={cn('mb-8', isLeft ? 'max-w-2xl' : '', headerAlign)}>
             {eyebrow && (
               <Reveal>
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand-gold/25 bg-brand-gold/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-gold">
