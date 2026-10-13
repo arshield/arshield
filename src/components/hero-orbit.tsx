@@ -44,7 +44,7 @@ export function HeroOrbit() {
 
   return (
     <svg
-      className="pointer-events-none absolute inset-x-0 top-0 h-[46rem] w-full opacity-[0.6] mix-blend-screen"
+      className="pointer-events-none absolute inset-x-0 top-0 h-[46rem] w-full opacity-[0.28] mix-blend-screen"
       viewBox="0 0 1200 640"
       preserveAspectRatio="xMidYMid slice"
       aria-hidden
