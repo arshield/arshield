@@ -19,7 +19,7 @@ const ARC_CHAIN_PARAMS = {
   chainName: 'ARC',
   nativeCurrency: { name: 'USD Coin', symbol: 'USDC', decimals: 6 },
   rpcUrls: [ARC_RPC],
-  blockExplorerUrls: ['https://explorer.arc.network'],
+  blockExplorerUrls: ['https://explorer.arc.io'],
 };
 
 function isArc(chainId: string | undefined | null): boolean {
