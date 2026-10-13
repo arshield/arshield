@@ -47,18 +47,22 @@ const NODES = [
 export function ProtocolDiagram() {
   return (
     <div className="relative">
-      {/* connector line behind the nodes */}
-      <div className="pointer-events-none absolute left-0 right-0 top-[3.15rem] hidden h-px bg-gradient-to-r from-transparent via-white/10 to-transparent lg:block" />
+      {/* connector track behind the nodes */}
+      <div className="pointer-events-none absolute left-[10%] right-[10%] top-[3.15rem] hidden h-px bg-gradient-to-r from-brand-gold/10 via-brand-gold/35 to-[#6ee7a8]/25 lg:block" />
 
       <div className="grid gap-3 lg:grid-cols-5">
         {NODES.map((n, i) => (
           <Reveal key={n.title} delay={i * 0.08}>
             <div className="group relative h-full">
+              {/* connector chevron between nodes */}
+              {i < NODES.length - 1 && (
+                <span className="pointer-events-none absolute -right-[0.72rem] top-[2.65rem] hidden h-2.5 w-2.5 rotate-45 border-r border-t border-brand-gold/40 lg:block" aria-hidden />
+              )}
               {/* step index */}
               <div className="mb-3 flex items-center gap-2">
                 <span
                   className={
-                    'grid h-6 w-6 place-items-center rounded-full border font-mono text-[10px] font-semibold ' +
+                    'relative grid h-6 w-6 place-items-center rounded-full border font-mono text-[10px] font-semibold ' +
                     (n.good
                       ? 'border-[#6ee7a8]/40 bg-[#6ee7a8]/10 text-[#6ee7a8]'
                       : n.accent
