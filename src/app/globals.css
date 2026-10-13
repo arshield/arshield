@@ -41,8 +41,12 @@
   --color-action-soft: rgba(209, 164, 19, 0.1);
   --color-verified: #4ade9b;
   --color-verified-soft: rgba(74, 222, 155, 0.12);
-  --color-progress: #e5a23c;
-  --color-progress-soft: rgba(229, 162, 60, 0.12);
+  /* Progress sits a clear step away from the brand gold. The old amber
+     (#e5a23c) read as "gold, slightly lighter", which made the two
+     indistinguishable at a glance. This is warmer and more orange, so a
+     working row never looks like a branded one. */
+  --color-progress: #f0a13a;
+  --color-progress-soft: rgba(240, 161, 58, 0.14);
   --color-danger: #f87171;
   --color-danger-soft: rgba(248, 113, 113, 0.12);
   --color-idle: #7c889c;
