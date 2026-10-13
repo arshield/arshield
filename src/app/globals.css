@@ -22,6 +22,10 @@
   --color-card: var(--card);
   --color-brand-gold: #d1a413;
   --color-brand-ink: #031020;
+  /* Second accent: a calm teal used for "verified / safe / done" states.
+     Keeps gold for action and gives the eye somewhere to rest. */
+  --color-verify: #6ee7a8;
+  --color-verify-dim: #3f8f66;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
   --radius-sm: calc(var(--radius) * 0.5);
