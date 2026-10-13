@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 const SHIPPED = [
-  'Hybrid post-quantum encryption in the browser (ML-KEM-768 + X25519, ML-DSA-65 + Ed25519, AES-256-GCM)',
+  'Hybrid post-quantum encryption in the browser (ML-KEM-768 + X25519 KEM, ML-DSA-65 signatures, AES-256-GCM)',
   'The .arshield envelope container',
   'Quantum Seal PNG export with embedded tEXt-chunk metadata',
   'Local Seal verification by dropping a PNG',

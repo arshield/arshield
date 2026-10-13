@@ -23,17 +23,17 @@ const GUARANTEES = [
   {
     icon: KeyRound,
     title: 'Keys never leave your device',
-    body: 'Key material is derived and used locally, in WebAssembly. If you lose your wallet, key file, and passphrase, your encrypted files are unrecoverable. This is by design.',
+    body: 'Key material is derived and used locally, in your browser. If you lose your wallet, key file, and passphrase, your encrypted files are unrecoverable. This is by design.',
   },
   {
     icon: FileLock2,
     title: 'Authenticated and tamper-evident',
-    body: 'AES-256-GCM binds ciphertext to its metadata through an authentication tag. Any modification is detected at decrypt time.',
+    body: 'AES-256-GCM binds ciphertext to its metadata through an authentication tag, and ML-DSA-65 signs the whole envelope. Any modification is detected at decrypt time.',
   },
   {
     icon: BadgeCheck,
     title: 'NIST-standardized primitives',
-    body: 'ML-KEM-768, ML-DSA-65, X25519, Ed25519, and AES-256-GCM. No experimental or home-rolled cryptography.',
+    body: 'ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204), X25519 (RFC 7748), and AES-256-GCM. No experimental or home-rolled cryptography.',
   },
 ];
 

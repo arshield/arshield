@@ -8,9 +8,10 @@ export const metadata: Metadata = {
 };
 
 const TIERS = [
-  { name: 'Free', hold: '—', limit: 'A handful of file encryptions per day', note: 'No token, no wallet required to try it.' },
-  { name: 'Holder', hold: 'Hold $arshield', limit: 'A higher daily encryption capacity', note: 'Read from ARC at connect time.' },
-  { name: 'Deep', hold: 'Hold more $arshield', limit: 'A materially higher daily capacity', note: 'Same mechanism, larger allowance.' },
+  { name: 'Free', hold: 'No token needed', limit: '3 file encryptions per day, up to 25 MB each', note: 'No wallet required to try it.' },
+  { name: 'Holder', hold: '≥ $20 in $arshield', limit: '25 per day, up to 100 MB each', note: 'Read from ARC when you connect.' },
+  { name: 'Pro', hold: '≥ $100 in $arshield', limit: '250 per day, up to 1 GB each', note: 'The same mechanism, a larger allowance.' },
+  { name: 'Whale', hold: '≥ $1,000 in $arshield', limit: 'Unlimited per day, no size cap', note: 'The ceiling removed entirely.' },
 ];
 
 export default function TokenomicsPage() {
@@ -40,8 +41,8 @@ export default function TokenomicsPage() {
         ))}
       </div>
       <DocP>
-        Tier thresholds are announced with the token launch and are subject to change. The exact
-        numbers live in the app once the token is live.
+        Thresholds are the current values; they are announced with the token launch and may change.
+        The live numbers are always shown in the app once the token is deployed.
       </DocP>
 
       <DocH2>How the check works</DocH2>

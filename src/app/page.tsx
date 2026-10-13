@@ -27,7 +27,7 @@ const STANDARDS = [
   ['MCP', 'AGENT INTERFACE'],
   ['x402', 'AGENT PAYMENTS'],
   ['ARC', '$ARSHIELD TIERS'],
-  ['noble', 'OPEN-SOURCE CRYPTO'],
+  ['@noble', 'OPEN-SOURCE CRYPTO'],
 ];
 
 const TIERS = [
@@ -43,7 +43,7 @@ const FAQS = [
   { q: 'What’s x402?', a: 'HTTP 402 Payment Required, brought back by Coinbase as a protocol for agents to pay APIs in stablecoins. The MCP tool arshield_sign_x402 signs any x402 payment payload with ML-DSA-65 under its own context, so anyone holding the agent’s public key and the payload can check which key signed a receipt; /mcp documents the exact bytes that are signed and where the signing key sits in the public key. Sealing every paid call on its own is what Shield is for, and Shield is on the roadmap.' },
   { q: 'How do I use the MCP server?', a: 'The server runs over stdio inside your own agent runtime and exposes six tools: arshield_encrypt_file, arshield_decrypt_file, arshield_send_message, arshield_decrypt_message, arshield_verify_seal and arshield_sign_x402. Keys come from a passphrase-protected key file (keyfile_path, which the server reads from disk, or keyfile_json, plus its passphrase), or from signature_hex plus the address that made it: your EOA wallet’s 65-byte signature of the ArShield derivation message, passed only over local stdio. So a file you encrypt in /app with your wallet opens in your agent with that wallet’s signature, no key export needed.' },
   { q: 'What does quantum-safe actually mean?', a: 'It means the cryptography is designed to resist attacks from both classical and quantum computers. ArShield uses ML-KEM-768 and ML-DSA-65, the standards chosen by NIST in FIPS 203 and 204. To guard against unknown weaknesses in any single algorithm, we combine ML-KEM with classical X25519 in a hybrid scheme, an attacker has to break both.' },
-  { q: 'Do I need a wallet?', a: 'No. A wallet is the fastest path, and it’s what powers token-gated tiers and Seal anchoring on ARC. Your keys come from one wallet signature, so they can be reproduced only if the wallet signs the same way every time. The first time an address derives keys on a device, the app asks for two signatures and refuses if they differ, which is how MPC and threshold signers show up. Those keys rest on your wallet’s curve. For files that must outlast it, generate a passphrase-protected key file instead: its keys are random and never touch your wallet’s signature, so if curves fall, an attacker still has to break ML-KEM-768 too. Agents pass a key file, or the same wallet signature, to the MCP server.' },
+  { q: 'Do I need a wallet?', a: 'No. A wallet is the fastest path, and it’s what powers token-gated tiers and Seal anchoring on ARC. Your keys come from one wallet signature, so they can be reproduced only if the wallet signs the same way every time — the app reads the signature back and refuses if it does not recover to the connected address. MPC and threshold signers that produce a different signature each time will fail that check, which is the intended behaviour. For files that must outlast your wallet’s curve, generate a passphrase-protected key file instead: its keys are random and never touch your wallet’s signature, so if curves fall, an attacker still has to break ML-KEM-768 too. Agents pass a key file, or the same wallet signature, to the MCP server.' },
   { q: 'Can ArShield read my files?', a: 'No. The web app is a static site and the MCP server runs in your own agent runtime. Every byte is encrypted and decrypted on your device, and no server of ours ever receives your files, their names or your keys. We hold no plaintext and no keys, so there is nothing to hand over. Like any web app, the browser side is only as safe as the code our site serves.' },
   { q: 'What happens if I lose my wallet or key?', a: 'Without the wallet or the key file, your files are unrecoverable. There is no server copy and no reset, that’s the whole point of zero-knowledge. If you use a wallet, save a key file backup from /app (Back up keys) after you first derive your keys: it holds the same keys, wrapped with a passphrase you choose. Store that file and its passphrase somewhere safe.' },
   { q: 'Why a token?', a: 'Holding $arshield on ARC raises the two limits the web app enforces: from 3 encryptions a day on Free to 25, 250 or no daily cap, and from 25 MB files to 100 MB, 1 GB or no tier cap. Encryption, Quantum Seals, messages, the MCP server and wallet or key file mode are open to every tier. No subscriptions, no accounts, just a wallet balance. Until the token launches, every wallet is on the Free tier.' },
@@ -265,7 +265,7 @@ function ThreeSurfaces() {
   const items = [
     { n: '01', t: 'Humans', tag: 'WEB APP · /APP', b: 'Drop a file in the browser. Out comes a .arshield envelope that only your wallet or your key file can open, plus a Quantum Seal receipt. Store it anywhere and open it on any device with the same keys.', cta: 'Launch app', href: '/app' },
     { n: '02', t: 'Agents (MCP)', tag: 'MCP · STDIO', b: 'Call arshield_encrypt_file from Claude, Cursor, or any MCP-aware agent. Same envelope, same crypto, same signer model. Zero browser.', cta: 'MCP server', href: '/mcp' },
-    { n: '03', t: 'Payments (x402)', tag: 'MCP · ARSHIELD_SIGN_X402', b: 'Agents sign x402 payment payloads with ML-DSA-65 over MCP, under their own context, so anyone holding the agent’s post-quantum public key can check which key signed. One Quantum Seal for every paid call is Shield, on the roadmap.', cta: 'See arshield_sign_x402', href: '/mcp' },
+    { n: '03', t: 'Payments (x402)', tag: 'MCP · arshield_sign_x402', b: 'Agents sign x402 payment payloads with ML-DSA-65 over MCP, under their own context, so anyone holding the agent’s post-quantum public key can check which key signed. One Quantum Seal for every paid call is Shield, on the roadmap.', cta: 'See arshield_sign_x402', href: '/mcp' },
   ];
   return (
     <Section
@@ -296,8 +296,8 @@ function ThreeSurfaces() {
 function Technology() {
   const cards = [
     { t: 'Hybrid post-quantum', b: 'ML-KEM-768 combined with X25519 via HKDF-SHA256. Attackers have to break both. The same defence-in-depth used by Signal, Chrome, and Cloudflare.', tag: 'FIPS 203 · FIPS 204' },
-    { t: 'MCP-native interface', b: 'Six PQC tools exposed over the Model Context Protocol, encrypt files, sign x402 receipts, message agents. Same crypto core as the web app. Agent-ready.', tag: 'MCP · STDIO · 6 TOOLS' },
-    { t: 'Built for ARC', b: 'The USD value of your $arshield on ARC sets your tier, priced on-chain from its pool against native USDC. Wallets connect as injected browser wallets only, with no relay in between.', tag: 'ARC · $ARSHIELD TIERS · X402' },
+    { t: 'MCP-native interface', b: 'Six PQC tools exposed over the Model Context Protocol: encrypt files, sign x402 receipts, message agents. Same crypto core as the web app. Agent-ready.', tag: 'MCP · STDIO · 6 TOOLS' },
+    { t: 'Built for ARC', b: 'Your $arshield balance on ARC will set your tier, read on-chain against native USDC once the token is live. Wallets connect as injected browser wallets only, with no relay in between.', tag: 'ARC · $ARSHIELD TIERS · X402' },
   ];
   return (
     <Section
@@ -400,7 +400,7 @@ function Tiers() {
       id="tiers"
       eyebrow="$ARSHIELD"
       title={<>Holders encrypt more.<br className="hidden sm:block" /> The quantum-safe token on ARC.</>}
-      subtitle="The envelope is post-quantum. $arshield sets how much you seal: the USD value of your balance on ARC raises encryptions per day and maximum file size in the web app. Seals, messages and the MCP server are the same on every tier. No subscriptions, no accounts: your balance is your tier."
+      subtitle="The envelope is post-quantum. Once $arshield is live, your balance on ARC will set how much you seal: its USD value raises encryptions per day and maximum file size in the web app. Seals, messages and the MCP server are the same on every tier. No subscriptions, no accounts: your balance will be your tier."
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {TIERS.map((t, i) => (

@@ -309,10 +309,10 @@ export function AppWorkspace({
             )}
           </div>
 
-          {/* Back up keys */}
+          {/* Key backup guidance */}
           <div className="mt-6 flex justify-center">
-            <Link href="/docs/architecture" className="text-[12.5px] text-[#5b6474] hover:text-[#9aa3b2]">
-              Back up keys → save a passphrase-wrapped key file
+            <Link href="/docs/getting-started" className="text-[12.5px] text-[#5b6474] hover:text-[#9aa3b2]">
+              Backing up your keys → why a key file outlives your wallet
             </Link>
           </div>
         </main>

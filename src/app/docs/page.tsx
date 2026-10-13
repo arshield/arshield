@@ -26,7 +26,7 @@ const CARDS = [
   {
     href: '/docs/security',
     label: 'Security',
-    desc: 'Five guarantees we make about your data. Zero-knowledge, NIST-standardized.',
+    desc: 'Five guarantees about your data. Zero-knowledge, NIST-standardized.',
     icon: ShieldCheck,
   },
   {
@@ -50,7 +50,7 @@ const CARDS = [
   {
     href: '/docs/roadmap',
     label: 'Roadmap',
-    desc: 'What ships today, and what is next on the roadmap with no date. The honest plan.',
+    desc: 'What ships today, and what is next. An honest plan, with no dates.',
     icon: Fingerprint,
   },
 ];
