@@ -8,9 +8,11 @@ import { Footer } from '@/components/footer';
 import { Background } from '@/components/background';
 import { HeroOrbit } from '@/components/hero-orbit';
 import { HeroPanel } from '@/components/hero-panel';
+import { EnvelopeFlow } from '@/components/envelope-flow';
 import { ProtocolDiagram } from '@/components/protocol-diagram';
 import { BentoFeatures } from '@/components/bento-features';
-import { Counter, Magnetic } from '@/components/motion-bits';
+import { PaperBand } from '@/components/paper-band';
+import { Magnetic } from '@/components/motion-bits';
 import { useParallax } from '@/lib/use-parallax';
 import { Reveal, HeroItem } from '@/components/reveal';
 import { Section } from '@/components/section';
@@ -58,6 +60,8 @@ export default function HomePage() {
         <Standards />
         <WhyNow />
         <Protocol />
+        <Journey />
+        <PaperBand />
         <Layer />
         <ThreeSurfaces />
         <Technology />
@@ -102,15 +106,15 @@ function Hero() {
 
           <HeroItem delay={0.15}>
             <h1 className="text-balance text-4xl font-light leading-[1.08] tracking-tight text-[#d9dbe1] sm:text-5xl md:text-6xl lg:text-[4.25rem]">
-              The post-quantum layer
-              <span className="text-gradient-gold mt-1 block font-bold">for data, messages and agents.</span>
+              Seal a file today
+              <span className="text-gradient-gold mt-1 block font-bold">that only opens if both curves fall.</span>
             </h1>
           </HeroItem>
 
           <HeroItem delay={0.3}>
             <p className="mx-auto mt-6 max-w-xl text-balance text-[15px] leading-relaxed text-[#8a93a3] sm:text-base lg:mx-0">
-              Coins can run to a fresh address. Your data can’t. ArShield seals it post-quantum, on your
-              device. Your agents too.
+              A coin can move to a fresh address when the maths gets shaky. A file can’t. ArShield wraps it in
+              ML-KEM-768 + X25519 on your device, signs it, and hands you something you can store anywhere.
             </p>
           </HeroItem>
 
@@ -118,32 +122,30 @@ function Hero() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Magnetic strength={5}>
                 <Link href="/app" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'bg-gold-gradient text-brand-ink shadow-gold-glow hover:shadow-gold-glow-lg')}>
-                  Launch app
+                  Seal a file
                   <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </Link>
               </Magnetic>
               <Magnetic strength={4}>
                 <Link href="/mcp" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'border border-white/10 bg-white/[0.02] text-[#e6e9ef] hover:border-white/20 hover:bg-white/[0.05]')}>
                   <Terminal className="h-4 w-4" />
-                  MCP server
+                  Use it from an agent
                 </Link>
               </Magnetic>
             </div>
           </HeroItem>
 
           <HeroItem delay={0.6}>
-            <div className="mt-9 flex items-center justify-center gap-6 lg:justify-start">
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 lg:justify-start">
               {[
-                [6, 'MCP tools', ''],
-                [3, 'surfaces', ''],
-                [0, 'servers', ''],
-              ].map(([n, l]) => (
-                <div key={l as string} className="text-left">
-                  <div className="font-mono text-xl font-semibold text-[#e6e9ef]">
-                    <Counter to={n as number} />
-                  </div>
-                  <div className="text-[11px] uppercase tracking-[0.14em] text-[#5b6474]">{l as string}</div>
-                </div>
+                'FIPS 203 + 204',
+                'no account, no upload',
+                'runs on your machine',
+              ].map((t) => (
+                <span key={t} className="inline-flex items-center gap-2 text-[12.5px] text-[#8a93a3]">
+                  <span className="h-1 w-1 rounded-full bg-[var(--color-verified)]" />
+                  {t}
+                </span>
               ))}
             </div>
           </HeroItem>
@@ -524,6 +526,40 @@ function Protocol() {
       subtitle="Every envelope is built locally, one primitive at a time. Nothing in the chain is optional: a copy taken today still needs all four broken to open."
     >
       <ProtocolDiagram />
+    </Section>
+  );
+}
+
+function Journey() {
+  return (
+    <Section
+      id="journey"
+      eyebrow="What actually happens"
+      title="A file goes in. An unopenable envelope comes out."
+      subtitle="One route, four stops. Nothing on this path touches a server of ours."
+    >
+      <Reveal>
+        <div className="rounded-[1.5rem] border border-white/[0.07] bg-[#03070f]/60 p-4 sm:p-8">
+          <EnvelopeFlow />
+        </div>
+      </Reveal>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {[
+          ['You pick a file', 'It is read into memory in the browser. It is never sent anywhere.'],
+          ['It gets wrapped', 'ML-KEM-768 + X25519 agree a key; AES-256-GCM seals the bytes with it.'],
+          ['It gets signed', 'ML-DSA-65 signs the whole envelope, so a later edit breaks it visibly.'],
+        ].map(([t, d], i) => (
+          <Reveal key={t} delay={i * 0.06}>
+            <div className="h-full rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
+              <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-progress)]">
+                step {i + 1}
+              </div>
+              <div className="text-[14.5px] font-semibold text-[#eef1f6]">{t}</div>
+              <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#8a93a3]">{d}</p>
+            </div>
+          </Reveal>
+        ))}
+      </div>
     </Section>
   );
 }
