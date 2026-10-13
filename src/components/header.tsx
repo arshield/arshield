@@ -10,26 +10,31 @@ import { useWallet } from '@/lib/use-wallet';
 export function Logo({ className = '' }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
-      {/* ArShield logo mark: gold rounded shield with darker inset */}
+      {/* ArShield mark: gold shield with a cream arc, no background plate. */}
       <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden>
         <defs>
-          <linearGradient id="logo-grad" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+          <linearGradient id="logo-grad" x1="6" y1="3" x2="26" y2="29" gradientUnits="userSpaceOnUse">
             <stop stopColor="#E9C35F" />
             <stop offset="0.55" stopColor="#D1A413" />
             <stop offset="1" stopColor="#7A5F0A" />
           </linearGradient>
         </defs>
+        {/* Shield outline (stroke only -> transparent interior) */}
         <path
           d="M16 3 27 7.5v8.6c0 6.7-4.6 10.9-11 12.9C9.6 27 5 22.8 5 16.1V7.5L16 3Z"
-          fill="url(#logo-grad)"
+          stroke="url(#logo-grad)"
+          strokeWidth="2.1"
+          strokeLinejoin="round"
+          fill="none"
         />
+        {/* The ARC gesture: a bright arc through the shield */}
         <path
-          d="M16 7.2 23 10.2v5.9c0 4.7-3 7.9-7 9.4-4-1.5-7-4.7-7-9.4v-5.9l7-3Z"
-          stroke="rgba(3,16,32,0.35)"
-          strokeWidth="1"
-          fill="rgba(3,16,32,0.12)"
+          d="M9.4 18.4c2.2-3.4 4.4-5.1 6.6-5.1s4.4 1.7 6.6 5.1"
+          stroke="#F5DA99"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          fill="none"
         />
-        <path d="M11.5 16.2l3 3 6-6.5" stroke="#F5DA99" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
       </svg>
       <span className="text-[15px] font-medium tracking-tight text-[#e6e9ef]">ArShield</span>
     </span>
