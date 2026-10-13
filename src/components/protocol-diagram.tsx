@@ -58,9 +58,11 @@ const TONE = {
     title: 'text-[#eef1f6]',
   },
   work: {
-    card: 'border-[var(--color-progress)]/20 bg-[var(--color-progress-soft)] hover:border-[var(--color-progress)]/40',
-    badge: 'border-[var(--color-progress)]/45 bg-[var(--color-progress-soft)] text-[var(--color-progress)]',
-    title: 'text-[#f6e7cf]',
+    // A structural step, not a live process state — so it stays neutral with a
+    // gold hairline rather than borrowing the amber "in flight" colour.
+    card: 'border-[var(--color-action)]/20 bg-[var(--color-action-soft)] hover:border-[var(--color-action)]/40',
+    badge: 'border-[var(--color-action)]/40 bg-[var(--color-action-soft)] text-[var(--color-action)]',
+    title: 'text-[#f6ecd2]',
   },
   verified: {
     card: 'border-[var(--color-verified)]/25 bg-[var(--color-verified-soft)] hover:border-[var(--color-verified)]/45',
@@ -102,10 +104,10 @@ export function ProtocolDiagram() {
 
       <Reveal delay={0.5}>
         <p className="mt-8 text-center font-mono text-[11px] leading-relaxed tracking-wide text-[#5b6474]">
-          an attacker must break <span className="text-[var(--color-progress)]">ML-KEM-768</span> ·{' '}
-          <span className="text-[var(--color-progress)]">X25519</span> ·{' '}
-          <span className="text-[var(--color-progress)]">ML-DSA-65</span> ·{' '}
-          <span className="text-[var(--color-progress)]">AES-256-GCM</span> — every one of them to open a single file.
+          an attacker must break <span className="text-[var(--color-action)]">ML-KEM-768</span> ·{' '}
+          <span className="text-[var(--color-action)]">X25519</span> ·{' '}
+          <span className="text-[var(--color-action)]">ML-DSA-65</span> ·{' '}
+          <span className="text-[var(--color-action)]">AES-256-GCM</span> — every one of them to open a single file.
         </p>
       </Reveal>
     </div>

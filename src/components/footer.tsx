@@ -19,7 +19,7 @@ const COLS = [
       { href: '/docs', label: 'Docs' },
       { href: '/docs/features', label: 'Features' },
       { href: '/docs/roadmap', label: 'Roadmap' },
-      { href: '/#technology', label: 'Technology' },
+      { href: '/#protocol', label: 'How it works' },
       { href: '/#faq', label: 'FAQ' },
     ],
   },
