@@ -1,12 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowDown, ArrowRight, ArrowUpRight, Check, Copy, ScrollText, Shield as ShieldIcon, ShieldCheck, Terminal } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check, Copy, ScrollText, Shield as ShieldIcon, ShieldCheck, Terminal } from 'lucide-react';
 import { useState } from 'react';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Background } from '@/components/background';
 import { HeroOrbit } from '@/components/hero-orbit';
+import { HeroPanel } from '@/components/hero-panel';
+import { ProtocolDiagram } from '@/components/protocol-diagram';
+import { BentoFeatures } from '@/components/bento-features';
 import { Reveal, HeroItem } from '@/components/reveal';
 import { Section } from '@/components/section';
 import { cn } from '@/lib/utils';
@@ -52,11 +55,13 @@ export default function HomePage() {
         <Hero />
         <Standards />
         <WhyNow />
+        <Protocol />
         <Layer />
         <ThreeSurfaces />
         <Technology />
         <BunkerAgents />
         <Tiers />
+        <Bento />
         <Shield />
         <Faq />
       </main>
@@ -70,53 +75,66 @@ function Hero() {
   return (
     <section className="relative overflow-hidden">
       <HeroOrbit />
-      <div className="relative mx-auto flex min-h-[88vh] w-full max-w-6xl flex-col items-center justify-center px-4 text-center sm:px-6">
-        <HeroItem delay={0}>
-          <Link
-            href="/docs/security"
-            className="mb-7 inline-flex items-center gap-2 rounded-full border border-brand-gold/25 bg-brand-gold/[0.06] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold transition-colors hover:bg-brand-gold/10"
-          >
-            <ShieldCheck className="h-3.5 w-3.5 flex-none" />
-            Post-Quantum Security Infrastructure on ARC
-            <ArrowRight className="h-3 w-3" />
-          </Link>
-        </HeroItem>
-
-        <HeroItem delay={0.15}>
-          <h1 className="max-w-4xl text-balance text-4xl font-light leading-[1.08] tracking-tight text-[#d9dbe1] sm:text-6xl md:text-7xl">
-            The post-quantum layer
-            <span className="text-gradient-gold mt-1 block font-bold">for data, messages and agents.</span>
-          </h1>
-        </HeroItem>
-
-        <HeroItem delay={0.3}>
-          <p className="mt-6 max-w-xl text-balance text-[15px] leading-relaxed text-[#8a93a3] sm:text-base">
-            Coins can run to a fresh address. Your data can’t. ArShield seals it post-quantum, on your
-            device. Your agents too.
-          </p>
-        </HeroItem>
-
-        <HeroItem delay={0.45}>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/app" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'bg-gold-gradient text-brand-ink shadow-gold-glow hover:-translate-y-[1px] hover:shadow-gold-glow-lg')}>
-              Launch app
-              <ArrowRight className="h-4 w-4" />
+      {/* Asymmetric hero: copy on the left, a live sealing panel on the right. */}
+      <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pb-20 pt-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:pb-28 lg:pt-24">
+        <div className="text-center lg:text-left">
+          <HeroItem delay={0}>
+            <Link
+              href="/docs/security"
+              className="mb-7 inline-flex items-center gap-2 rounded-full border border-brand-gold/25 bg-brand-gold/[0.06] px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-gold transition-colors hover:bg-brand-gold/10"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 flex-none" />
+              Post-Quantum Security Infrastructure on ARC
+              <ArrowRight className="h-3 w-3" />
             </Link>
-            <Link href="/mcp" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'border border-white/10 bg-white/[0.02] text-[#e6e9ef] hover:border-white/20 hover:bg-white/[0.05]')}>
-              <Terminal className="h-4 w-4" />
-              MCP server
-            </Link>
-          </div>
-        </HeroItem>
+          </HeroItem>
 
-        <HeroItem delay={0.6}>
-          <a
-            href="#standards"
-            aria-label="Scroll to next section"
-            className="mt-12 grid h-10 w-10 place-items-center rounded-full border border-white/10 text-brand-gold transition-colors hover:border-brand-gold/40"
-          >
-            <ArrowDown className="h-3.5 w-3.5" />
-          </a>
+          <HeroItem delay={0.15}>
+            <h1 className="text-balance text-4xl font-light leading-[1.08] tracking-tight text-[#d9dbe1] sm:text-5xl md:text-6xl lg:text-[4.25rem]">
+              The post-quantum layer
+              <span className="text-gradient-gold mt-1 block font-bold">for data, messages and agents.</span>
+            </h1>
+          </HeroItem>
+
+          <HeroItem delay={0.3}>
+            <p className="mx-auto mt-6 max-w-xl text-balance text-[15px] leading-relaxed text-[#8a93a3] sm:text-base lg:mx-0">
+              Coins can run to a fresh address. Your data can’t. ArShield seals it post-quantum, on your
+              device. Your agents too.
+            </p>
+          </HeroItem>
+
+          <HeroItem delay={0.45}>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+              <Link href="/app" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'bg-gold-gradient text-brand-ink shadow-gold-glow hover:-translate-y-[1px] hover:shadow-gold-glow-lg')}>
+                Launch app
+                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+              </Link>
+              <Link href="/mcp" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'border border-white/10 bg-white/[0.02] text-[#e6e9ef] hover:border-white/20 hover:bg-white/[0.05]')}>
+                <Terminal className="h-4 w-4" />
+                MCP server
+              </Link>
+            </div>
+          </HeroItem>
+
+          <HeroItem delay={0.6}>
+            <div className="mt-9 flex items-center justify-center gap-6 lg:justify-start">
+              {[
+                ['6', 'MCP tools'],
+                ['3', 'surfaces'],
+                ['0', 'servers'],
+              ].map(([n, l]) => (
+                <div key={l} className="text-left">
+                  <div className="font-mono text-xl font-semibold text-[#e6e9ef]">{n}</div>
+                  <div className="text-[11px] uppercase tracking-[0.14em] text-[#5b6474]">{l}</div>
+                </div>
+              ))}
+            </div>
+          </HeroItem>
+        </div>
+
+        {/* Right column: the product working, not decoration. */}
+        <HeroItem delay={0.5} className="w-full">
+          <HeroPanel />
         </HeroItem>
       </div>
     </section>
@@ -473,6 +491,31 @@ function Shield() {
           </div>
         </Reveal>
       </div>
+    </Section>
+  );
+}
+
+function Protocol() {
+  return (
+    <Section
+      id="protocol"
+      eyebrow="How it works"
+      title="Five steps, no servers."
+      subtitle="Every envelope is built locally, one primitive at a time. Nothing in the chain is optional: a copy taken today still needs all four broken to open."
+    >
+      <ProtocolDiagram />
+    </Section>
+  );
+}
+
+function Bento() {
+  return (
+    <Section
+      eyebrow="Why ArShield"
+      title="Built to keep working when the rest doesn't."
+      subtitle="Post-quantum by default, portable by design, and verifiable offline."
+    >
+      <BentoFeatures />
     </Section>
   );
 }

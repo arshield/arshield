@@ -175,3 +175,33 @@
   50% { opacity: 0.55; }
 }
 .animate-soft-pulse { animation: soft-pulse 2.4s ease-in-out infinite; }
+
+/* Progress tick that slides across the active pipeline row in the hero panel */
+@keyframes arSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* Orbital node blink (hero flow map) */
+@keyframes arBlink {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.35); }
+}
+.animate-node-blink { animation: arBlink 2.6s ease-in-out infinite; }
+
+/* Travelling packet along the hero flow lines */
+@keyframes arPacket {
+  0% { offset-distance: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift,
+  .animate-drift-slow,
+  .animate-soft-pulse,
+  .animate-node-blink {
+    animation: none !important;
+  }
+}
