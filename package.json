@@ -17,7 +17,8 @@
     "mcp:build": "npm --prefix packages/core run build && npm --prefix packages/mcp run build",
     "mcp:interop": "node scripts/interop-test.mjs",
     "mcp:recipient": "node scripts/recipient-e2e.mjs",
-    "wallet:e2e": "node scripts/wallet-e2e.mjs"
+    "wallet:e2e": "node scripts/wallet-e2e.mjs",
+    "test": "npm run check && npm run mcp:interop && npm run mcp:recipient && npm run wallet:e2e"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
