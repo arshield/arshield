@@ -62,10 +62,10 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-[16px] font-semibold text-[#e6e9ef]">Analytics</h2>
               <p className="mt-2 text-[14.5px] leading-relaxed text-[#8a93a3]">
-                We may use privacy-first analytics (such as Plausible) to understand aggregate page traffic:
-                number of visitors, popular pages, referral sources. These tools collect no personally
-                identifiable information and use no cookies. Wallet addresses are never included in any
-                analytics event.
+                We do not run third-party analytics or advertising trackers, and we set no cookies.
+                Our hosting provider may keep standard, aggregate request logs (IP address, path,
+                timestamp) for security and abuse prevention. Wallet addresses are never part of
+                those logs.
               </p>
             </section>
 

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 const SECTIONS: [string, string][] = [
   ['1. Acceptance', 'These Terms govern your access to and use of ArShield, a post-quantum encryption tool available at arc-shield.xyz, including its web application and MCP server. By using ArShield you agree to these Terms.'],
-  ['2. What ArShield is', 'ArShield is a client-side encryption tool. All cryptographic operations run entirely in your browser. No file content, key material, or personal data is ever transmitted to our servers: because we have no servers that process your data.'],
+  ['2. What ArShield is', 'ArShield is a client-side encryption tool. All cryptographic operations run entirely in your browser. No file content, key material, or personal data is ever transmitted to us, because we operate no servers that process your data.'],
   ['3. Your keys, your responsibility', 'You are responsible for the security of your wallet, key file and passphrase. ArShield cannot recover them, and cannot decrypt your files. You must not use the Service where prohibited by law.'],
   ['4. Beta software', 'ArShield is pre-launch software. Features may change, break, or be withdrawn. Do not rely on it as the sole copy of anything irreplaceable.'],
   ['5. Prohibited use', 'Do not use the Service to violate any law, to infringe the rights of others, or to interfere with the Service or its users.'],
