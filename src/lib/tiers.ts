@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Tier + daily-limit logic. Mirrors the client-side soft gate QuantSafe uses:
+ * Tier + daily-limit logic. Mirrors the client-side soft gate used pre-launch:
  * the tier comes from the USD value of the $arshield balance read on-chain;
  * the daily encryption counter lives in localStorage and resets at 00:00 UTC.
  * No token is live yet, so the balance read falls back to Free.
