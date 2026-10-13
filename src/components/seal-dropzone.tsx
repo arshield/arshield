@@ -248,7 +248,7 @@ export function SealDropzone({ className }: { className?: string }) {
                   </span>
                 </div>
                 <div className="mt-0.5 text-[11.5px] text-[#7b8493]">
-                  {(result.fileSize / 1024).toFixed(1)} KB · signed, unsigned fields below
+                  {(result.fileSize / 1024).toFixed(1)} KB · unsigned metadata fields below
                 </div>
               </div>
             </div>
@@ -296,8 +296,8 @@ export function SealDropzone({ className }: { className?: string }) {
           {result.valid && result.metadata.file_hash && (
             <p className="mt-5 flex items-start gap-2 text-[12.5px] leading-relaxed text-emerald-300/90">
               <CheckCircle2 className="mt-0.5 h-4 w-4 flex-none" />
-              To confirm integrity, decrypt the matching .arshield envelope: the server checks that the
-              envelope&apos;s SHA-256 matches this Seal&apos;s file_hash.
+              To confirm integrity, compare this file_hash against the SHA-256 of the matching .arshield
+              envelope. You can do that here in the browser or with arshield_verify_seal from your agent.
             </p>
           )}
         </div>

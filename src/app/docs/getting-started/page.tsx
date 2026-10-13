@@ -26,9 +26,11 @@ export default function GettingStartedPage() {
       </ol>
       <DocH2>3 · Back up your keys</DocH2>
       <DocP>
-        After deriving from a wallet, use Back up keys to download a passphrase-wrapped key file. It holds
-        the same keypair, so it opens your files without the wallet. Lose the wallet and the passphrase, and
-        the files are unrecoverable — that is the point.
+        A wallet-derived keypair can be reproduced from the wallet signature alone, so the working
+        backup of a wallet path is the wallet itself. If you would rather not depend on the wallet
+        curve, generate a passphrase-protected key file from the key-source screen instead: it holds
+        random keys that never touch your wallet&apos;s signature, and it opens your files on its own.
+        Lose both the wallet and the key file, and the files are unrecoverable — that is the point.
       </DocP>
       <DocH2>4 · Use it from an agent</DocH2>
       <DocP>Install the MCP server and give your agent the same wallet signature or key file:</DocP>

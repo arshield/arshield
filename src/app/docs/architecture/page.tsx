@@ -16,18 +16,18 @@ const LAYERS = [
   },
   {
     step: '02',
-    title: 'Hybrid signatures',
-    body: 'Every Seal envelope is signed with ML-DSA-65 (Dilithium) alongside Ed25519. The signature binds the file hash, the recipient, and the timestamp, and verifies in your browser before decryption.',
+    title: 'AEAD content encryption',
+    body: 'File content is encrypted with AES-256-GCM using the derived key. A fresh random 96-bit nonce is generated per file, and the algorithm header is passed as additional authenticated data, so any edit to the header or ciphertext is detected on decrypt.',
   },
   {
     step: '03',
-    title: 'AEAD content encryption',
-    body: 'File content is encrypted with AES-256-GCM. A fresh random 96-bit nonce is generated per file; the authentication tag covers both the ciphertext and the associated metadata, so tampering is detected on decrypt.',
+    title: 'Post-quantum signature',
+    body: 'The envelope — header plus ciphertext — is signed with ML-DSA-65 (Dilithium) under a fixed ArShield context. The signature covers the KEM ciphertexts, the nonce and the encrypted payload, so a modified byte fails verification before decryption.',
   },
   {
     step: '04',
     title: 'Browser-only execution',
-    body: 'All primitives run in WebAssembly inside your browser. No key material, plaintext, or filename is ever posted to a server. There is no server that could receive it.',
+    body: 'All primitives run in pure JavaScript in your browser, using the audited @noble libraries. No key material, plaintext, or filename is ever posted to a server. There is no server that could receive it.',
   },
 ];
 
