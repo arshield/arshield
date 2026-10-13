@@ -101,14 +101,19 @@ def make_og(width=1200, height=630, out="public/seo/opengraph-image.png"):
     print("wrote", p)
 
 
-def make_icon(size=512, out="src/app/icon.png", pad_ratio=0.14):
-    img = Image.new("RGB", (size, size), BG)
-    img = radial_glow(img, size // 2, int(size * 0.46), int(size * 0.55), GOLD, 0.22)
+def make_icon(size=512, out="src/app/icon.png", pad_ratio=0.14, transparent=False):
+    """App icon. transparent=True drops the background so the mark can sit on
+    any surface (used for the in-page brand mark); False keeps the navy plate
+    (used where a solid tile is expected)."""
+    bg = (0, 0, 0, 0) if transparent else BG
+    img = Image.new("RGBA" if transparent else "RGB", (size, size), bg)
+    if not transparent:
+        img = radial_glow(img, size // 2, int(size * 0.46), int(size * 0.55), GOLD, 0.22)
     d = ImageDraw.Draw(img)
     draw_shield(d, size // 2, size // 2, int(size * (1 - pad_ratio * 2)), GOLD, width=max(6, size // 26), arc=True)
     p = ROOT / out
     img.save(p, "PNG", optimize=True)
-    print("wrote", p)
+    print("wrote", p, "(transparent)" if transparent else "(plate)")
 
 
 def make_ico(out="src/app/favicon.ico"):
@@ -125,11 +130,12 @@ def make_ico(out="src/app/favicon.ico"):
 
 if __name__ == "__main__":
     make_og()
-    make_og()  # twitter uses the same art
-    # copy to twitter
+    # twitter uses the same art
     import shutil
     shutil.copyfile(ROOT / "public/seo/opengraph-image.png", ROOT / "public/seo/twitter-image.png")
     print("wrote", ROOT / "public/seo/twitter-image.png")
-    make_icon(out="src/app/icon.png")
-    make_icon(out="src/app/apple-icon.png", size=180)
+    # In-page / apple marks: transparent so they sit on any surface.
+    make_icon(out="src/app/icon.png", transparent=True)
+    make_icon(out="src/app/apple-icon.png", size=180, transparent=True)
+    # Favicon keeps a small plate so it stays legible on light browser tabs.
     make_ico()
