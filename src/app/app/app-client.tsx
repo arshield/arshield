@@ -10,6 +10,7 @@ import { Button } from '@/components/button';
 import { AppWorkspace } from '@/components/app-workspace';
 import { useWallet } from '@/lib/use-wallet';
 import { ephemeralIdentity, unwrapKeyfile, wrapKeyfile, type ArShieldKeyPair } from '@/lib/arshield';
+import { fetchTier, TIER_BY_KEY, type Tier } from '@/lib/tiers';
 import { cn } from '@/lib/utils';
 
 type KeySource = { kind: 'wallet'; label: string; kp: ArShieldKeyPair } | { kind: 'keyfile'; label: string; kp: ArShieldKeyPair } | null;
@@ -23,10 +24,14 @@ export function AppClient() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showKeyfile, setShowKeyfile] = useState(false);
+  const [tier, setTier] = useState<Tier>(TIER_BY_KEY.free);
+  const [tierBusy, setTierBusy] = useState(false);
 
-  const tierBadge = wallet
-    ? 'TIER CHECK PENDING · SHOWING FREE'
-    : 'CONNECT WALLET TO VERIFY TIER · SHOWING FREE';
+  const tierBadge = tierBusy
+    ? 'READING TIER…'
+    : wallet
+      ? `${tier.name.toUpperCase()} TIER${tier.key === 'free' ? ' · PRE-LAUNCH · SHOWING FREE' : ''}`
+      : 'CONNECT WALLET TO VERIFY TIER · SHOWING FREE';
 
   const pickWallet = async () => {
     setErr(null);
@@ -38,6 +43,15 @@ export function AppClient() {
     try {
       const kp = await deriveIdentity();
       setSource({ kind: 'wallet', label: `wallet · ${wallet.address.slice(0, 6)}…${wallet.address.slice(-4)}`, kp });
+      // Tier check: read $arshield balance for this address. Falls back to Free
+      // pre-launch (no token deployed yet).
+      setTierBusy(true);
+      try {
+        const t = await fetchTier(wallet.address);
+        setTier(t);
+      } finally {
+        setTierBusy(false);
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -83,7 +97,7 @@ export function AppClient() {
   };
 
   if (source) {
-    return <AppWorkspace source={source} onReset={() => setSource(null)} />;
+    return <AppWorkspace source={source} onReset={() => setSource(null)} tier={tier} />;
   }
 
   return (

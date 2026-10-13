@@ -13,7 +13,7 @@ export { aeadEncrypt, aeadDecrypt } from './aead';
 export { buildHeaderAad, encode, decode } from './codec';
 export { wrapKeyfile, unwrapKeyfile } from './keyfile';
 export { encryptFile, decryptFile } from './file';
-export { buildMessageUrl, parseMessageUrl } from './message-url';
+export { buildMessageUrl, parseMessageUrl, encodePublicKey, parsePublicKey } from './message-url';
 export {
   identityFromWalletSignature,
   ephemeralIdentity,

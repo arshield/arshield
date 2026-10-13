@@ -12,9 +12,15 @@ import {
   buildMessageUrl,
   type ArShieldKeyPair,
 } from '@/lib/arshield';
+import {
+  canEncrypt,
+  encryptionsLeft,
+  incrementEncryptionsUsed,
+  tierLabel,
+  type Tier,
+} from '@/lib/tiers';
 
 const MB = 1024 * 1024;
-const FREE_MAX = 25 * MB;
 
 
 function download(bytes: Uint8Array, name: string, type = 'application/octet-stream') {
@@ -93,9 +99,11 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
 export function AppWorkspace({
   source,
   onReset,
+  tier,
 }: {
   source: { kind: 'wallet' | 'keyfile'; label: string; kp: ArShieldKeyPair };
   onReset: () => void;
+  tier: Tier;
 }) {
   const [file, setFile] = useState<{ name: string; bytes: Uint8Array } | null>(null);
   const [mode, setMode] = useState<'wait' | 'encrypt' | 'decrypt'>('wait');
@@ -112,24 +120,38 @@ export function AppWorkspace({
     void f.arrayBuffer().then((b) => {
       const bytes = new Uint8Array(b);
       setFile({ name: f.name, bytes });
-      setMode(f.name.endsWith('.arshield') ? 'decrypt' : 'encrypt');
       setResult(null);
       setStatus(null);
-      if (bytes.length > FREE_MAX) {
-        setStatus(`File too large (${(bytes.length / MB).toFixed(1)} MB). Free tier caps at 25 MB. Higher tiers encrypt bigger files, see tiers.`);
+      const isDecrypt = f.name.endsWith('.arshield');
+      setMode(isDecrypt ? 'decrypt' : 'encrypt');
+      if (!isDecrypt && bytes.length > tier.maxFileBytes) {
+        // Hard refuse: file above this tier's cap cannot be encrypted.
+        setFile(null);
+        setMode('wait');
+        setStatus(
+          `File too large (${(bytes.length / MB).toFixed(1)} MB). ${tierLabel(tier)} caps at ${
+            Number.isFinite(tier.maxFileBytes) ? `${Math.round(tier.maxFileBytes / MB)} MB` : 'unlimited'
+          }. See tiers.`,
+        );
       }
     });
   };
 
   const doEncrypt = async () => {
     if (!file) return;
+    if (!canEncrypt(tier)) {
+      setStatus(`Daily encryption limit reached${Number.isFinite(tier.encryptionsPerDay) ? ` (${tier.encryptionsPerDay}/24h on ${tier.name})` : ''}. Resets at 00:00 UTC.`);
+      return;
+    }
     setBusy(true); setStatus(null);
     try {
       const container = await encryptFile(file.bytes, file.name, source.kp.publicKey, source.kp.secretKey);
+      incrementEncryptionsUsed();
       const hash = await sha256Hex(container);
       const seal = await buildSealPng(hash, file.name);
       setResult({ name: file.name + '.arshield', bytes: container, seal, hash });
-      setStatus('Quantum-Sealed · Ready to download');
+      const left = encryptionsLeft(tier);
+      setStatus(`Quantum-Sealed · Ready to download · ${left === 'unlimited' ? 'unlimited' : left + ' left'} today`);
     } catch (e) {
       setStatus(e instanceof Error ? e.message : String(e));
     } finally { setBusy(false); }
@@ -169,6 +191,10 @@ export function AppWorkspace({
           <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
             <Link href="/" aria-label="ArShield home"><Logo /></Link>
             <div className="flex items-center gap-3">
+              <span className="hidden items-center gap-2 rounded-full border border-brand-gold/25 bg-brand-gold/[0.06] px-3 py-1 text-[11px] font-medium text-brand-gold sm:inline-flex">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                {tier.name} · {encryptionsLeft(tier) === 'unlimited' ? '∞' : encryptionsLeft(tier) + ' left'}
+              </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] px-3 py-1 text-[11px] font-medium text-emerald-300">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 {source.label}

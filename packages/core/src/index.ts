@@ -18,7 +18,7 @@ export { aeadEncrypt, aeadDecrypt } from './aead.js';
 export { buildHeaderAad, encode, decode } from './codec.js';
 export { wrapKeyfile, unwrapKeyfile } from './keyfile.js';
 export { encryptFile, decryptFile } from './file.js';
-export { buildMessageUrl, parseMessageUrl } from './message-url.js';
+export { buildMessageUrl, parseMessageUrl, encodePublicKey, parsePublicKey } from './message-url.js';
 export {
   identityFromWalletSignature,
   ephemeralIdentity,
