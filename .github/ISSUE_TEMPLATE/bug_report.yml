@@ -1,18 +1,20 @@
 name: Bug Report
-description: Report a bug or unexpected behavior
+description: Report a bug or unexpected behaviour
 title: "[Bug]: "
 labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report a bug! Please fill out the form below so we can reproduce and fix it.
+        Thanks for reporting. Please fill this in so the issue can be reproduced.
+
+        **Do not report security vulnerabilities here** — see SECURITY.md instead.
 
   - type: textarea
     id: description
     attributes:
       label: Description
-      description: A clear description of what the bug is.
+      description: What went wrong, in one or two sentences.
       placeholder: What happened?
     validations:
       required: true
@@ -20,67 +22,58 @@ body:
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to Reproduce
-      description: Step-by-step instructions to reproduce the behavior.
+      label: Steps to reproduce
+      description: The smallest sequence that shows the problem.
       placeholder: |
-        1. Run `/clone-website https://example.com`
-        2. Wait for agents to finish
-        3. See error in terminal...
+        1. Open /app and connect a wallet
+        2. Drop a file and click Encrypt
+        3. ...
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: Expected Behavior
-      description: What did you expect to happen?
+      label: Expected behaviour
+      description: What you expected instead.
     validations:
       required: true
 
   - type: textarea
     id: actual
     attributes:
-      label: Actual Behavior
-      description: What actually happened? Include error messages or screenshots if possible.
+      label: Actual behaviour
+      description: What actually happened. Include the error text if there is one.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where did it happen
+      options:
+        - Web app (browser)
+        - MCP server
+        - Both
+        - Docs or README
     validations:
       required: true
 
   - type: input
-    id: target-url
+    id: version
     attributes:
-      label: Target URL
-      description: The website URL you were trying to clone (if applicable).
-      placeholder: https://example.com
+      label: Version
+      description: Output of `git rev-parse --short HEAD`, or the npm package version.
+      placeholder: e.g. 437a01d or 0.1.0
 
   - type: dropdown
     id: os
     attributes:
-      label: Operating System
+      label: Operating system
       options:
+        - Linux
         - macOS
         - Windows
-        - Linux
+        - WSL
     validations:
       required: true
-
-  - type: input
-    id: node-version
-    attributes:
-      label: Node.js Version
-      description: Run `node -v` to find this.
-      placeholder: v24.x.x
-    validations:
-      required: true
-
-  - type: input
-    id: claude-code-version
-    attributes:
-      label: Claude Code Version
-      description: Run `claude --version` to find this.
-      placeholder: 1.x.x
-
-  - type: textarea
-    id: additional
-    attributes:
-      label: Additional Context
-      description: Any other context, logs, or screenshots.

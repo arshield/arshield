@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { BRAND_MARK_PATH, BRAND_MARK_TRANSFORM } from '@/lib/brand-mark';
 import { Menu, Wallet, X } from 'lucide-react';
 import { Button, sizes, variants } from './button';
 import { cn } from '@/lib/utils';
@@ -10,31 +11,30 @@ import { useWallet } from '@/lib/use-wallet';
 export function Logo({ className = '' }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
-      {/* ArShield mark: gold shield with a cream arc, no background plate. */}
-      <svg width="26" height="26" viewBox="0 0 32 32" fill="none" aria-hidden>
+      {/*
+        ArShield mark: the wolf-and-shield, traced from the source artwork by
+        scripts/gen-brand-assets.py + potrace. Drawn as one path, fill-rule
+        evenodd, so the negative space inside the mark stays transparent.
+        No background plate.
+      */}
+      <svg
+        width="26"
+        height="26"
+        viewBox="0 0 32 32"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden
+      >
+        <g transform={BRAND_MARK_TRANSFORM}>
+          <path d={BRAND_MARK_PATH} fill="url(#logo-gold)" fillRule="evenodd" />
+        </g>
         <defs>
-          <linearGradient id="logo-grad" x1="6" y1="3" x2="26" y2="29" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#E9C35F" />
-            <stop offset="0.55" stopColor="#D1A413" />
-            <stop offset="1" stopColor="#7A5F0A" />
+          <linearGradient id="logo-gold" x1="0" y1="0" x2="1" y2="1">
+            <stop stopColor="#FFD86B" />
+            <stop offset="0.55" stopColor="#F6B621" />
+            <stop offset="1" stopColor="#C98A10" />
           </linearGradient>
         </defs>
-        {/* Shield outline (stroke only -> transparent interior) */}
-        <path
-          d="M16 3 27 7.5v8.6c0 6.7-4.6 10.9-11 12.9C9.6 27 5 22.8 5 16.1V7.5L16 3Z"
-          stroke="url(#logo-grad)"
-          strokeWidth="2.1"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        {/* The ARC gesture: a bright arc through the shield */}
-        <path
-          d="M9.4 18.4c2.2-3.4 4.4-5.1 6.6-5.1s4.4 1.7 6.6 5.1"
-          stroke="#F5DA99"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          fill="none"
-        />
       </svg>
       <span className="text-[15px] font-medium tracking-tight text-[#e6e9ef]">ArShield</span>
     </span>

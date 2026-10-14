@@ -1,80 +1,58 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Notable changes to ArShield. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
+versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Changed
-- Raised the project Node.js baseline to 24 across local development, CI, Docker, and contributor-facing documentation
+### Added
+- `SECURITY.md` — threat model, in-scope surface, and the four limitations stated plainly
+- `CONTRIBUTING.md` — build steps and what `npm test` actually proves
+- `npm test` as a single gate: lint + typecheck + build, then interop, recipient-only, and
+  wallet-derived end-to-end tests
 
-## [0.3.1] - 2026-03-29
+### Changed
+- README rewritten around the crypto, the container format, and the security posture
+- Landing page consolidated to 11 sections; section rhythm normalised to ~200px
+- Colour tokens split so state is readable: `action` (gold), `verified` (teal),
+  `progress` (amber), distinct from the brand gold
 
 ### Fixed
-- `sync-agent-rules.sh` failing to resolve `@file` imports on Windows due to CRLF line endings — platform instruction files now correctly inline the Inspection Guide content
+- `/m` had no message reader — a recipient clicking a shared link hit a dead end. Added the
+  reader; the composer and reader now share the route by fragment presence
+- The seal verifier could not read seals written by the app. It expected per-field `tEXt`
+  keywords, while the app writes one `arshield` chunk containing JSON. It now reads both
+- Docs claimed `Ed25519` signatures, `WebAssembly`, and a signature that binds the
+  recipient and timestamp. None were true. Corrected against the source
+- Analytics were described that do not exist; a "Back up keys" button was documented that
+  is not implemented. Both rewritten to match reality
+- Terraform: leaked Vercel project link and a build cache were tracked in this public repo
 
-## [0.3.0] - 2026-03-29
-
-### Added
-- Multi-URL support for `/clone-website` — clone multiple sites in a single command with parallel processing and isolated output
-- CI quality gates via GitHub Actions — automated lint, typecheck, and build on every push and PR
-- `npm run typecheck` and `npm run check` scripts for local quality validation
-- `.gitattributes` for cross-platform line ending normalization
-- `.nvmrc` to pin Node.js 20 for contributor consistency
-
-### Changed
-- Streamlined PR template — removed redundant checklist items and screenshots section
-- Improved project description and README — clearer use cases, limitations, and modern wording
-- Refined documentation and agent rules across all platforms for clarity and consistency
-- Fixed CRLF handling in `sync-skills.mjs` for reliable Windows operation
-
-### Removed
-- Outdated use case from README documentation
-
-## [0.2.0] - 2026-03-28
+## [0.3.1]
 
 ### Added
-- Multi-platform AI agent support: Claude Code, Codex CLI, OpenCode, GitHub Copilot, Cursor, Windsurf, Gemini CLI, Cline/Roo Code, Continue, Amazon Q, Augment Code, Aider
-- Platform-specific instruction files and `/clone-website` skill for each supported agent
-- `scripts/sync-agent-rules.sh` to regenerate platform instruction files from AGENTS.md
-- `scripts/sync-skills.mjs` to regenerate `/clone-website` skill across all platforms
-- GEMINI.md for Gemini CLI configuration
-- Supported Platforms table in README
-- "Updating for Other Platforms" documentation section in README
-
-### Changed
-- README now describes the project as multi-agent (Claude Code recommended, not required)
-- AGENTS.md updated with sync script reminders
-
-## [0.1.1] - 2026-03-28
-
-### Added
-- Bug report and feature request issue templates
-- Pull request template with checklist
-- CHANGELOG.md following Keep a Changelog format
-- Package.json metadata (description, repository, homepage, keywords, engines)
+- Encrypted messages via URL fragment, self-decrypting or recipient-only
+- Quantum Seal PNG export and local verification
+- Six MCP tools over stdio sharing the browser crypto core
+- Wallet-derived identity from an EIP-191 signature, alongside passphrase keyfiles
 
 ### Fixed
-- LICENSE copyright holder now attributed to JCodesMore
+- Signature is verified before decryption, not after
+- Header is authenticated as AES-GCM additional data and covered by the ML-DSA-65 signature
 
-## [0.1.0] - 2026-03-28
+## [0.3.0]
 
 ### Added
-- Initial template scaffold for website reverse-engineering with Claude Code
-- `/clone-website` skill for full-site cloning pipeline
-- `/build-from-spec` and `/customize` skills
-- Parallel builder agents with git worktree isolation
-- Chrome MCP integration for design token extraction
-- Comprehensive inspection guide and project structure documentation
-- Next.js 16 + shadcn/ui + Tailwind CSS v4 base scaffold
-- MIT license
-- README with badges, demo section, quick start, and star history
+- `@arshield/mcp` — the MCP server package
+- Hybrid ML-KEM-768 + X25519 key agreement via HKDF-SHA256
+- ML-DSA-65 signatures over the envelope
+- Argon2id-wrapped keyfiles
 
-[Unreleased]: https://github.com/JCodesMore/ai-website-cloner-template/compare/v0.3.1...HEAD
-[0.3.1]: https://github.com/JCodesMore/ai-website-cloner-template/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/JCodesMore/ai-website-cloner-template/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/JCodesMore/ai-website-cloner-template/compare/v0.1.1...v0.2.0
-[0.1.1]: https://github.com/JCodesMore/ai-website-cloner-template/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/JCodesMore/ai-website-cloner-template/releases/tag/v0.1.0
+## [0.1.0]
+
+### Added
+- Initial `.arshield` container format
+- Browser file encryption and decryption, entirely client-side
+- Hybrid post-quantum crypto core (`packages/core`)
+
+[Unreleased]: https://github.com/arshield/arshield/compare/v0.3.1...HEAD
