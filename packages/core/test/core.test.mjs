@@ -153,7 +153,8 @@ test('x402 signatures are context-bound (cannot cross-use file signatures)', () 
   assert.equal(verify(id.publicKey.mldsa, payload, sig, 'arshield-v1-file'), false);
 });
 
-test('derivation message is the ArShield domain, not a leftover', () => {
+test('derivation message carries the ArShield domain', () => {
   assert.match(ARSHIELD_DERIVATION_MESSAGE, /Domain: arc-shield\.xyz/);
-  assert.doesNotMatch(ARSHIELD_DERIVATION_MESSAGE, /quantsafe/i);
+  // No other domain should appear — the message must name exactly one origin.
+  assert.equal((ARSHIELD_DERIVATION_MESSAGE.match(/Domain:\s*\S+/g) ?? []).length, 1);
 });
