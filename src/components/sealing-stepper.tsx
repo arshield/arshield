@@ -74,8 +74,8 @@ export function SealingStepper({
     <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
       <style>{KEYFRAMES}</style>
 
-      <div className="border-b border-white/[0.06] px-4 py-2.5">
-        <span className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-[var(--color-action)]">
+      <div className="border-b border-white/[0.06] px-5 py-3">
+        <span className="font-mono text-[11.5px] uppercase tracking-[0.18em] text-[var(--color-action)]">
           {title}
         </span>
       </div>
@@ -89,7 +89,7 @@ export function SealingStepper({
             <li
               key={step.id}
               className={[
-                'flex items-center gap-3 px-4 py-2.5',
+                'flex items-center gap-3.5 px-5 py-3',
                 'transition-[background-color,border-color,opacity] duration-[620ms] ease-out',
                 state === 'active'
                   ? 'border-l-2 border-l-[var(--color-action)] bg-[var(--color-action)]/[0.06]'
@@ -102,17 +102,17 @@ export function SealingStepper({
               <div className="min-w-0 flex-1">
                 <div
                   className={[
-                    'truncate text-[13px] transition-colors duration-[620ms] ease-out',
+                    'truncate text-[14px] transition-colors duration-[620ms] ease-out',
                     state === 'done'
-                      ? 'text-[#9aa3b2]'
+                      ? 'text-[#aab3c1]'
                       : state === 'active'
                         ? 'text-[#eef1f6]'
-                        : 'text-[#8b93a3]',
+                        : 'text-[#9ba4b3]',
                   ].join(' ')}
                 >
                   {step.name}
                 </div>
-                <div className="truncate text-[11.5px] text-[#5b6474]">{step.detail}</div>
+                <div className="truncate text-[12.5px] text-[#7a8494]">{step.detail}</div>
               </div>
 
               <Badge state={state} isLast={isLast && state === 'done'} />
@@ -121,18 +121,18 @@ export function SealingStepper({
         })}
       </ul>
 
-      <div className="flex items-center justify-between border-t border-white/[0.06] px-4 py-2.5">
-        <span className="text-[11px] text-[#5b6474]">
+      <div className="flex items-center justify-between border-t border-white/[0.06] px-5 py-3">
+        <span className="text-[12px] text-[#7a8494]">
           {footerLabel} ·{' '}
           <span className="text-[var(--color-action)]/80">
             {finished} / {total}
           </span>
         </span>
-        <span className="font-mono text-[11px] text-[#4a5262]">NIST FIPS 203 · 204 · SP 800-56C</span>
+        <span className="font-mono text-[12px] text-[#6a7385]">NIST FIPS 203 · 204 · SP 800-56C</span>
       </div>
 
       {error && (
-        <div className="border-t border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[12px] text-red-300">
+        <div className="border-t border-red-500/20 bg-red-500/[0.06] px-5 py-3 text-[13px] text-red-300">
           {error}
         </div>
       )}
@@ -173,12 +173,12 @@ function Glyph({ state, index }: { state: string; index: number }) {
       ? 'bg-[var(--color-verified)]/15 text-[var(--color-verified)]'
       : state === 'active'
         ? 'bg-[var(--color-action)]/15 text-[var(--color-action)]'
-        : 'border border-white/10 bg-white/[0.03] text-[#6b7383]';
+        : 'border border-white/10 bg-white/[0.03] text-[#848d9c]';
 
   return (
     <span
       className={`${base} ${disc} transition-colors duration-[620ms] ease-out ${
-        state === 'pending' ? 'font-mono text-[11px]' : ''
+        state === 'pending' ? 'font-mono text-[12px]' : ''
       }`}
     >
       {/* The number is always present underneath. It fades out as the row
@@ -240,7 +240,7 @@ function Badge({ state, isLast }: { state: string; isLast: boolean }) {
       ? 'border-[var(--color-verified)]/25 bg-[var(--color-verified)]/10 text-[var(--color-verified)]'
       : state === 'active'
         ? 'border-[var(--color-action)]/40 bg-[var(--color-action)]/12 text-[var(--color-action)]'
-        : 'border-white/10 bg-white/[0.02] text-[#5b6474]';
+        : 'border-white/10 bg-white/[0.02] text-[#7a8494]';
 
   return (
     // Keyed on the label so React remounts on change, which lets the fade-in
@@ -248,7 +248,7 @@ function Badge({ state, isLast }: { state: string; isLast: boolean }) {
     <span className="relative flex-none">
       <span
         key={label}
-        className={`inline-block rounded-md border px-2 py-[3px] font-mono text-[9.5px] uppercase tracking-[0.14em] transition-colors duration-[620ms] ease-out ${tone}`}
+        className={`inline-block rounded-md border px-2 py-[3px] font-mono text-[10px] uppercase tracking-[0.14em] transition-colors duration-[620ms] ease-out ${tone}`}
         style={{ animation: `as-tick-in ${SETTLE_MS}ms ease-out both` }}
       >
         {label}
