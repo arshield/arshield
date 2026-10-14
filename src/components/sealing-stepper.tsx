@@ -152,9 +152,9 @@ function Glyph({ state, index }: { state: string; index: number }) {
         */}
         <span
           className="absolute inset-0 rounded-full bg-[var(--color-action)]/30 motion-safe:animate-ping"
-          style={{ animationDuration: '1.8s' }}
+          style={{ animationDuration: '3s' }}
         />
-        <span className="relative inline-flex motion-safe:animate-spin" style={{ animationDuration: '1.6s' }}>
+        <span className="relative inline-flex motion-safe:animate-spin" style={{ animationDuration: '2.6s' }}>
           <Loader2 className="h-3.5 w-3.5" strokeWidth={2.5} />
         </span>
       </span>
