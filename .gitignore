@@ -7,3 +7,14 @@ out/
 # monorepo packages
 packages/*/node_modules/
 packages/*/dist/
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Vercel local link (contains projectId + orgId — must not be published)
+.vercel/
+
+# Local env
+.env
+.env.local
+.env*.local
