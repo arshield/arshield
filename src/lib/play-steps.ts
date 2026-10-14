@@ -8,11 +8,13 @@
  * showing the result.
  *
  * Pacing rules:
- *   - every step except the last is held for stepMs, so each is legible
- *   - the last step waits out whatever real time the crypto took, so a slow
- *     file still shows the final row as running rather than skipping it
- *   - the operation's own duration is never added on top of the total, so the
- *     list does not get slower just because a file is large
+ *   - every step is held for stepMs, uniformly. An earlier version divided the
+ *     remaining budget across the rows, which made the later ones visibly
+ *     quicker; a fixed beat per row reads as a steady walk instead
+ *   - a slow operation extends the list rather than compressing it, so no row
+ *     is ever rushed to keep within a total
+ *   - the last row is held for one extra beat before the caller proceeds, so
+ *     the eye lands on the finished list before the result appears
  *
  * It never marks a step the operation did not reach.
  */
@@ -20,43 +22,33 @@ export function playSteps(
   setStep: (n: number) => void,
   total: number,
   cryptoMs: number,
-  stepMs = 900,
+  stepMs = 1500,
 ): Promise<void> {
   return new Promise((resolve) => {
-    const started = Date.now();
     let current = 0;
-
-    // How long the whole list should take. At least the work itself, and at
-    // least one readable beat per row.
-    const budget = Math.max(total * stepMs, cryptoMs);
 
     const advance = () => {
       current += 1;
       setStep(current);
 
       if (current >= total) {
-        // Hold the final row on screen so the eye lands on it before the
-        // result panel replaces the sense of motion.
         setTimeout(resolve, stepMs);
         return;
       }
 
-      const elapsed = Date.now() - started;
-      const remaining = Math.max(0, budget - elapsed);
-      const rowsLeft = total - current;
-      // Divide the remaining time evenly, but never rush a row below the
-      // readable floor.
-      const wait = Math.max(stepMs * 0.7, Math.min(stepMs * 1.4, remaining / rowsLeft));
-      setTimeout(advance, Math.round(wait));
+      // One even beat per row. If the real work is still going when the list
+      // is done, the caller simply waits for it — the display is never
+      // compressed to fit.
+      setTimeout(advance, stepMs);
     };
 
-    // A beat before the first row is marked, so the whole list is visible and
+    // A beat before the first row is marked, so the whole list is on screen and
     // the first spinner is seen rather than skipped.
     setTimeout(advance, stepMs);
   });
 }
 
 /** Total wall time `playSteps` will take, for callers that need to plan around it. */
-export function stepBudget(total: number, cryptoMs: number, stepMs = 900): number {
-  return Math.max(total * stepMs, cryptoMs) + stepMs;
+export function stepBudget(total: number, cryptoMs: number, stepMs = 1500): number {
+  return Math.max((total + 1) * stepMs, cryptoMs + stepMs);
 }
