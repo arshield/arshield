@@ -143,9 +143,20 @@ function Glyph({ state, index }: { state: string; index: number }) {
   if (state === 'active') {
     return (
       <span className={`${base} bg-[var(--color-action)]/15 text-[var(--color-action)]`}>
-        {/* the ping ring is what draws the eye to the step that is moving */}
-        <span className="absolute inset-0 animate-ping rounded-full bg-[var(--color-action)]/30" />
-        <Loader2 className="relative h-3.5 w-3.5 animate-spin" strokeWidth={2.5} />
+        {/*
+          The ping ring draws the eye to the step that is moving.
+          Durations are set inline rather than through Tailwind classes: the
+          animate-* utilities write the `animation` shorthand, and a class-based
+          [animation-duration:…] override loses to it in the cascade, so the
+          animation kept running at the default 1s. Inline style wins.
+        */}
+        <span
+          className="absolute inset-0 rounded-full bg-[var(--color-action)]/30 motion-safe:animate-ping"
+          style={{ animationDuration: '1.8s' }}
+        />
+        <span className="relative inline-flex motion-safe:animate-spin" style={{ animationDuration: '1.6s' }}>
+          <Loader2 className="h-3.5 w-3.5" strokeWidth={2.5} />
+        </span>
       </span>
     );
   }
