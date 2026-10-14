@@ -222,22 +222,22 @@ export function AppWorkspace({
           <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
             <Link href="/" aria-label="ArShield home"><Logo /></Link>
             <div className="flex items-center gap-3">
-              <span className="hidden items-center gap-2 rounded-full border border-brand-gold/25 bg-brand-gold/[0.06] px-3 py-1 text-[11px] font-medium text-brand-gold sm:inline-flex">
+              <span className="hidden items-center gap-2 rounded-full border border-brand-gold/25 bg-brand-gold/[0.06] px-3 py-1 text-[12.5px] font-medium text-brand-gold sm:inline-flex">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 {tier.name} · {encryptionsLeft(tier) === 'unlimited' ? '∞' : encryptionsLeft(tier) + ' left'}
               </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] px-3 py-1 text-[11px] font-medium text-emerald-300">
+              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] px-3 py-1 text-[12.5px] font-medium text-emerald-300">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 {source.label}
               </span>
-              <button onClick={onReset} className="inline-flex items-center gap-1.5 text-[13px] text-[#9aa3b2] hover:text-white">
+              <button onClick={onReset} className="inline-flex items-center gap-1.5 text-[14.5px] text-[#aab3c1] hover:text-white">
                 <RotateCcw className="h-3.5 w-3.5" /> Change key
               </button>
             </div>
           </div>
         </header>
 
-        <main className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
+        <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
           {/* Mode switch, above the drop zone.
               Without this the two buttons only appeared after a file was
               picked, so the first thing a visitor did — drop a file — happened
@@ -265,10 +265,10 @@ export function AppWorkspace({
                     setShowSteps(false);
                   }}
                   className={[
-                    'rounded-full px-5 py-2 text-[13px] font-medium transition-colors',
+                    'rounded-full px-5 py-2 text-[14.5px] font-medium transition-colors',
                     active
                       ? 'bg-[#020610] text-[#eef1f6] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]'
-                      : 'text-[#8a93a3] hover:text-[#c8cedb]',
+                      : 'text-[#9ba4b3] hover:text-[#d6dbe5]',
                   ].join(' ')}
                 >
                   {m === 'encrypt' ? 'Encrypt' : 'Decrypt'}
@@ -281,13 +281,13 @@ export function AppWorkspace({
               Three states, one card: empty (drop zone), filled (file summary
               with the details of what will happen), and locked (during a run,
               so nothing can be swapped mid-operation). */}
-          <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02]">
+          <div className="overflow-hidden rounded-2xl border border-white/[0.10] bg-white/[0.028]">
             {/* header strip: what this card is for, and the current mode */}
-            <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
-              <span className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-[#5b6474]">
+            <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
+              <span className="font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8b94a4]">
                 {mode === 'decrypt' ? 'Open an envelope' : 'Seal a file'}
               </span>
-              <span className="inline-flex items-center gap-1.5 text-[11px] text-[#5b6474]">
+              <span className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#8b94a4]">
                 <ShieldCheck className="h-3.5 w-3.5 text-[var(--color-verified)]" />
                 {mode === 'decrypt'
                   ? 'signature checked before decryption'
@@ -301,7 +301,7 @@ export function AppWorkspace({
               onDrop={(e) => { e.preventDefault(); if (!busy) pick(e.dataTransfer.files?.[0]); }}
               onClick={() => { if (!busy) input.current?.click(); }}
               className={[
-                'px-5 py-8 text-center transition-colors',
+                'px-6 py-10 text-center transition-colors',
                 busy ? 'cursor-default opacity-70' : 'cursor-pointer hover:bg-white/[0.015]',
               ].join(' ')}
             >
@@ -315,12 +315,12 @@ export function AppWorkspace({
               {file ? (
                 <div className="text-left">
                   <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[var(--color-action)]/12 text-[var(--color-action)]">
-                      <FileText className="h-5 w-5" />
+                    <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-[var(--color-action)]/14 text-[var(--color-action)]">
+                      <FileText className="h-[22px] w-[22px]" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="truncate text-[14px] font-medium text-[#eef1f6]">{file.name}</div>
-                      <div className="mt-0.5 text-[12px] text-[#6b7383]">
+                      <div className="truncate text-[15.5px] font-medium text-[#eef1f6]">{file.name}</div>
+                      <div className="mt-0.5 text-[13px]text-[#949dac]">
                         {(file.bytes.length / MB).toFixed(2)} MB
                         {mode === 'decrypt' ? ' · envelope' : ' · plaintext'}
                       </div>
@@ -332,7 +332,7 @@ export function AppWorkspace({
                           e.stopPropagation();
                           setFile(null); setResult(null); setStatus(null); setStep(0); setShowSteps(false);
                         }}
-                        className="flex-none rounded-lg border border-white/10 px-2.5 py-1 text-[11px] text-[#8a93a3] transition-colors hover:border-white/20 hover:text-[#c8cedb]"
+                        className="flex-none rounded-lg border border-white/12 px-3 py-1.5 text-[12.5px] font-medium text-[#9ba4b3] transition-colors hover:border-white/25 hover:text-[#e6e9ef]"
                       >
                         Remove
                       </button>
@@ -343,22 +343,22 @@ export function AppWorkspace({
                       the real flow will act on. Stacked rather than a two-column
                       table so a long suite string wraps instead of crushing the
                       label column on narrow screens. */}
-                  <dl className="mt-4 space-y-2.5 border-t border-white/[0.06] pt-4">
+                  <dl className="mt-5 space-y-3 border-t border-white/[0.06] pt-4">
                     <div className="flex items-baseline justify-between gap-4">
-                      <dt className="flex-none text-[12px] text-[#7b8493]">
+                      <dt className="flex-none text-[13px] font-medium text-[#9ba4b3]">
                         {mode === 'decrypt' ? 'Opening with' : 'Sealing to'}
                       </dt>
-                      <dd className="truncate text-right font-mono text-[12px] text-[#a8b0bd]">{source.label}</dd>
+                      <dd className="truncate text-right font-mono text-[13.5px] text-[#bcc4d0]">{source.label}</dd>
                     </div>
                     <div className="flex items-baseline justify-between gap-4">
-                      <dt className="flex-none text-[12px] text-[#7b8493]">Output</dt>
-                      <dd className="text-right text-[12px] text-[#a8b0bd]">
+                      <dt className="flex-none text-[13px] font-medium text-[#9ba4b3]">Output</dt>
+                      <dd className="text-right text-[13.5px] text-[#bcc4d0]">
                         {mode === 'decrypt' ? 'your original file' : 'a .arshield container'}
                       </dd>
                     </div>
                     <div className="flex items-baseline justify-between gap-4">
-                      <dt className="flex-none text-[12px] text-[#7b8493]">Suite</dt>
-                      <dd className="text-right font-mono text-[11.5px] leading-relaxed text-[#a8b0bd]">
+                      <dt className="flex-none text-[13px] font-medium text-[#9ba4b3]">Suite</dt>
+                      <dd className="text-right font-mono text-[13px] leading-relaxed text-[#bcc4d0]">
                         ML-KEM-768 + X25519 · AES-256-GCM · ML-DSA-65
                       </dd>
                     </div>
@@ -366,13 +366,13 @@ export function AppWorkspace({
                 </div>
               ) : (
                 <div>
-                  <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-action)]/10 text-[var(--color-action)]">
-                    <Upload className="h-5 w-5" />
+                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--color-action)]/12 text-[var(--color-action)]">
+                    <Upload className="h-6 w-6" />
                   </span>
-                  <div className="mt-3 text-[14px] font-medium text-[#eef1f6]">
+                  <div className="mt-3 text-[15.5px] font-medium text-[#eef1f6]">
                     {mode === 'decrypt' ? 'Drop a .arshield file' : 'Drop a file to seal'}
                   </div>
-                  <div className="mt-1 text-[12.5px] text-[#6b7383]">
+                  <div className="mt-1 text-[13.5px] font-medium text-[#949dac]">
                     or <span className="text-[var(--color-action)]/80">browse</span>
                     {' · '}
                     {mode === 'decrypt'
@@ -387,7 +387,7 @@ export function AppWorkspace({
                 is a plain link underneath rather than a second button, so there
                 is never a pair of competing actions to pick between. */}
             {file && (
-              <div className="border-t border-white/[0.06] bg-white/[0.012] px-5 py-4">
+              <div className="border-t border-white/[0.06] bg-white/[0.012] px-6 py-5">
                 <Button
                   variant="primary"
                   className="w-full"
@@ -413,13 +413,13 @@ export function AppWorkspace({
                       setShowSteps(false);
                     }}
                     disabled={busy}
-                    className="text-[12px] text-[#7b8493] underline-offset-4 transition-colors hover:text-[#c8cedb] hover:underline disabled:opacity-50"
+                    className="text-[13px] font-medium text-[#9ba4b3] underline-offset-4 transition-colors hover:text-[#e6e9ef] hover:underline disabled:opacity-50"
                   >
                     {mode === 'decrypt' ? 'seal it instead' : 'open it instead'}
                   </button>
                 </div>
                 {!canEncrypt(tier) && (
-                  <p className="mt-2.5 text-center text-[11.5px] text-[#e5a23c]">
+                  <p className="mt-2.5 text-center text-[13px] text-[#e5a23c]">
                     Daily limit reached on {tier.name}. Resets at 00:00 UTC.
                   </p>
                 )}
@@ -428,7 +428,7 @@ export function AppWorkspace({
           </div>
 
 
-          {status && <p className="mt-4 text-center text-[13px] text-brand-gold">{status}</p>}
+          {status && <p className="mt-4 text-center text-[14.5px] text-brand-gold">{status}</p>}
 
           {/* Live stage list. Shown while a sealing or opening run is under
               way, and kept on screen afterwards so the finished sequence stays
@@ -441,7 +441,7 @@ export function AppWorkspace({
 
           {result && (
             <div className="panel mt-6 p-5">
-              <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-emerald-300">
+              <div className="mb-3 flex items-center gap-2 text-[14.5px] font-semibold text-emerald-300">
                 <Check className="h-4 w-4" />
                 {result.seal ? 'Quantum-Sealed' : 'Opened'}
               </div>
@@ -461,8 +461,8 @@ export function AppWorkspace({
               </div>
               {result.hash && (
                 <div className="mt-4">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5b6474]">Envelope sha256</div>
-                  <div className="mt-1 break-all font-mono text-[11px] text-[#8a93a3]">{result.hash}</div>
+                  <div className="text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8b94a4]">Envelope sha256</div>
+                  <div className="mt-1 break-all font-mono text-[12.5px] text-[#9ba4b3]">{result.hash}</div>
                 </div>
               )}
             </div>
@@ -470,16 +470,16 @@ export function AppWorkspace({
 
           {/* Message composer */}
           <div className="panel mt-6 p-5">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5b6474]">Compose</div>
-            <h3 className="text-[15px] font-semibold text-[#e6e9ef]">Share via .arshield message</h3>
+            <div className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8b94a4]">Compose</div>
+            <h3 className="text-[16.5px] font-semibold text-[#e6e9ef]">Share via .arshield message</h3>
             <textarea
               value={msgText}
               onChange={(e) => setMsgText(e.target.value.slice(0, 65536))}
               rows={3}
               placeholder="Type a message to seal into a URL…"
-              className="mt-3 w-full rounded-xl border border-white/10 bg-[#03070f] px-3 py-2.5 text-[13px] text-[#e6e9ef] outline-none focus:border-brand-gold/50"
+              className="mt-3 w-full rounded-xl border border-white/12 bg-[#03070f] px-4 py-3 text-[14.5px] text-[#eef1f6] outline-none placeholder:text-[#828b9c] focus:border-brand-gold/50"
             />
-            <div className="mt-1 flex justify-between text-[11px] text-[#5b6474]">
+            <div className="mt-2 flex justify-between text-[12.5px] text-[#8b94a4]">
               <span>Encrypted bytes live in the URL fragment, never sent to a server.</span>
               <span>{msgText.length} / 65536 B</span>
             </div>
@@ -489,22 +489,22 @@ export function AppWorkspace({
             {msgUrl && (
               <div className="mt-3 rounded-xl border border-white/[0.08] bg-[#03070f] p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-gold">Message URL</span>
+                  <span className="text-[12.5px] font-semibold uppercase tracking-wider text-brand-gold">Message URL</span>
                   <button
                     onClick={() => { navigator.clipboard?.writeText(msgUrl); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-                    className="inline-flex items-center gap-1 text-[11px] text-[#9aa3b2] hover:text-brand-gold"
+                    className="inline-flex items-center gap-1 text-[12.5px] text-[#aab3c1] hover:text-brand-gold"
                   >
                     <Copy className="h-3 w-3" />{copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
-                <div className="mt-2 max-h-24 overflow-y-auto break-all font-mono text-[10.5px] text-[#8a93a3]">{msgUrl}</div>
+                <div className="mt-2 max-h-24 overflow-y-auto break-all font-mono text-[12px] text-[#9ba4b3]">{msgUrl}</div>
               </div>
             )}
           </div>
 
           {/* Key backup guidance */}
           <div className="mt-6 flex justify-center">
-            <Link href="/docs/getting-started" className="text-[12.5px] text-[#5b6474] hover:text-[#9aa3b2]">
+            <Link href="/docs/getting-started" className="text-[13.5px] font-medium text-[#8b94a4] hover:text-[#d6dbe5]">
               Backing up your keys → why a key file outlives your wallet
             </Link>
           </div>
