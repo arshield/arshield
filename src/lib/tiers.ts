@@ -24,6 +24,25 @@ export const TIERS: Tier[] = [
 
 export const TIER_BY_KEY = Object.fromEntries(TIERS.map((t) => [t.key, t])) as Record<Tier['key'], Tier>;
 
+/**
+ * Addresses granted the top tier for testing.
+ *
+ * Pre-launch there is no token to hold, so everyone reads as Free and the daily
+ * cap is easy to hit while exercising the app. These wallets are treated as
+ * Whale — no daily limit, no size cap — so the whole flow can be run without
+ * waiting for a reset.
+ *
+ * Lowercase for comparison; addresses are case-insensitive but checksummed in
+ * display, so never match on the raw string.
+ */
+export const TEST_UNLIMITED: ReadonlySet<string> = new Set([
+  '0xaece0ab2a46f31209f4c6381f20a5af218fda176',
+]);
+
+export function isTestUnlimited(address?: string | null): boolean {
+  return !!address && TEST_UNLIMITED.has(address.toLowerCase());
+}
+
 /** $arshield → tier from USD balance. Balance <= 0 -> free. */
 export function tierFromUsd(usd: number): Tier {
   if (!Number.isFinite(usd) || usd <= 0) return TIER_BY_KEY.free;
@@ -34,9 +53,12 @@ export function tierFromUsd(usd: number): Tier {
 /**
  * Read $arshield balance over the ARC RPC and convert to a tier.
  * The token is not deployed yet; when ARSHIELD_CONTRACT is set, this reads
- * balanceOf(address) and prices it against a pool. Pre-launch: everyone is Free.
+ * balanceOf(address) and prices it against a pool. Pre-launch, everyone is
+ * Free except the test addresses above.
  */
 export async function fetchTier(address?: string | null): Promise<Tier> {
+  // Test wallets bypass the gate entirely — see TEST_UNLIMITED.
+  if (isTestUnlimited(address)) return TIER_BY_KEY.whale;
   // Pre-launch: $arshield hasn't launched, so any address reads as Free.
   // When ARSHIELD_CONTRACT is set, replace this with balanceOf(address) over
   // ARC_RPC, priced into USD, then tierFromUsd().
