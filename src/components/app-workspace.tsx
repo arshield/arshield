@@ -6,7 +6,7 @@ import { Check, Copy, Download, FileLock2, FileText, Loader2, RotateCcw, ShieldC
 import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
 import { SealingStepper } from '@/components/sealing-stepper';
-import { runStepper } from '@/lib/run-stepper';
+import { playSteps } from '@/lib/play-steps';
 import { Button } from '@/components/button';
 import {
   encryptFile,
@@ -115,6 +115,9 @@ export function AppWorkspace({
   // operation runs so the primitives read as a sequence rather than a
   // single opaque wait.
   const [step, setStep] = useState(0);
+  // Whether the stage list is on screen. Kept separate from `busy` because the
+  // crypto finishes in milliseconds — `busy` alone would flash and vanish.
+  const [showSteps, setShowSteps] = useState(false);
   const [result, setResult] = useState<{ name: string; bytes: Uint8Array; seal?: Uint8Array; hash?: string } | null>(null);
   const [msgText, setMsgText] = useState('');
   const [msgUrl, setMsgUrl] = useState<string | null>(null);
@@ -129,6 +132,7 @@ export function AppWorkspace({
       setResult(null);
       setStatus(null);
       setStep(0);
+      setShowSteps(false);
       const isDecrypt = f.name.endsWith('.arshield');
       setMode(isDecrypt ? 'decrypt' : 'encrypt');
       if (!isDecrypt && bytes.length > tier.maxFileBytes) {
@@ -150,37 +154,50 @@ export function AppWorkspace({
       setStatus(`Daily encryption limit reached${Number.isFinite(tier.encryptionsPerDay) ? ` (${tier.encryptionsPerDay}/24h on ${tier.name})` : ''}. Resets at 00:00 UTC.`);
       return;
     }
-    setBusy(true); setStatus(null); setStep(0);
-    // Walk the stepper while the real work runs. The primitive order matches
-    // encryptFile(): encapsulate, agree, combine, encrypt, sign.
-    const advance = runStepper(setStep, 5);
+    setBusy(true); setStatus(null); setStep(0); setShowSteps(true);
+    // The primitives finish in milliseconds — far faster than a frame — so the
+    // display is paced. Each step is held long enough to be read, and the
+    // crypto runs in parallel; the final step is only marked once the real
+    // work has actually returned.
     try {
+      const started = Date.now();
       const container = await encryptFile(file.bytes, file.name, source.kp.publicKey, source.kp.secretKey);
-      advance.finish();
+      const cryptoMs = Date.now() - started;
+
       incrementEncryptionsUsed();
       const hash = await sha256Hex(container);
       const seal = await buildSealPng(hash, file.name);
+
+      // Show the stages in order, spending whatever time is left of the
+      // display budget after the real work.
+      await playSteps(setStep, 5, cryptoMs);
+
       setResult({ name: file.name + '.arshield', bytes: container, seal, hash });
       const left = encryptionsLeft(tier);
       setStatus(`Quantum-Sealed · Ready to download · ${left === 'unlimited' ? 'unlimited' : left + ' left'} today`);
     } catch (e) {
       setStatus(e instanceof Error ? e.message : String(e));
-    } finally { advance.cancel(); setBusy(false); }
+      setShowSteps(false);
+    } finally { setBusy(false); }
   };
 
   const doDecrypt = async () => {
     if (!file) return;
-    setBusy(true); setStatus(null); setStep(0);
-    // Opening verifies the signature first, so the stepper leads with ML-DSA-65.
-    const advance = runStepper(setStep, 5);
+    setBusy(true); setStatus(null); setStep(0); setShowSteps(true);
+    // Opening verifies the signature first, so the list leads with ML-DSA-65.
     try {
+      const started = Date.now();
       const out = await decryptFile(file.bytes, source.kp.secretKey, source.kp.publicKey);
-      advance.finish();
+      const cryptoMs = Date.now() - started;
+
+      await playSteps(setStep, 5, cryptoMs);
+
       setResult({ name: out.filename, bytes: out.fileBytes });
       setStatus('Decrypted · ML-DSA-65 signature verified');
     } catch {
       setStatus('Decryption failed. Wrong key, or the file was tampered with.');
-    } finally { advance.cancel(); setBusy(false); }
+      setShowSteps(false);
+    } finally { setBusy(false); }
   };
 
   const doMessage = async () => {
@@ -221,6 +238,45 @@ export function AppWorkspace({
         </header>
 
         <main className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
+          {/* Mode switch, above the drop zone.
+              Without this the two buttons only appeared after a file was
+              picked, so the first thing a visitor did — drop a file — happened
+              before they had chosen what to do with it. Choosing first also
+              sets the drop zone's own wording, which is what tells them
+              whether a file belongs here at all. */}
+          <div
+            role="tablist"
+            aria-label="Operation"
+            className="mx-auto mb-5 flex w-fit gap-1 rounded-full border border-white/[0.08] bg-white/[0.02] p-1"
+          >
+            {(['encrypt', 'decrypt'] as const).map((m) => {
+              const active = mode === m;
+              return (
+                <button
+                  key={m}
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => {
+                    setMode(m);
+                    setFile(null);
+                    setResult(null);
+                    setStatus(null);
+                    setStep(0);
+                    setShowSteps(false);
+                  }}
+                  className={[
+                    'rounded-full px-5 py-2 text-[13px] font-medium transition-colors',
+                    active
+                      ? 'bg-[#020610] text-[#eef1f6] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]'
+                      : 'text-[#8a93a3] hover:text-[#c8cedb]',
+                  ].join(' ')}
+                >
+                  {m === 'encrypt' ? 'Encrypt' : 'Decrypt'}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Drop zone */}
           <div
             onDragOver={(e) => e.preventDefault()}
@@ -240,8 +296,14 @@ export function AppWorkspace({
             ) : (
               <div>
                 <FileLock2 className="mx-auto h-8 w-8 text-brand-gold" />
-                <div className="mt-3 font-semibold text-[#e6e9ef]">Drop a .arshield file to decrypt</div>
-                <div className="mt-1 text-[12.5px] text-[#8a93a3]">or any file to encrypt · filename sealed inside</div>
+                <div className="mt-3 font-semibold text-[#e6e9ef]">
+                  {mode === 'decrypt' ? 'Drop a .arshield file to decrypt' : 'Drop a file to encrypt'}
+                </div>
+                <div className="mt-1 text-[12.5px] text-[#8a93a3]">
+                  {mode === 'decrypt'
+                    ? 'output is your original file · filename is read from inside'
+                    : 'output is a .arshield container · filename sealed inside'}
+                </div>
               </div>
             )}
           </div>
@@ -263,9 +325,9 @@ export function AppWorkspace({
           {/* Live stage list. Shown while a sealing or opening run is under
               way, and kept on screen afterwards so the finished sequence stays
               readable next to the result. */}
-          {(busy || (step > 0 && !result)) && mode !== 'wait' && (
+          {showSteps && (
             <div className="mt-5">
-              <SealingStepper mode={mode} done={step} running={busy} />
+              <SealingStepper mode={mode === 'decrypt' ? 'decrypt' : 'encrypt'} done={step} running={busy} />
             </div>
           )}
 
