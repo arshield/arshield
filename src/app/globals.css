@@ -1,0 +1,240 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-brand-gold: #d1a413;
+  --color-brand-ink: #031020;
+
+  /* ---- Semantic state colors ----------------------------------------
+     Before this the gold token did every job (brand, CTA, progress,
+     decoration, success), so the eye had no way to read state. Now each
+     hue means exactly one thing:
+
+       action   (gold)  : things you can click / the brand
+       verified (teal)  : a cryptographic check passed
+       progress (amber) : work in flight
+       danger   (red)   : a check failed or something is wrong
+       idle     (slate) : nothing happening / disabled / pending
+
+     Gold is no longer allowed to mean success, and teal is no longer a
+     hairline outline — it fills the row it belongs to.
+     ------------------------------------------------------------------ */
+  --color-action: #d1a413;
+  --color-action-soft: rgba(209, 164, 19, 0.1);
+  --color-verified: #4ade9b;
+  --color-verified-soft: rgba(74, 222, 155, 0.12);
+  /* Progress sits a clear step away from the brand gold. The old amber
+     (#e5a23c) read as "gold, slightly lighter", which made the two
+     indistinguishable at a glance. This is warmer and more orange, so a
+     working row never looks like a branded one. */
+  --color-progress: #f0a13a;
+  --color-progress-soft: rgba(240, 161, 58, 0.14);
+  --color-danger: #f87171;
+  --color-danger-soft: rgba(248, 113, 113, 0.12);
+  --color-idle: #7c889c;
+
+  /* Raised surface for the one light-on-dark inversion used mid-page. */
+  --color-paper: #f2f0ea;
+  --color-paper-ink: #12131a;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.25);
+}
+
+:root {
+  --background: 225 88% 3%;       /* #020610 near-black navy */
+  --foreground: 0 0% 85%;         /* #D9D9D9 light gray */
+  --card: 225 50% 6%;
+  --card-foreground: 0 0% 85%;
+  --popover: 225 60% 5%;
+  --popover-foreground: 0 0% 92%;
+  --primary: 46 83% 45%;          /* #D1A413 gold */
+  --primary-foreground: 225 88% 3%;
+  --secondary: 225 30% 10%;
+  --secondary-foreground: 0 0% 92%;
+  --muted: 225 30% 10%;
+  --muted-foreground: 0 0% 62%;
+  --accent: 46 83% 45%;
+  --accent-foreground: 225 88% 3%;
+  --destructive: 0 72% 50%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 100%;
+  --input: 225 40% 12%;
+  --ring: 46 83% 45%;
+  --radius: 1rem;
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border) / 0.06);
+  }
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: rgba(209, 164, 19, 0.25);
+    color: #f5e3b3;
+  }
+  html {
+    scroll-behavior: smooth;
+    background: #020610;
+  }
+}
+
+@layer utilities {
+  /* Panel card used across the site */
+  .panel {
+    background: linear-gradient(180deg, rgba(20, 28, 48, 0.55), rgba(8, 14, 28, 0.55));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+  }
+
+  /* ---- Gold treatments (exact from ArShield) ---- */
+  .text-gradient-gold {
+    background-image: linear-gradient(135deg, #f5daa2, #d1a413 55%, #b68708);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .bg-gold-gradient {
+    background-image: linear-gradient(135deg, #e9c35f, #d1a413 45%, #7a5f0a);
+  }
+  .shadow-gold-glow {
+    box-shadow: 0 0 32px 0 rgba(209, 164, 19, 0.18);
+  }
+  .shadow-gold-glow-lg {
+    box-shadow: 0 0 48px 0 rgba(209, 164, 19, 0.28);
+  }
+  .shadow-gold-glow-lg:hover {
+    box-shadow: 0 0 64px 0 rgba(209, 164, 19, 0.38);
+  }
+  .border-gold {
+    border-color: rgba(209, 164, 19, 0.4);
+  }
+  .text-brand-gold {
+    color: #d1a413;
+  }
+  .bg-brand-gold {
+    background: #d1a413;
+  }
+  .text-brand-ink {
+    color: #031020;
+  }
+  .bg-brand-ink {
+    background: #031020;
+  }
+
+  /* ---- Fine hairline top borders on gold CTAs ---- */
+  .hairline-top {
+    position: relative;
+  }
+  .hairline-top::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
+    pointer-events: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ---- Keyframes (from ArShield + template) ---- */
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+.animate-accordion-down { animation: accordion-down 0.25s ease-out; }
+.animate-accordion-up { animation: accordion-up 0.2s ease-out; }
+
+/* Slow drift for background orbs */
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(2%, -3%, 0) scale(1.04); }
+  66% { transform: translate3d(-2%, 2%, 0) scale(0.98); }
+}
+.animate-drift { animation: drift 22s ease-in-out infinite; }
+.animate-drift-slow { animation: drift 32s ease-in-out infinite; }
+
+/* Shimmer sweep across gold gradients */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Soft pulse for LIVE badges */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.animate-soft-pulse { animation: soft-pulse 2.4s ease-in-out infinite; }
+
+/* Progress tick that slides across the active pipeline row in the hero panel */
+@keyframes arSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* Orbital node blink (hero flow map) */
+@keyframes arBlink {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.35); }
+}
+.animate-node-blink { animation: arBlink 2.6s ease-in-out infinite; }
+
+/* Travelling packet along the hero flow lines */
+@keyframes arPacket {
+  0% { offset-distance: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift,
+  .animate-drift-slow,
+  .animate-soft-pulse,
+  .animate-node-blink {
+    animation: none !important;
+  }
+}
