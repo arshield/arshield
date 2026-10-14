@@ -2,16 +2,25 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 
+/**
+ * Geist ships as a variable font here, so `weight` is left unset — the file
+ * carries a range and the browser picks from it. Declaring a single weight
+ * would make every bold in the UI render from the same face and flatten the
+ * hierarchy.
+ */
 const geistSans = localFont({
   src: './fonts/geist-sans.woff2',
   variable: '--font-geist-sans',
   display: 'swap',
+  fallback: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+  adjustFontFallback: 'Arial',
 });
 
 const geistMono = localFont({
   src: './fonts/geist-mono.woff2',
   variable: '--font-geist-mono',
   display: 'swap',
+  fallback: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
 });
 
 export const metadata: Metadata = {
@@ -44,7 +53,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
         {children}
       </body>
     </html>
