@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Check, Copy, Download, FileLock2, FileText, Loader2, RotateCcw, ShieldCheck } from 'lucide-react';
 import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
+import { SealingStepper } from '@/components/sealing-stepper';
+import { runStepper } from '@/lib/run-stepper';
 import { Button } from '@/components/button';
 import {
   encryptFile,
@@ -109,6 +111,10 @@ export function AppWorkspace({
   const [mode, setMode] = useState<'wait' | 'encrypt' | 'decrypt'>('wait');
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  // How many stepper rows have completed. Advanced on a timer while the
+  // operation runs so the primitives read as a sequence rather than a
+  // single opaque wait.
+  const [step, setStep] = useState(0);
   const [result, setResult] = useState<{ name: string; bytes: Uint8Array; seal?: Uint8Array; hash?: string } | null>(null);
   const [msgText, setMsgText] = useState('');
   const [msgUrl, setMsgUrl] = useState<string | null>(null);
@@ -122,6 +128,7 @@ export function AppWorkspace({
       setFile({ name: f.name, bytes });
       setResult(null);
       setStatus(null);
+      setStep(0);
       const isDecrypt = f.name.endsWith('.arshield');
       setMode(isDecrypt ? 'decrypt' : 'encrypt');
       if (!isDecrypt && bytes.length > tier.maxFileBytes) {
@@ -143,9 +150,13 @@ export function AppWorkspace({
       setStatus(`Daily encryption limit reached${Number.isFinite(tier.encryptionsPerDay) ? ` (${tier.encryptionsPerDay}/24h on ${tier.name})` : ''}. Resets at 00:00 UTC.`);
       return;
     }
-    setBusy(true); setStatus(null);
+    setBusy(true); setStatus(null); setStep(0);
+    // Walk the stepper while the real work runs. The primitive order matches
+    // encryptFile(): encapsulate, agree, combine, encrypt, sign.
+    const advance = runStepper(setStep, 5);
     try {
       const container = await encryptFile(file.bytes, file.name, source.kp.publicKey, source.kp.secretKey);
+      advance.finish();
       incrementEncryptionsUsed();
       const hash = await sha256Hex(container);
       const seal = await buildSealPng(hash, file.name);
@@ -154,19 +165,22 @@ export function AppWorkspace({
       setStatus(`Quantum-Sealed · Ready to download · ${left === 'unlimited' ? 'unlimited' : left + ' left'} today`);
     } catch (e) {
       setStatus(e instanceof Error ? e.message : String(e));
-    } finally { setBusy(false); }
+    } finally { advance.cancel(); setBusy(false); }
   };
 
   const doDecrypt = async () => {
     if (!file) return;
-    setBusy(true); setStatus(null);
+    setBusy(true); setStatus(null); setStep(0);
+    // Opening verifies the signature first, so the stepper leads with ML-DSA-65.
+    const advance = runStepper(setStep, 5);
     try {
       const out = await decryptFile(file.bytes, source.kp.secretKey, source.kp.publicKey);
+      advance.finish();
       setResult({ name: out.filename, bytes: out.fileBytes });
       setStatus('Decrypted · ML-DSA-65 signature verified');
     } catch {
       setStatus('Decryption failed. Wrong key, or the file was tampered with.');
-    } finally { setBusy(false); }
+    } finally { advance.cancel(); setBusy(false); }
   };
 
   const doMessage = async () => {
@@ -245,6 +259,15 @@ export function AppWorkspace({
           )}
 
           {status && <p className="mt-4 text-center text-[13px] text-brand-gold">{status}</p>}
+
+          {/* Live stage list. Shown while a sealing or opening run is under
+              way, and kept on screen afterwards so the finished sequence stays
+              readable next to the result. */}
+          {(busy || (step > 0 && !result)) && mode !== 'wait' && (
+            <div className="mt-5">
+              <SealingStepper mode={mode} done={step} running={busy} />
+            </div>
+          )}
 
           {result && (
             <div className="panel mt-6 p-5">
