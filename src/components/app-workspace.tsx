@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { Check, Copy, Download, FileLock2, FileText, Loader2, RotateCcw, ShieldCheck } from 'lucide-react';
+import { Check, Copy, Download, FileText, Loader2, RotateCcw, ShieldCheck, Upload } from 'lucide-react';
 import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
 import { SealingStepper } from '@/components/sealing-stepper';
@@ -277,48 +277,156 @@ export function AppWorkspace({
             })}
           </div>
 
-          {/* Drop zone */}
-          <div
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => { e.preventDefault(); pick(e.dataTransfer.files?.[0]); }}
-            onClick={() => input.current?.click()}
-            className="panel cursor-pointer p-10 text-center transition-colors hover:border-brand-gold/30"
-          >
-            <input ref={input} type="file" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
-            {file ? (
-              <div>
-                <FileText className="mx-auto h-8 w-8 text-brand-gold" />
-                <div className="mt-3 font-semibold text-[#e6e9ef]">{file.name}</div>
-                <div className="mt-1 text-[12.5px] text-[#8a93a3]">
-                  {(file.bytes.length / MB).toFixed(2)} MB · {mode === 'decrypt' ? 'ready to decrypt' : 'ready to encrypt'}
+          {/* Upload card.
+              Three states, one card: empty (drop zone), filled (file summary
+              with the details of what will happen), and locked (during a run,
+              so nothing can be swapped mid-operation). */}
+          <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02]">
+            {/* header strip: what this card is for, and the current mode */}
+            <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-[#5b6474]">
+                {mode === 'decrypt' ? 'Open an envelope' : 'Seal a file'}
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-[#5b6474]">
+                <ShieldCheck className="h-3.5 w-3.5 text-[var(--color-verified)]" />
+                {mode === 'decrypt'
+                  ? 'signature checked before decryption'
+                  : 'ML-KEM-768 + X25519 · ML-DSA-65'}
+              </span>
+            </div>
+
+            {/* body: drop target when empty, file summary when filled */}
+            <div
+              onDragOver={(e) => { if (!busy) e.preventDefault(); }}
+              onDrop={(e) => { e.preventDefault(); if (!busy) pick(e.dataTransfer.files?.[0]); }}
+              onClick={() => { if (!busy) input.current?.click(); }}
+              className={[
+                'px-5 py-8 text-center transition-colors',
+                busy ? 'cursor-default opacity-70' : 'cursor-pointer hover:bg-white/[0.015]',
+              ].join(' ')}
+            >
+              <input
+                ref={input}
+                type="file"
+                className="hidden"
+                onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ''; }}
+              />
+
+              {file ? (
+                <div className="text-left">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-[var(--color-action)]/12 text-[var(--color-action)]">
+                      <FileText className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[14px] font-medium text-[#eef1f6]">{file.name}</div>
+                      <div className="mt-0.5 text-[12px] text-[#6b7383]">
+                        {(file.bytes.length / MB).toFixed(2)} MB
+                        {mode === 'decrypt' ? ' · envelope' : ' · plaintext'}
+                      </div>
+                    </div>
+                    {!busy && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFile(null); setResult(null); setStatus(null); setStep(0); setShowSteps(false);
+                        }}
+                        className="flex-none rounded-lg border border-white/10 px-2.5 py-1 text-[11px] text-[#8a93a3] transition-colors hover:border-white/20 hover:text-[#c8cedb]"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  {/* what this file is about to become — the same three facts
+                      the real flow will act on. Stacked rather than a two-column
+                      table so a long suite string wraps instead of crushing the
+                      label column on narrow screens. */}
+                  <dl className="mt-4 space-y-2.5 border-t border-white/[0.06] pt-4">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <dt className="flex-none text-[12px] text-[#7b8493]">
+                        {mode === 'decrypt' ? 'Opening with' : 'Sealing to'}
+                      </dt>
+                      <dd className="truncate text-right font-mono text-[12px] text-[#a8b0bd]">{source.label}</dd>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-4">
+                      <dt className="flex-none text-[12px] text-[#7b8493]">Output</dt>
+                      <dd className="text-right text-[12px] text-[#a8b0bd]">
+                        {mode === 'decrypt' ? 'your original file' : 'a .arshield container'}
+                      </dd>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-4">
+                      <dt className="flex-none text-[12px] text-[#7b8493]">Suite</dt>
+                      <dd className="text-right font-mono text-[11.5px] leading-relaxed text-[#a8b0bd]">
+                        ML-KEM-768 + X25519 · AES-256-GCM · ML-DSA-65
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
-              </div>
-            ) : (
-              <div>
-                <FileLock2 className="mx-auto h-8 w-8 text-brand-gold" />
-                <div className="mt-3 font-semibold text-[#e6e9ef]">
-                  {mode === 'decrypt' ? 'Drop a .arshield file to decrypt' : 'Drop a file to encrypt'}
+              ) : (
+                <div>
+                  <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-action)]/10 text-[var(--color-action)]">
+                    <Upload className="h-5 w-5" />
+                  </span>
+                  <div className="mt-3 text-[14px] font-medium text-[#eef1f6]">
+                    {mode === 'decrypt' ? 'Drop a .arshield file' : 'Drop a file to seal'}
+                  </div>
+                  <div className="mt-1 text-[12.5px] text-[#6b7383]">
+                    or <span className="text-[var(--color-action)]/80">browse</span>
+                    {' · '}
+                    {mode === 'decrypt'
+                      ? 'filename is read from inside the envelope'
+                      : 'filename travels sealed inside'}
+                  </div>
                 </div>
-                <div className="mt-1 text-[12.5px] text-[#8a93a3]">
-                  {mode === 'decrypt'
-                    ? 'output is your original file · filename is read from inside'
-                    : 'output is a .arshield container · filename sealed inside'}
+              )}
+            </div>
+
+            {/* footer: one primary action for the chosen mode. The alternative
+                is a plain link underneath rather than a second button, so there
+                is never a pair of competing actions to pick between. */}
+            {file && (
+              <div className="border-t border-white/[0.06] bg-white/[0.012] px-5 py-4">
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  onClick={mode === 'decrypt' ? doDecrypt : doEncrypt}
+                  disabled={busy || !canEncrypt(tier)}
+                >
+                  {busy ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ShieldCheck className="h-4 w-4" />
+                  )}
+                  {mode === 'decrypt' ? 'Open envelope' : 'Seal file'}
+                </Button>
+                <div className="mt-2.5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const other = mode === 'decrypt' ? 'encrypt' : 'decrypt';
+                      setMode(other);
+                      setResult(null);
+                      setStatus(null);
+                      setStep(0);
+                      setShowSteps(false);
+                    }}
+                    disabled={busy}
+                    className="text-[12px] text-[#7b8493] underline-offset-4 transition-colors hover:text-[#c8cedb] hover:underline disabled:opacity-50"
+                  >
+                    {mode === 'decrypt' ? 'seal it instead' : 'open it instead'}
+                  </button>
                 </div>
+                {!canEncrypt(tier) && (
+                  <p className="mt-2.5 text-center text-[11.5px] text-[#e5a23c]">
+                    Daily limit reached on {tier.name}. Resets at 00:00 UTC.
+                  </p>
+                )}
               </div>
             )}
           </div>
 
-          {file && (
-            <div className="mt-4 flex gap-3">
-              <Button variant="primary" className="flex-1" onClick={doEncrypt} disabled={busy}>
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                Encrypt → .arshield
-              </Button>
-              <Button variant="ghost" className="flex-1" onClick={doDecrypt} disabled={busy}>
-                Decrypt
-              </Button>
-            </div>
-          )}
 
           {status && <p className="mt-4 text-center text-[13px] text-brand-gold">{status}</p>}
 
