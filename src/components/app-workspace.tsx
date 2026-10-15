@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Check, Copy, Download, FileText, Loader2, RotateCcw, ShieldCheck, Upload } from 'lucide-react';
 import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
+import { motion } from 'framer-motion';
 import { SealingStepper } from '@/components/sealing-stepper';
 import { playSteps } from '@/lib/play-steps';
 import { Button } from '@/components/button';
@@ -281,7 +282,12 @@ export function AppWorkspace({
               Three states, one card: empty (drop zone), filled (file summary
               with the details of what will happen), and locked (during a run,
               so nothing can be swapped mid-operation). */}
-          <div className="overflow-hidden rounded-2xl border border-white/[0.10] bg-white/[0.028]">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden rounded-2xl border border-white/[0.10] bg-white/[0.028]"
+          >
             {/* header strip: what this card is for, and the current mode */}
             <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
               <span className="font-mono text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8b94a4]">
@@ -425,7 +431,7 @@ export function AppWorkspace({
                 )}
               </div>
             )}
-          </div>
+          </motion.div>
 
 
           {status && <p className="mt-4 text-center text-[14.5px] text-brand-gold">{status}</p>}
@@ -469,7 +475,12 @@ export function AppWorkspace({
           )}
 
           {/* Message composer */}
-          <div className="panel mt-6 p-5">
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            className="panel mt-6 p-5"
+          >
             <div className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8b94a4]">Compose</div>
             <h3 className="text-[16.5px] font-semibold text-[#e6e9ef]">Share via .arshield message</h3>
             <textarea
@@ -500,7 +511,7 @@ export function AppWorkspace({
                 <div className="mt-2 max-h-24 overflow-y-auto break-all font-mono text-[12px] text-[#9ba4b3]">{msgUrl}</div>
               </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Key backup guidance */}
           <div className="mt-6 flex justify-center">
