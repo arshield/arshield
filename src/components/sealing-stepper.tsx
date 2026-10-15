@@ -132,7 +132,12 @@ export function SealingStepper({
         <div
           className={[
             'h-full rounded-r-full transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
-            finished >= total ? 'bg-[var(--color-verified)]' : 'bg-[var(--color-action)]',
+            // On completion the bar turns teal and pulses once. A bar that
+            // simply arrives at full width has no finish; the single pulse is
+            // what marks the end of the sequence.
+            finished >= total
+              ? 'bg-[var(--color-verified)] motion-safe:animate-[as-bar-done_900ms_cubic-bezier(0.22,1,0.36,1)_1]'
+              : 'bg-[var(--color-action)]',
           ].join(' ')}
           style={{ width: `${barPct}%` }}
           role="progressbar"
