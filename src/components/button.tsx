@@ -13,8 +13,11 @@ export const sizes = {
 } as const;
 
 export const variants: Record<ButtonVariant, string> = {
+  // The lift is on a named easing rather than the default so the primary action
+  // settles the way the rest of the site's motion does. The glow widens on the
+  // same transition rather than a separate one, so lift and light move together.
   primary:
-    'bg-gold-gradient text-brand-ink shadow-gold-glow hover:-translate-y-[1px] hover:shadow-gold-glow-lg',
+    'bg-gold-gradient text-brand-ink shadow-gold-glow hover:-translate-y-[1px] hover:shadow-gold-glow-lg duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]',
   ghost:
     'border border-white/10 bg-white/[0.02] text-[#e6e9ef] hover:border-white/20 hover:bg-white/[0.05]',
   outline:

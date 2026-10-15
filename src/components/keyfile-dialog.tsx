@@ -120,14 +120,14 @@ export function KeyfileDialog({
         type="button"
         aria-label="Close"
         onClick={() => !busy && onClose()}
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="as-backdrop-in absolute inset-0 bg-black/70 backdrop-blur-sm"
       />
 
       <div
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.10] bg-[#080d18] shadow-2xl"
+        className="as-dialog-in relative w-full max-w-md overflow-hidden rounded-2xl border border-white/[0.10] bg-[#080d18] shadow-2xl"
       >
         <div className="flex items-start justify-between border-b border-white/[0.07] px-6 py-4">
           <div>
