@@ -37,6 +37,7 @@ export function KeyfileDialog({
   onOpen,
   busy,
   error,
+  progress,
 }: {
   mode: Mode;
   open: boolean;
@@ -45,6 +46,8 @@ export function KeyfileDialog({
   onOpen?: (json: string, passphrase: string) => void | Promise<void>;
   busy?: boolean;
   error?: string | null;
+  /** 0..1 while deriving. Drives a bar so a 5s wait doesn't read as a hang. */
+  progress?: number | null;
 }) {
   const [pass, setPass] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -268,6 +271,24 @@ export function KeyfileDialog({
             </p>
           )}
         </div>
+
+        {/* Deriving takes seconds at production Argon2id params. Without a bar
+            the modal is a still image for that whole time, which reads as a
+            hang — measured at ~5s, and the freeze it used to be. */}
+        {busy && progress != null && (
+          <div className="px-6 pb-1">
+            <div className="h-[3px] w-full overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="h-full rounded-full bg-[var(--color-action)] transition-[width] duration-200 ease-out"
+                style={{ width: `${Math.round(Math.max(0.04, Math.min(1, progress)) * 100)}%` }}
+              />
+            </div>
+            <p className="mt-2 text-[11.5px] text-[#8b94a4]">
+              {mode === 'create' ? 'Deriving your wrap key' : 'Unwrapping your key'}
+              {' · Argon2id, deliberately slow'}
+            </p>
+          </div>
+        )}
 
         <div className="flex items-center justify-end gap-2.5 border-t border-white/[0.07] px-6 py-4">
           <Button variant="ghost" onClick={onClose} disabled={busy}>

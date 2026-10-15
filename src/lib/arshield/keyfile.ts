@@ -1,8 +1,7 @@
-import { argon2idAsync } from '@noble/hashes/argon2';
+import { argon2WrapKey } from './argon2-client';
 import { randomBytes } from '@noble/hashes/utils';
 import { aeadDecrypt, aeadEncrypt } from './aead';
 import * as constants from './constants';
-import { hkdfDerive } from './hkdf';
 import { InvalidPassphraseError } from './types';
 import type { ArShieldKeyPair, ArShieldKeyfile } from './types';
 
@@ -56,23 +55,35 @@ function deserializeKeypair(bytes: Uint8Array): ArShieldKeyPair {
   };
 }
 
+/**
+ * Derive the AES wrapping key from the passphrase.
+ *
+ * The expensive part (Argon2id, ~5s at these params) runs in a worker so the UI
+ * keeps painting — see argon2-client.ts for why. `onProgress` is optional and
+ * only ever drives a progress bar; nothing about the key depends on it.
+ */
 async function deriveWrapKey(
   passphrase: string,
   salt: Uint8Array,
   params: { t: number; m: number; p: number },
+  onProgress?: (fraction: number) => void,
 ): Promise<Uint8Array> {
-  const argonOut = await argon2idAsync(utf8Encoder.encode(passphrase), salt, {
-    t: params.t,
-    m: params.m,
-    p: params.p,
-    dkLen: 32,
-  });
-  return hkdfDerive(
-    argonOut,
-    constants.HKDF_SALT,
-    constants.HKDF_INFO_KEYFILE_WRAP,
-    constants.AES_KEY_LEN,
+  const { wrapKey } = await argon2WrapKey(
+    passphrase,
+    salt,
+    {
+      t: params.t,
+      m: params.m,
+      p: params.p,
+      dkLen: 32,
+      // The worker's HKDF info must match what this side always used, so the
+      // derived key is byte-identical to the pre-worker implementation. An
+      // existing key file has to keep opening.
+      info: constants.HKDF_INFO_KEYFILE_WRAP,
+    },
+    onProgress,
   );
+  return wrapKey;
 }
 
 /** Wrap a keypair under a passphrase (Argon2id + AES-256-GCM) into a portable keyfile. */
@@ -80,13 +91,14 @@ export async function wrapKeyfile(
   kp: ArShieldKeyPair,
   passphrase: string,
   params: { t: number; m: number; p: number } = constants.ARGON2ID_PARAMS_PROD,
+  onProgress?: (fraction: number) => void,
 ): Promise<ArShieldKeyfile> {
   if (!passphrase || passphrase.length === 0) {
     throw new Error('Passphrase must be non-empty');
   }
   const salt = randomBytes(constants.ARGON2ID_SALT_LEN);
   const nonce = randomBytes(constants.NONCE_LEN);
-  const wrapKey = await deriveWrapKey(passphrase, salt, params);
+  const wrapKey = await deriveWrapKey(passphrase, salt, params, onProgress);
   const wrapped = await aeadEncrypt(
     wrapKey,
     nonce,
@@ -107,6 +119,7 @@ export async function wrapKeyfile(
 export async function unwrapKeyfile(
   kf: ArShieldKeyfile,
   passphrase: string,
+  onProgress?: (fraction: number) => void,
 ): Promise<ArShieldKeyPair> {
   if (kf.v !== 1) {
     throw new Error(`Unsupported keyfile version ${kf.v}`);
@@ -117,7 +130,7 @@ export async function unwrapKeyfile(
   const salt = b64.decode(kf.salt);
   const nonce = b64.decode(kf.nonce);
   const wrapped = b64.decode(kf.wrapped);
-  const wrapKey = await deriveWrapKey(passphrase, salt, kf.kdfParams);
+  const wrapKey = await deriveWrapKey(passphrase, salt, kf.kdfParams, onProgress);
   let plaintext: Uint8Array;
   try {
     plaintext = await aeadDecrypt(
