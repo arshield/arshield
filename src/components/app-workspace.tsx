@@ -2,12 +2,13 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { Check, Copy, Download, FileText, Loader2, RotateCcw, ShieldCheck, Upload } from 'lucide-react';
+import { Check, Copy, FileText, Loader2, RotateCcw, ShieldCheck, Upload } from 'lucide-react';
 import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SealingStepper } from '@/components/sealing-stepper';
 import { TypeOut } from '@/components/type-out';
+import { DownloadButton } from '@/components/download-button';
 import { playSteps } from '@/lib/play-steps';
 import { Button } from '@/components/button';
 import {
@@ -521,14 +522,17 @@ export function AppWorkspace({
                 {result.seal ? 'Quantum-Sealed' : 'Opened'}
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="ghost" size="sm" onClick={() => download(result.bytes, result.name)}>
-                  <Download className="h-3.5 w-3.5" />
-                  {result.seal ? 'Download .arshield' : 'Download file'}
-                </Button>
+                <DownloadButton
+                  onDownload={() => download(result.bytes, result.name)}
+                  label={result.seal ? 'Download .arshield' : 'Download file'}
+                  doneLabel="Saved"
+                />
                 {result.seal && (
-                  <Button variant="ghost" size="sm" onClick={() => download(result.seal!, result.name.replace(/\.arshield$/, '') + '.seal.png', 'image/png')}>
-                    <Download className="h-3.5 w-3.5" /> Download Seal
-                  </Button>
+                  <DownloadButton
+                    onDownload={() => download(result.seal!, result.name.replace(/\.arshield$/, '') + '.seal.png', 'image/png')}
+                    label="Download Seal"
+                    doneLabel="Saved"
+                  />
                 )}
                 <Button variant="ghost" size="sm" onClick={() => { setFile(null); setResult(null); setStatus(null); setMode('wait'); }}>
                   {result.seal ? 'Encrypt another' : 'Decrypt another'}
