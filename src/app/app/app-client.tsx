@@ -10,6 +10,8 @@ import { Button } from '@/components/button';
 import { AppWorkspace } from '@/components/app-workspace';
 import { useWallet } from '@/lib/use-wallet';
 import { ephemeralIdentity, unwrapKeyfile, wrapKeyfile, type ArShieldKeyPair } from '@/lib/arshield';
+import { ARGON2ID_PARAMS_PROD } from '@/lib/arshield/constants';
+import { KeyfileDialog } from '@/components/keyfile-dialog';
 import { fetchTier, TIER_BY_KEY, type Tier } from '@/lib/tiers';
 import { cn } from '@/lib/utils';
 
@@ -18,12 +20,11 @@ type KeySource = { kind: 'wallet'; label: string; kp: ArShieldKeyPair } | { kind
 export function AppClient() {
   const { wallet, deriving, error: walletError, mounted, connect, disconnect, deriveIdentity } = useWallet();
   const [source, setSource] = useState<KeySource>(null);
-  const [pass, setPass] = useState('');
-  const [keyfileJson, setKeyfileJson] = useState<string | null>(null);
-  const [genPass, setGenPass] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [showKeyfile, setShowKeyfile] = useState(false);
+  // Which key-file flow is open, if any. Replaces the inline passphrase field
+  // and the separate file picker that used to live in the card.
+  const [dialog, setDialog] = useState<'create' | 'open' | null>(null);
   const [tier, setTier] = useState<Tier>(TIER_BY_KEY.free);
   const [tierBusy, setTierBusy] = useState(false);
 
@@ -59,21 +60,28 @@ export function AppClient() {
     }
   };
 
-  const generateKeyfile = async () => {
+  /**
+   * Wrap a fresh random keypair as a key file and hand it to the user.
+   *
+   * The passphrase is required and comes from the dialog. It is never defaulted:
+   * a generated file the user cannot open again is worse than no file, because
+   * it looks like a backup.
+   */
+  const generateKeyfile = async (passphrase: string) => {
     setErr(null);
     setBusy(true);
     try {
       const kp = ephemeralIdentity();
-      const pw = genPass || 'arshield-generated-key';
-      const kf = await wrapKeyfile(kp, pw, { t: 2, m: 16384, p: 1 });
+      const kf = await wrapKeyfile(kp, passphrase, ARGON2ID_PARAMS_PROD);
       const blob = new Blob([JSON.stringify(kf, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'arshield-keyfile.json';
+      a.download = `arshield-keyfile-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
       setSource({ kind: 'keyfile', label: 'keyfile (generated)', kp });
+      setDialog(null);
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
@@ -81,16 +89,31 @@ export function AppClient() {
     }
   };
 
-  const loadKeyfile = async () => {
+  /**
+   * Unwrap a key file. The two failure modes are separated on purpose — a wrong
+   * passphrase and a file that is not a key file need different fixes, so telling
+   * the user which one happened is the difference between a retry and a dead end.
+   */
+  const openKeyfile = async (json: string, passphrase: string) => {
     setErr(null);
     setBusy(true);
     try {
-      if (!keyfileJson) throw new Error('Choose a key file first');
-      if (!pass) throw new Error('Enter the key file passphrase');
-      const kp = await unwrapKeyfile(JSON.parse(keyfileJson), pass);
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(json);
+      } catch {
+        throw new Error('That file is not valid JSON, so it cannot be an ArShield key file.');
+      }
+      const kp = await unwrapKeyfile(parsed as Parameters<typeof unwrapKeyfile>[0], passphrase);
       setSource({ kind: 'keyfile', label: 'keyfile (loaded)', kp });
+      setDialog(null);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
+      const msg = e instanceof Error ? e.message : String(e);
+      setErr(
+        /argon2|tag|unwrap|decrypt|oper/i.test(msg)
+          ? 'Wrong passphrase, or the key file is corrupted.'
+          : msg,
+      );
     } finally {
       setBusy(false);
     }
@@ -223,43 +246,17 @@ export function AppClient() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mt-auto space-y-2">
-                    <input
-                      type="password"
-                      value={genPass}
-                      onChange={(e) => setGenPass(e.target.value)}
-                      placeholder="passphrase to protect the file"
-                      className="w-full rounded-xl border border-white/10 bg-[#03070f] px-3 py-2.5 text-[13px] text-[#e6e9ef] outline-none focus:border-brand-gold/50"
-                    />
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="ghost" onClick={generateKeyfile} disabled={busy}>
-                        Generate new
-                      </Button>
-                      <Button variant="primary" onClick={() => setShowKeyfile((v) => !v)}>
-                        <Upload className="h-4 w-4" />
-                        Load existing
-                      </Button>
-                    </div>
-                    {showKeyfile && (
-                      <div className="space-y-2 rounded-xl border border-white/[0.08] bg-[#03070f] p-3">
-                        <input
-                          type="file"
-                          accept=".json"
-                          onChange={(e) => e.target.files?.[0]?.text().then(setKeyfileJson)}
-                          className="w-full text-[11px] text-[#8a93a3]"
-                        />
-                        <input
-                          type="password"
-                          value={pass}
-                          onChange={(e) => setPass(e.target.value)}
-                          placeholder="key file passphrase"
-                          className="w-full rounded-lg border border-white/10 bg-[#020610] px-3 py-2 text-[13px] text-[#e6e9ef] outline-none focus:border-brand-gold/50"
-                        />
-                        <Button variant="primary" className="w-full" onClick={loadKeyfile} disabled={busy}>
-                          Unlock key file
-                        </Button>
-                      </div>
-                    )}
+                  {/* Both flows open a dialog. The passphrase is set or
+                      entered there, never inline, so creating a file always
+                      means confirming what it was locked with. */}
+                  <div className="mt-auto grid grid-cols-2 gap-2">
+                    <Button variant="ghost" onClick={() => { setErr(null); setDialog('create'); }} disabled={busy}>
+                      Generate new
+                    </Button>
+                    <Button variant="primary" onClick={() => { setErr(null); setDialog('open'); }} disabled={busy}>
+                      <Upload className="h-4 w-4" />
+                      Load existing
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -287,6 +284,20 @@ export function AppClient() {
           </Reveal>
         </main>
       </div>
+
+      {/* One dialog for both key-file flows. `mode` only picks the copy and
+          which callback fires; the shell, validation and reset logic are
+          shared. */}
+      <KeyfileDialog
+        key={dialog ?? 'closed'}
+        mode={dialog ?? 'create'}
+        open={dialog !== null}
+        onClose={() => { if (!busy) { setDialog(null); setErr(null); } }}
+        onCreate={generateKeyfile}
+        onOpen={openKeyfile}
+        busy={busy}
+        error={err}
+      />
     </>
   );
 }
