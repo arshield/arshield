@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Logo } from './header';
-import { XLink } from './x-link';
+import { SocialLinks } from './social-links';
 
 const COLS = [
   {
@@ -49,8 +49,8 @@ export function Footer() {
             {/* Brighter than the header variant: this column has nothing
                 competing with it, and the quiet version disappeared against the
                 near-black background in review. */}
-            <div className="mt-6 flex items-center gap-3">
-              <XLink tone="bright" />
+            <div className="mt-6">
+              <SocialLinks tone="bright" />
             </div>
 
             <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#5b6474]">
