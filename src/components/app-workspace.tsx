@@ -400,12 +400,21 @@ export function AppWorkspace({
                   onClick={mode === 'decrypt' ? doDecrypt : doEncrypt}
                   disabled={busy || !canEncrypt(tier)}
                 >
+                  {/* The label carries the state. A spinner alone says "wait"
+                      without saying what for, and on a slow Argon2id unwrap the
+                      difference between "running" and "frozen" is exactly what
+                      the user is trying to read. */}
                   {busy ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {mode === 'decrypt' ? 'Opening…' : 'Sealing…'}
+                    </>
                   ) : (
-                    <ShieldCheck className="h-4 w-4" />
+                    <>
+                      <ShieldCheck className="h-4 w-4" />
+                      {mode === 'decrypt' ? 'Open envelope' : 'Seal file'}
+                    </>
                   )}
-                  {mode === 'decrypt' ? 'Open envelope' : 'Seal file'}
                 </Button>
                 <div className="mt-2.5 text-center">
                   <button
@@ -446,9 +455,27 @@ export function AppWorkspace({
           )}
 
           {result && (
-            <div className="panel mt-6 p-5">
+            /* The result is the payoff for a multi-second operation, so it
+               arrives rather than appears: the panel rises the last few pixels
+               and the tick scales in behind it. Keyed on the payload so a
+               second run replays the entrance instead of silently swapping
+               content into an already-settled panel. */
+            <motion.div
+              key={`${result.name}-${result.hash ?? ''}`}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+              className="panel mt-6 p-5"
+            >
               <div className="mb-3 flex items-center gap-2 text-[14.5px] font-semibold text-emerald-300">
-                <Check className="h-4 w-4" />
+                <motion.span
+                  initial={{ scale: 0.4, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.12, duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+                  className="grid h-5 w-5 place-items-center rounded-full bg-emerald-400/15"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </motion.span>
                 {result.seal ? 'Quantum-Sealed' : 'Opened'}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -471,7 +498,7 @@ export function AppWorkspace({
                   <div className="mt-1 break-all font-mono text-[12.5px] text-[#9ba4b3]">{result.hash}</div>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {/* Message composer */}
