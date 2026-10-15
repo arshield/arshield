@@ -5,14 +5,13 @@ import Link from 'next/link';
 import { ArrowLeft, FileKey, Loader2, ShieldCheck, Upload, Wallet } from 'lucide-react';
 import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
-import { Reveal } from '@/components/reveal';
 import { Button } from '@/components/button';
 import { AppWorkspace } from '@/components/app-workspace';
 import { useWallet } from '@/lib/use-wallet';
 import { ephemeralIdentity, unwrapKeyfile, wrapKeyfile, type ArShieldKeyPair } from '@/lib/arshield';
 import { ARGON2ID_PARAMS_PROD } from '@/lib/arshield/constants';
 import { KeyfileDialog } from '@/components/keyfile-dialog';
-import { useScreenTransition } from '@/lib/use-screen-transition';
+import { useScreenTransition, SWAP_CSS } from '@/lib/use-screen-transition';
 import { fetchTier, TIER_BY_KEY, type Tier } from '@/lib/tiers';
 import { cn } from '@/lib/utils';
 
@@ -123,29 +122,16 @@ export function AppClient() {
     }
   };
 
-  // The outgoing screen stays mounted while `screen.shown` catches up, so the
-  // two overlap instead of blinking past each other.
-  const showingWorkspace = screen.shown === 'workspace' && source;
+  // The outgoing screen is held for the swap window and animated out on top of
+  // Both screens render below; the picker unmounts only once the phase settles
+  // back to idle.
+  //
+  // There is deliberately no early return here. An earlier version returned the
+  // workspace as soon as `shown` flipped, which unmounted the picker in the
+  // same commit — so its exit animation never ran and there was a frame with
+  // nothing on screen. Measured as a 39%-of-normal JPEG, i.e. a blank page.
 
-  const wrap = (node: React.ReactNode, side: 'incoming' | 'existing') => (
-    <div
-      style={{
-        ...screen.style,
-        ...(side === 'incoming' ? screen.enterStyle : screen.exitStyle),
-      }}
-    >
-      {node}
-    </div>
-  );
-
-  if (showingWorkspace) {
-    return wrap(
-      <AppWorkspace source={source} onReset={() => setSource(null)} tier={tier} />,
-      screen.phase === 'in' ? 'incoming' : 'existing',
-    );
-  }
-
-  const picker = (
+  const pickerBody = (
     <>
       <Background />
       <div className="relative min-h-screen">
@@ -166,29 +152,24 @@ export function AppClient() {
         </header>
 
         <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-          <Reveal>
             <div className="mb-6 flex justify-center">
               <span className="inline-flex items-center gap-2 rounded-full border border-brand-gold/25 bg-brand-gold/[0.06] px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-brand-gold">
                 <ShieldCheck className="h-3 w-3" />
                 {tierBadge}
               </span>
             </div>
-          </Reveal>
-
-          <Reveal delay={0.05}>
+          
             <h1 className="text-center text-3xl font-bold leading-tight tracking-tight text-[#e6e9ef] sm:text-4xl">
               Quantum-safe encryption,
               <span className="text-gradient-gold mt-1 block">in your browser.</span>
             </h1>
-          </Reveal>
-          <Reveal delay={0.1}>
+          
             <p className="mx-auto mt-4 max-w-xl text-center text-[14.5px] leading-relaxed text-[#8a93a3]">
               Files never leave your device. ML-KEM-768 + X25519 hybrid · ML-DSA-65 signed.
             </p>
-          </Reveal>
+          
 
           {/* Key source panel */}
-          <Reveal delay={0.15}>
             <div className="panel mt-10 p-6 sm:p-8">
               <div className="mb-1 text-center">
                 <h2 className="text-lg font-bold text-[#e6e9ef]">
@@ -292,9 +273,7 @@ export function AppClient() {
                 A wallet derives your keys from its signature; a generated key file holds random ones.
               </p>
             </div>
-          </Reveal>
-
-          <Reveal delay={0.2}>
+          
             <div className="mt-6 flex items-center justify-center gap-6 text-[13px]">
               <Link href="/#tiers" className={cn('text-brand-gold transition-colors hover:text-[#e9c35f]')}>
                 Holders encrypt more →
@@ -303,7 +282,7 @@ export function AppClient() {
                 cryptography spec
               </Link>
             </div>
-          </Reveal>
+          
         </main>
       </div>
 
@@ -323,16 +302,29 @@ export function AppClient() {
     </>
   );
 
-  // When `source` is set but the transition has not swapped yet, both screens
-  // are painted — the workspace underneath, the picker fading out on top.
+
+
   return (
     <>
+      <style>{SWAP_CSS}</style>
+
+      {/* Incoming screen. Mounted as soon as the swap begins so it is already
+          painted underneath while the outgoing one fades over it. */}
       {source && (
-        <div className="fixed inset-0 z-40">
+        <div className={screen.enteringClass}>
           <AppWorkspace source={source} onReset={() => setSource(null)} tier={tier} />
         </div>
       )}
-      {wrap(picker, screen.phase === 'out' ? 'existing' : 'incoming')}
+
+      {/* Outgoing screen. Stays mounted for the whole swap. `as-screen-out`
+          lifts it over the incoming screen so the two are visible at once and
+          there is never a frame with nothing on it. Once the phase returns to
+          idle this stops rendering. */}
+      {(!source || screen.isSwapping) && (
+        <div className={source ? screen.leavingClass : screen.enteringClass}>
+          {pickerBody}
+        </div>
+      )}
     </>
   );
 }
