@@ -12,6 +12,7 @@ import { useWallet } from '@/lib/use-wallet';
 import { ephemeralIdentity, unwrapKeyfile, wrapKeyfile, type ArShieldKeyPair } from '@/lib/arshield';
 import { ARGON2ID_PARAMS_PROD } from '@/lib/arshield/constants';
 import { KeyfileDialog } from '@/components/keyfile-dialog';
+import { useScreenTransition } from '@/lib/use-screen-transition';
 import { fetchTier, TIER_BY_KEY, type Tier } from '@/lib/tiers';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +26,9 @@ export function AppClient() {
   // Which key-file flow is open, if any. Replaces the inline passphrase field
   // and the separate file picker that used to live in the card.
   const [dialog, setDialog] = useState<'create' | 'open' | null>(null);
+  // Cross-fade between the key-source picker and the workspace, so switching
+  // reads as moving into the app rather than a page replace.
+  const screen = useScreenTransition(source ? 'workspace' : 'picker');
   const [tier, setTier] = useState<Tier>(TIER_BY_KEY.free);
   const [tierBusy, setTierBusy] = useState(false);
 
@@ -119,11 +123,29 @@ export function AppClient() {
     }
   };
 
-  if (source) {
-    return <AppWorkspace source={source} onReset={() => setSource(null)} tier={tier} />;
+  // The outgoing screen stays mounted while `screen.shown` catches up, so the
+  // two overlap instead of blinking past each other.
+  const showingWorkspace = screen.shown === 'workspace' && source;
+
+  const wrap = (node: React.ReactNode, side: 'incoming' | 'existing') => (
+    <div
+      style={{
+        ...screen.style,
+        ...(side === 'incoming' ? screen.enterStyle : screen.exitStyle),
+      }}
+    >
+      {node}
+    </div>
+  );
+
+  if (showingWorkspace) {
+    return wrap(
+      <AppWorkspace source={source} onReset={() => setSource(null)} tier={tier} />,
+      screen.phase === 'in' ? 'incoming' : 'existing',
+    );
   }
 
-  return (
+  const picker = (
     <>
       <Background />
       <div className="relative min-h-screen">
@@ -298,6 +320,19 @@ export function AppClient() {
         busy={busy}
         error={err}
       />
+    </>
+  );
+
+  // When `source` is set but the transition has not swapped yet, both screens
+  // are painted — the workspace underneath, the picker fading out on top.
+  return (
+    <>
+      {source && (
+        <div className="fixed inset-0 z-40">
+          <AppWorkspace source={source} onReset={() => setSource(null)} tier={tier} />
+        </div>
+      )}
+      {wrap(picker, screen.phase === 'out' ? 'existing' : 'incoming')}
     </>
   );
 }
