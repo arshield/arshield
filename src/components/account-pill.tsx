@@ -27,32 +27,151 @@ import { encryptionsLeft } from '@/lib/tiers';
  */
 
 /**
- * Identity mark for an address.
+ * Identity mark for an address: the ArShield shield, with a generated interior.
  *
- * Derived from the address, so a given wallet always looks the same. What it
- * deliberately is not is a full-hue rainbow: an earlier pass spread the hue
- * across 360 degrees and the result was a blue-purple badge sitting in a header
- * that is otherwise gold-on-near-black — one element from a different palette
- * makes the whole row look assembled rather than designed.
+ * Why a shield and not an identicon, having built both. A bare identicon is
+ * unique per address but carries no meaning — it reads as a generated avatar,
+ * which is exactly the impression we were trying to get away from. Putting the
+ * grid inside the product's own silhouette keeps the uniqueness and adds the
+ * part that matters for a security tool: the shape itself says what the account
+ * is for. The outer form is the brand, the interior is the identity.
  *
- * So the hue stays inside the brand's band (gold through warm amber, 34-58deg)
- * and identity comes from lightness and saturation instead. Distinct at a
- * glance, still part of the system.
+ * Deterministic end to end — the same address always produces the same mark, so
+ * it is an identity rather than decoration. Two constraints that came out of
+ * testing this at real size:
+ *
+ * - The grid is 4x4, not finer. Thin lines disappear at 16px; blocks survive.
+ * - The block layer is clipped to the shield path. Without the clip a square
+ *   grid laid over a curved shield spills past the shoulders and the two
+ *   geometries visibly fight. The outline is drawn after the blocks so it is
+ *   never occluded by them.
+ *
+ * The hue is held inside the brand band (34-58deg, gold through amber). A
+ * full-wheel hue produced a blue-purple badge sitting in a header that is
+ * otherwise gold-on-near-black, and one element from a different palette is what
+ * makes a row look assembled rather than designed.
  */
-function markForAddress(address: string): { bg: string; fg: string } {
-  let h = 0;
-  for (let i = 0; i < address.length; i++) h = (h * 31 + address.charCodeAt(i)) >>> 0;
 
-  const hue = 34 + (h % 25);        // 34..58
-  const sat = 58 + ((h >> 5) % 22); // 58..79
-  const light = 42 + ((h >> 11) % 14); // 42..55
-  const hue2 = 34 + ((h >> 3) % 25);
+/** The shield, in its own 32x32 coordinate space. */
+const SHIELD_PATH = 'M16 2.5 27 6v9.6c0 6.9-4.6 11.6-11 13.4C9.6 27.2 5 22.5 5 15.6V6z';
 
-  return {
-    bg: `linear-gradient(140deg, hsl(${hue} ${sat}% ${light}%), hsl(${hue2} ${Math.max(30, sat - 18)}% ${Math.max(24, light - 16)}%))`,
-    // Near-black on a mid-light gold reads as a stamp rather than a sticker.
-    fg: '#04101f',
-  };
+/** FNV-1a. Cheap, deterministic, and well spread for this use. */
+function hash32(s: string): number {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h >>> 0;
+}
+
+type ShieldMark = {
+  /** Block rectangles as SVG `rect` children, in a 0-100 space. */
+  blocks: Array<{ x: number; y: number; w: number; h: number }>;
+  /** Brand-band hue for this address. */
+  hue: number;
+  /** Unique id for the clipPath — multiple marks can be on one page. */
+  clipId: string;
+};
+
+/**
+ * The shield path lives in a 32x32 space but the SVG viewBox is 0-100, so the
+ * path is scaled into place. The grid has to use the same box — an earlier
+ * version scattered blocks across the full 0-100 and then clipped to a shield
+ * occupying roughly 12-88, so most blocks were clipped away entirely and the
+ * mark rendered as an empty outline.
+ */
+const SHIELD_BOX = { x: 12.4, y: 12.4, size: 75.2 };
+
+function markForAddress(address: string): ShieldMark {
+  const s1 = hash32(address);
+  const s2 = hash32(address + 'a');
+  const s3 = hash32(address.slice(-16) + 'b');
+
+  const hue = 34 + (s3 % 22);
+  const cols = 3;
+  const rows = 3;
+  const inset = 1.6;   // gap between blocks; smaller = bolder blocks
+  // Inset the grid inside the shield so the outer ring of blocks is not clipped
+  // by the tapering shoulders, which is where the shield is narrowest.
+  const pad = { left: 7, right: 7, top: 8.5, bottom: 11 };
+  const gridW = SHIELD_BOX.size - pad.left - pad.right;
+  const gridH = SHIELD_BOX.size - pad.top - pad.bottom;
+  const cw = gridW / cols;
+  const ch = gridH / rows;
+
+  const blocks: ShieldMark['blocks'] = [];
+  for (let r = 0; r < rows; r++) {
+    // Only the left half is derived; the right half mirrors it, so the mark
+    // reads as a deliberate symbol rather than noise.
+    for (let c = 0; c < Math.ceil(cols / 2); c++) {
+      const on = ((s1 >>> (r * 2 + c)) ^ (s2 >>> (r + c))) & 1;
+      if (!on) continue;
+      const mirror = cols - 1 - c;
+      for (const cc of new Set([c, mirror])) {
+        blocks.push({
+          x: SHIELD_BOX.x + pad.left + cc * cw + inset / 2,
+          y: SHIELD_BOX.y + pad.top + r * ch + inset / 2,
+          w: cw - inset,
+          h: ch - inset,
+        });
+      }
+    }
+  }
+
+  // Stable per address, but needs to be unique in the document, so it is scoped
+  // by the address rather than a counter — a counter would differ between the
+  // server render and hydration.
+  return { blocks, hue, clipId: `ash-${s1.toString(36)}` };
+}
+
+/**
+ * Renders the mark. Sized in px, drawn in a 0-100 viewBox, so one path serves
+ * every size the header may use.
+ */
+function ShieldAvatar({ address, size = 24 }: { address: string; size?: number }) {
+  const mark = markForAddress(address);
+  // The shield is 32 units wide; scale it to fill the box with a little margin.
+  const scale = (size === 24 ? 2.35 : 2.35);
+  const tx = (100 - 32 * scale) / 2;
+  const ty = (100 - 32 * scale) / 2;
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" className="flex-none">
+      <defs>
+        <clipPath id={mark.clipId}>
+          <path d={SHIELD_PATH} transform={`translate(${tx} ${ty}) scale(${scale})`} />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${mark.clipId})`}>
+        {/* A filled bed behind the blocks. Without it the gaps between blocks
+            show the page background, so the mark reads as gold shapes floating
+            in a void rather than as a filled emblem — and at larger sizes the
+            "pattern" is ambiguous about which part is the figure. */}
+        <rect
+          x={SHIELD_BOX.x}
+          y={SHIELD_BOX.y}
+          width={SHIELD_BOX.size}
+          height={SHIELD_BOX.size}
+          fill={`hsl(${mark.hue} 30% 10%)`}
+        />
+        <g fill={`hsl(${mark.hue} 82% 64%)`}>
+          {mark.blocks.map((b, i) => (
+            <rect key={i} x={b.x} y={b.y} width={b.w} height={b.h} rx={1} />
+          ))}
+        </g>
+      </g>
+      <path
+        d={SHIELD_PATH}
+        fill="none"
+        stroke={`hsl(${mark.hue} 62% 52%)`}
+        strokeWidth={2.2}
+        vectorEffect="non-scaling-stroke"
+        opacity={1}
+        transform={`translate(${tx} ${ty}) scale(${scale})`}
+      />
+    </svg>
+  );
 }
 
 export function AccountPill({
@@ -74,7 +193,6 @@ export function AccountPill({
 
   const left = encryptionsLeft(tier);
   const isWallet = !!address;
-  const mark = address ? markForAddress(address) : null;
 
   // Dismiss on outside click or Escape. A popover that only closes via its own
   // button is the kind of thing that gets clicked away and does not respond.
@@ -123,16 +241,12 @@ export function AccountPill({
             : 'border-white/[0.11] bg-white/[0.03] hover:border-white/[0.20] hover:bg-white/[0.055]',
         ].join(' ')}
       >
-        {/* Identity mark. Deterministic hue per address, so the same wallet is
-            recognisable at a glance across sessions. */}
+        {/* Identity mark. The product's shield with a grid generated from the
+            address, so it reads as this wallet specifically rather than as a
+            placeholder. The key-file path has no address to derive from, so it
+            keeps a neutral key glyph. */}
         {isWallet ? (
-          <span
-            aria-hidden="true"
-            className="grid h-6 w-6 flex-none place-items-center rounded-full text-[10px] font-bold uppercase"
-            style={{ background: mark!.bg, color: mark!.fg }}
-          >
-            {address!.slice(2, 4)}
-          </span>
+          <ShieldAvatar address={address!} size={24} />
         ) : (
           <span className="grid h-6 w-6 flex-none place-items-center rounded-full border border-white/[0.14] bg-white/[0.05]">
             <KeyRound className="h-3 w-3 text-[#aab3c1]" />
@@ -178,8 +292,11 @@ export function AccountPill({
             {/* Label without the tier badge. The tier is already in the trigger
                 directly above, and repeating it here made it ambiguous whether
                 "WHALE" was the account name or a plan. */}
-            <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#7a8494]">
-              {sourceLabel.startsWith('keyfile') ? 'Key file' : 'Connected wallet'}
+            <div className="flex items-center gap-2.5">
+              {isWallet && <ShieldAvatar address={address!} size={28} />}
+              <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#7a8494]">
+                {sourceLabel.startsWith('keyfile') ? 'Key file' : 'Connected wallet'}
+              </div>
             </div>
 
             {isWallet ? (
