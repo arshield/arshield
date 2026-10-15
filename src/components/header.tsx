@@ -7,7 +7,7 @@ import { Menu, Wallet, X } from 'lucide-react';
 import { Button, sizes, variants } from './button';
 import { cn } from '@/lib/utils';
 import { useWallet } from '@/lib/use-wallet';
-import { XLink } from './x-link';
+import { SocialLinks } from './social-links';
 
 export function Logo({ className = '' }: { className?: string }) {
   return (
@@ -80,7 +80,7 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-2.5">
-          <XLink className="hidden sm:grid" />
+          <div className="hidden sm:block"><SocialLinks tone="quiet" showSoon={false} /></div>
           {mounted && wallet ? (
             <button
               onClick={disconnect}
@@ -138,7 +138,7 @@ export function Header() {
             {/* The desktop X link is hidden on small screens, so the mobile menu
                 carries it instead of dropping it. */}
             <div className="mt-2 flex items-center gap-3 px-3 py-1">
-              <XLink tone="bright" />
+              <SocialLinks tone="bright" />
               <span className="text-[13px] text-[#9aa3b2]">Follow @arcshield_</span>
             </div>
 
