@@ -286,7 +286,7 @@ export function AppWorkspace({
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0, ease: [0.22, 1, 0.36, 1] }}
-            className="overflow-hidden rounded-2xl border border-white/[0.10] bg-white/[0.028]"
+            className="as-lift-soft overflow-hidden rounded-2xl border border-white/[0.10] bg-white/[0.028]"
           >
             {/* header strip: what this card is for, and the current mode */}
             <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
@@ -465,7 +465,7 @@ export function AppWorkspace({
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="panel mt-6 p-5"
+              className="as-lift-soft panel mt-6 p-5"
             >
               <div className="mb-3 flex items-center gap-2 text-[14.5px] font-semibold text-emerald-300">
                 <motion.span
@@ -506,7 +506,7 @@ export function AppWorkspace({
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-            className="panel mt-6 p-5"
+            className="as-lift-soft panel mt-6 p-5"
           >
             <div className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8b94a4]">Compose</div>
             <h3 className="text-[16.5px] font-semibold text-[#e6e9ef]">Share via .arshield message</h3>

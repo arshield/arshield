@@ -1,6 +1,11 @@
 /**
  * Fixed full-page background: near-black navy with blue + gold radial glows and a
  * faint grid, matching ArShield. Two drifting orbs give the cinematic motion.
+ *
+ * The grid creeps upward very slowly. At 90s for a 64px tile it is far below the
+ * threshold of noticing the movement as movement — the effect is that the
+ * surface never reads as a flat image, which is what a static grid looked like
+ * next to the drifting glows. The drift is hidden from reduced-motion users.
  */
 export function Background() {
   return (
@@ -29,9 +34,10 @@ export function Background() {
             'radial-gradient(circle at center, rgba(160,120,15,0.12), transparent 70%)',
         }}
       />
-      {/* Faint technical grid */}
+      {/* Technical grid, creeping upward. One extra tile of height so the tile
+          boundary never scrolls into view. */}
       <div
-        className="absolute inset-0 opacity-[0.16]"
+        className="absolute -top-[64px] left-0 h-[calc(100%+128px)] w-full opacity-[0.16] motion-safe:animate-[as-grid_90s_linear_infinite]"
         style={{
           backgroundImage:
             'linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px)',
