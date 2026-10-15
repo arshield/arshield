@@ -128,6 +128,73 @@
     backdrop-filter: blur(8px);
   }
 
+  /*
+   * Cards lift slightly on hover, so the interactive surface is felt before it
+   * is clicked. 2px at this scale reads as responsiveness; more reads as a
+   * bouncing toy. Paired with a border and background shift so the lift is not
+   * the only signal.
+   */
+  .as-lift {
+    transition:
+      transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 200ms ease,
+      background-color 200ms ease;
+  }
+  .as-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  /*
+   * Same lift, but for elements Framer Motion controls.
+   *
+   * Motion writes its animated values as inline style, and inline beats a class
+   * — so `.as-lift:hover { transform: ... }` silently does nothing on a
+   * motion.div, which is exactly what happened to the workspace cards. This
+   * variant moves no transform at all: the hover reads through border and
+   * background instead, and a box-shadow that lifts it off the page. It lives on
+   * an outer wrapper rather than the motion element, so the two never compete
+   * for the same property.
+   */
+  .as-lift-soft {
+    transition:
+      border-color 220ms ease,
+      background-color 220ms ease,
+      box-shadow 220ms ease;
+  }
+  .as-lift-soft:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    background-color: rgba(255, 255, 255, 0.035);
+    box-shadow: 0 18px 44px -28px rgba(0, 0, 0, 0.85);
+  }
+
+  /* Primary buttons get a slightly wider glow on hover rather than a colour
+     change, which would fight the gold gradient. */
+  .as-glow {
+    transition: box-shadow 220ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .as-glow:hover {
+    box-shadow: 0 10px 34px -10px rgba(209, 164, 19, 0.55);
+  }
+
+  /* Modal entrance, applied to the dialog panel and its backdrop. */
+  .as-dialog-in {
+    animation: as-dialog-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .as-backdrop-in {
+    animation: as-backdrop-in 200ms ease both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .as-lift, .as-lift:hover, .as-glow, .as-glow:hover,
+    .as-lift-soft, .as-lift-soft:hover {
+      transition: none;
+      transform: none;
+    }
+    .as-dialog-in, .as-backdrop-in {
+      animation: none;
+    }
+  }
+
   /* ---- Gold treatments (exact from ArShield) ---- */
   .text-gradient-gold {
     background-image: linear-gradient(135deg, #f5daa2, #d1a413 55%, #b68708);
@@ -248,4 +315,25 @@
   .animate-node-blink {
     animation: none !important;
   }
+}
+
+/*
+ * Background grid drift. Deliberately almost imperceptible: one 64px tile over
+ * 90 seconds is roughly a pixel every 1.4s. The point is not for the movement to
+ * be noticed as movement — it is to stop the surface reading as a flat image
+ * next to the drifting glows, which is how the static grid looked.
+ */
+@keyframes as-grid {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-64px); }
+}
+
+/* Modal entrance: settles forward instead of snapping into place. */
+@keyframes as-dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes as-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
