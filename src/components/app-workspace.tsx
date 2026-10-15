@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { SealingStepper } from '@/components/sealing-stepper';
 import { TypeOut } from '@/components/type-out';
 import { DownloadButton } from '@/components/download-button';
+import { CopyButton } from '@/components/copy-button';
 import { playSteps } from '@/lib/play-steps';
 import { Button } from '@/components/button';
 import {
@@ -126,6 +127,16 @@ export function AppWorkspace({
   // cleared on a timer — the label flicks to "Sealed" and back so the control
   // the user is already looking at reports the outcome.
   const [justFinished, setJustFinished] = useState(false);
+  // True while a chosen file is being read into memory. A large file takes long
+  // enough that the card would otherwise look like the click did nothing.
+  const [reading, setReading] = useState(false);
+  // True while a file is hovering the drop zone. Depth is counted because
+  // dragenter/dragleave fire for every child the pointer crosses.
+  const [dragging, setDragging] = useState(false);
+  const dragDepth = useRef(0);
+  // True for the brief window between pressing reset and the card actually
+  // clearing, so the outgoing state can fade instead of being replaced.
+  const [resetting, setResetting] = useState(false);
   const [msgText, setMsgText] = useState('');
   const [msgUrl, setMsgUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -133,6 +144,7 @@ export function AppWorkspace({
 
   const pick = (f?: File | null) => {
     if (!f) return;
+    setReading(true);
     void f.arrayBuffer().then((b) => {
       const bytes = new Uint8Array(b);
       setFile({ name: f.name, bytes });
@@ -152,7 +164,29 @@ export function AppWorkspace({
           }. See tiers.`,
         );
       }
-    });
+    }).finally(() => setReading(false));
+  };
+
+  /**
+   * Clear the workspace back to its empty state.
+   *
+   * Goes through a short delay so the outgoing card fades rather than vanishing:
+   * resetting used to swap the entire panel in one frame, which read as a page
+   * reload rather than a step backwards.
+   */
+  const resetToEmpty = () => {
+    // Fade the panel first, then clear. Clearing immediately swaps the whole
+    // card in one frame, which reads as a reload rather than a step back.
+    setResetting(true);
+    window.setTimeout(() => {
+      setFile(null);
+      setResult(null);
+      setStatus(null);
+      setMode('wait');
+      setStep(0);
+      setShowSteps(false);
+      setResetting(false);
+    }, 260);
   };
 
   /**
@@ -303,8 +337,8 @@ export function AppWorkspace({
               so nothing can be swapped mid-operation). */}
           <motion.div
             initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0, ease: [0.22, 1, 0.36, 1] }}
+            animate={{ opacity: resetting ? 0 : 1, y: resetting ? -10 : 0 }}
+            transition={{ duration: resetting ? 0.26 : 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="as-lift-soft overflow-hidden rounded-2xl border border-white/[0.10] bg-white/[0.028]"
           >
             {/* header strip: what this card is for, and the current mode */}
@@ -320,14 +354,27 @@ export function AppWorkspace({
               </span>
             </div>
 
-            {/* body: drop target when empty, file summary when filled */}
+            {/* body: drop target when empty, file summary when filled.
+                `dragging` tracks a file actually hovering the zone, so the
+                border answers before the drop instead of the file just
+                appearing. dragenter/dragleave are counted rather than toggled
+                because they fire for every child element the pointer crosses,
+                which makes a naive boolean flicker. */}
             <div
+              onDragEnter={(e) => { if (!busy) { e.preventDefault(); dragDepth.current++; setDragging(true); } }}
               onDragOver={(e) => { if (!busy) e.preventDefault(); }}
-              onDrop={(e) => { e.preventDefault(); if (!busy) pick(e.dataTransfer.files?.[0]); }}
-              onClick={() => { if (!busy) input.current?.click(); }}
+              onDragLeave={() => { dragDepth.current = Math.max(0, dragDepth.current - 1); if (dragDepth.current === 0) setDragging(false); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                dragDepth.current = 0;
+                setDragging(false);
+                if (!busy) pick(e.dataTransfer.files?.[0]);
+              }}
+              onClick={() => { if (!busy && !reading) input.current?.click(); }}
               className={[
-                'px-6 py-10 text-center transition-colors',
-                busy ? 'cursor-default opacity-70' : 'cursor-pointer hover:bg-white/[0.015]',
+                'px-6 py-10 text-center transition-all duration-200',
+                busy || reading ? 'cursor-default opacity-70' : 'cursor-pointer hover:bg-white/[0.015]',
+                dragging ? 'bg-[var(--color-action)]/[0.05] ring-2 ring-inset ring-[var(--color-action)]/35' : '',
               ].join(' ')}
             >
               <input
@@ -337,7 +384,15 @@ export function AppWorkspace({
                 onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ''; }}
               />
 
-              {file ? (
+              {/* Reading indicator. A large file takes long enough to read into
+                  memory that the card would otherwise look like the click
+                  missed, which invites a second click. */}
+              {reading && !file ? (
+                <div className="flex flex-col items-center gap-3 py-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-[var(--color-action)]" />
+                  <p className="text-[14px] text-[#9ba4b3]">Reading file…</p>
+                </div>
+              ) : file ? (
                 <div className="text-left">
                   <div className="flex items-start gap-3">
                     <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-[var(--color-action)]/14 text-[var(--color-action)]">
@@ -534,14 +589,19 @@ export function AppWorkspace({
                     doneLabel="Saved"
                   />
                 )}
-                <Button variant="ghost" size="sm" onClick={() => { setFile(null); setResult(null); setStatus(null); setMode('wait'); }}>
+                <Button variant="ghost" size="sm" onClick={resetToEmpty}>
                   {result.seal ? 'Encrypt another' : 'Decrypt another'}
                 </Button>
               </div>
               {result.hash && (
                 <div className="mt-4">
-                  <div className="text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8b94a4]">Envelope sha256</div>
-                  <div className="mt-1 break-all font-mono text-[12.5px] text-[#9ba4b3]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8b94a4]">
+                      Envelope sha256
+                    </span>
+                    <CopyButton value={result.hash} label="Copy hash" copiedLabel="Copied" />
+                  </div>
+                  <div className="mt-1.5 break-all font-mono text-[12.5px] text-[#9ba4b3]">
                     <TypeOut text={result.hash} />
                   </div>
                 </div>
