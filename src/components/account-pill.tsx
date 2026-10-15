@@ -168,6 +168,7 @@ export function AccountPill({
   tier,
   sourceLabel,
   address,
+  holdings,
   onChangeKey,
 }: {
   tier: Tier;
@@ -175,6 +176,8 @@ export function AccountPill({
   sourceLabel: string;
   /** Present only for the wallet path; drives the identity mark. */
   address?: string;
+  /** Token holding behind the tier, when it could be read. */
+  holdings?: { balance: number; usd: number; priceSource: 'live' | 'fallback' | 'none' } | null;
   onChangeKey: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -307,6 +310,30 @@ export function AccountPill({
               </p>
             )}
           </div>
+
+          {/* What the tier was derived from. Shown because a tier badge that
+              asserts a level with no visible basis is the kind of thing people
+              reasonably distrust — and because a holder needs to be able to see
+              that their balance was actually picked up. */}
+          {holdings && holdings.balance > 0 && (
+            <div className="border-t border-white/[0.06] px-3 py-2">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[11.5px] tabular-nums text-[#c8cedb]">
+                  {holdings.balance.toLocaleString(undefined, { maximumFractionDigits: 2 })} ARSHIELD
+                </span>
+                {holdings.usd > 0 && (
+                  <span className="text-[11.5px] tabular-nums text-[var(--color-verified)]">
+                    ${holdings.usd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                  </span>
+                )}
+              </div>
+              {holdings.priceSource === 'fallback' && (
+                <p className="mt-0.5 text-[10.5px] text-[#7a8494]">
+                  Priced at the fallback rate — live feed unavailable
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Plain sentence rather than a spec dump: this is the one line a
               person reads to know what their tier gets them. */}
