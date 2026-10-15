@@ -2,7 +2,7 @@
   "name": "arshield",
   "version": "0.3.1",
   "private": true,
-  "description": "ArShield \u2014 post-quantum security infrastructure. Web app + MCP server (ML-KEM-768 + X25519, ML-DSA-65).",
+  "description": "ArShield — post-quantum security infrastructure. Web app + MCP server (ML-KEM-768 + X25519, ML-DSA-65).",
   "license": "MIT",
   "engines": {
     "node": ">=24"
@@ -10,6 +10,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:worker": "node scripts/build-worker.mjs",
+    "prebuild": "node scripts/build-worker.mjs",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -39,6 +41,7 @@
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
