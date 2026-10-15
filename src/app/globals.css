@@ -337,3 +337,58 @@
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+/*
+ * Completion markers. All three are one-shot and short: they are receipts, not
+ * states. Anything that loops or lingers past a second starts reading as
+ * something the user has to dismiss.
+ */
+
+/* The primary button flicking to its confirmed look. Colour only — the button
+   never moves, because a moving target after a click is the last thing anyone
+   wants to chase. */
+@keyframes as-success-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(74, 222, 155, 0.55); }
+  55%  { box-shadow: 0 0 0 12px rgba(74, 222, 155, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 222, 155, 0); }
+}
+
+/* The stepper's progress bar reaching full: a single settle, not a celebration. */
+@keyframes as-bar-done {
+  0%   { filter: brightness(1); }
+  35%  { filter: brightness(1.55); }
+  100% { filter: brightness(1); }
+}
+
+/* The result panel's border lighting up once as it lands, so the edge of the
+   new card registers before its contents are read. */
+@keyframes as-result-glow {
+  0%   { border-color: rgba(209, 164, 19, 0.55); box-shadow: 0 0 0 1px rgba(209, 164, 19, 0.18), 0 24px 60px -30px rgba(0, 0, 0, 0.7); }
+  100% { border-color: rgba(255, 255, 255, 0.08); box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.7); }
+}
+
+/*
+ * Per-character reveal for the digest. Each character carries its own delay, so
+ * the string appears to be typed without any JavaScript running per frame — and
+ * without depending on hydration, which is what makes it work in a static
+ * export. `both` holds each character invisible until its delay elapses.
+ */
+@keyframes as-type-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.as-success-flash {
+  animation: as-success-flash 1200ms cubic-bezier(0.22, 1, 0.36, 1) 1 !important;
+}
+.as-result-glow {
+  animation: as-result-glow 900ms cubic-bezier(0.22, 1, 0.36, 1) 1 both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .as-success-flash,
+  .as-result-glow,
+  .as-bar-done {
+    animation: none !important;
+  }
+}

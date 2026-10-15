@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { Check, Copy, Download, FileText, Loader2, RotateCcw, ShieldCheck, Upload } from 'lucide-react';
 import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { SealingStepper } from '@/components/sealing-stepper';
+import { TypeOut } from '@/components/type-out';
 import { playSteps } from '@/lib/play-steps';
 import { Button } from '@/components/button';
 import {
@@ -120,6 +121,10 @@ export function AppWorkspace({
   // crypto finishes in milliseconds — `busy` alone would flash and vanish.
   const [showSteps, setShowSteps] = useState(false);
   const [result, setResult] = useState<{ name: string; bytes: Uint8Array; seal?: Uint8Array; hash?: string } | null>(null);
+  // Brief confirmation state on the primary button. Set when a run completes,
+  // cleared on a timer — the label flicks to "Sealed" and back so the control
+  // the user is already looking at reports the outcome.
+  const [justFinished, setJustFinished] = useState(false);
   const [msgText, setMsgText] = useState('');
   const [msgUrl, setMsgUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -149,6 +154,17 @@ export function AppWorkspace({
     });
   };
 
+  /**
+   * Flash the primary button into its confirmed state for a beat.
+   *
+   * Kept deliberately short and self-clearing: this is a receipt, not a mode.
+   * Longer than ~1.2s and it starts reading as a state the user has to dismiss.
+   */
+  const flashDone = () => {
+    setJustFinished(true);
+    window.setTimeout(() => setJustFinished(false), 1200);
+  };
+
   const doEncrypt = async () => {
     if (!file) return;
     if (!canEncrypt(tier)) {
@@ -174,6 +190,7 @@ export function AppWorkspace({
       await playSteps(setStep, 5, cryptoMs);
 
       setResult({ name: file.name + '.arshield', bytes: container, seal, hash });
+      flashDone();
       const left = encryptionsLeft(tier);
       setStatus(`Quantum-Sealed · Ready to download · ${left === 'unlimited' ? 'unlimited' : left + ' left'} today`);
     } catch (e) {
@@ -194,6 +211,7 @@ export function AppWorkspace({
       await playSteps(setStep, 5, cryptoMs);
 
       setResult({ name: out.filename, bytes: out.fileBytes });
+      flashDone();
       setStatus('Decrypted · ML-DSA-65 signature verified');
     } catch {
       setStatus('Decryption failed. Wrong key, or the file was tampered with.');
@@ -394,11 +412,15 @@ export function AppWorkspace({
                 is never a pair of competing actions to pick between. */}
             {file && (
               <div className="border-t border-white/[0.06] bg-white/[0.012] px-6 py-5">
+                {/* A short confirmation on the button itself. The result
+                    panel animates in below, but the button is where the user's
+                    pointer already is, so that is where "it worked" lands
+                    first. `justFinished` clears itself after 1.2s. */}
                 <Button
                   variant="primary"
-                  className="w-full"
+                  className={`w-full ${justFinished ? 'as-success-flash' : ''}`}
                   onClick={mode === 'decrypt' ? doDecrypt : doEncrypt}
-                  disabled={busy || !canEncrypt(tier)}
+                  disabled={busy || !canEncrypt(tier) || justFinished}
                 >
                   {/* The label carries the state. A spinner alone says "wait"
                       without saying what for, and on a slow Argon2id unwrap the
@@ -408,6 +430,11 @@ export function AppWorkspace({
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       {mode === 'decrypt' ? 'Opening…' : 'Sealing…'}
+                    </>
+                  ) : justFinished ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      {mode === 'decrypt' ? 'Opened' : 'Sealed'}
                     </>
                   ) : (
                     <>
@@ -445,14 +472,29 @@ export function AppWorkspace({
 
           {status && <p className="mt-4 text-center text-[14.5px] text-brand-gold">{status}</p>}
 
-          {/* Live stage list. Shown while a sealing or opening run is under
-              way, and kept on screen afterwards so the finished sequence stays
-              readable next to the result. */}
-          {showSteps && (
-            <div className="mt-5">
-              <SealingStepper mode={mode === 'decrypt' ? 'decrypt' : 'encrypt'} done={step} running={busy} />
-            </div>
-          )}
+          {/* Live stage list.
+              While a run is in flight it is the only thing here. Once the result
+              exists it collapses away instead of staying on screen, because
+              leaving both up for the ~7 seconds they used to overlap meant the
+              completion had no moment — the page just kept accumulating
+              elements. Collapsing it hands the space to the result, so the
+              sequence reads as one thing becoming another. */}
+          <AnimatePresence initial={false}>
+            {showSteps && !result && (
+              <motion.div
+                key="stepper"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden"
+              >
+                <div className="mt-5">
+                  <SealingStepper mode={mode === 'decrypt' ? 'decrypt' : 'encrypt'} done={step} running={busy} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {result && (
             /* The result is the payoff for a multi-second operation, so it
@@ -465,7 +507,7 @@ export function AppWorkspace({
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="as-lift-soft panel mt-6 p-5"
+              className="as-lift-soft as-result-glow panel mt-6 p-5"
             >
               <div className="mb-3 flex items-center gap-2 text-[14.5px] font-semibold text-emerald-300">
                 <motion.span
@@ -495,7 +537,9 @@ export function AppWorkspace({
               {result.hash && (
                 <div className="mt-4">
                   <div className="text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8b94a4]">Envelope sha256</div>
-                  <div className="mt-1 break-all font-mono text-[12.5px] text-[#9ba4b3]">{result.hash}</div>
+                  <div className="mt-1 break-all font-mono text-[12.5px] text-[#9ba4b3]">
+                    <TypeOut text={result.hash} />
+                  </div>
                 </div>
               )}
             </motion.div>
@@ -506,7 +550,7 @@ export function AppWorkspace({
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
-            className="as-lift-soft panel mt-6 p-5"
+            className="as-lift-soft as-result-glow panel mt-6 p-5"
           >
             <div className="mb-1 text-[11.5px] font-semibold uppercase tracking-[0.16em] text-[#8b94a4]">Compose</div>
             <h3 className="text-[16.5px] font-semibold text-[#e6e9ef]">Share via .arshield message</h3>
