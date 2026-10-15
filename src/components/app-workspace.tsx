@@ -107,10 +107,13 @@ export function AppWorkspace({
   source,
   onReset,
   tier,
+  holdings,
 }: {
   source: { kind: 'wallet' | 'keyfile'; label: string; kp: ArShieldKeyPair };
   onReset: () => void;
   tier: Tier;
+  /** Token holding behind the tier, when it could be read. */
+  holdings?: { balance: number; usd: number; priceSource: 'live' | 'fallback' | 'none' } | null;
 }) {
   const [file, setFile] = useState<{ name: string; bytes: Uint8Array } | null>(null);
   const [mode, setMode] = useState<'wait' | 'encrypt' | 'decrypt'>('wait');
@@ -282,6 +285,7 @@ export function AppWorkspace({
               tier={tier}
               sourceLabel={source.label}
               address={source.kind === 'wallet' ? source.label.split('· ')[1] : undefined}
+              holdings={holdings}
               onChangeKey={onReset}
             />
           </div>

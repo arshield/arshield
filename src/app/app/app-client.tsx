@@ -12,7 +12,7 @@ import { ephemeralIdentity, unwrapKeyfile, wrapKeyfile, type ArShieldKeyPair } f
 import { ARGON2ID_PARAMS_PROD } from '@/lib/arshield/constants';
 import { KeyfileDialog } from '@/components/keyfile-dialog';
 import { useScreenTransition, SWAP_CSS } from '@/lib/use-screen-transition';
-import { fetchTier, TIER_BY_KEY, type Tier } from '@/lib/tiers';
+import { fetchTierState, TIER_BY_KEY, type Tier, type TierState } from '@/lib/tiers';
 import { cn } from '@/lib/utils';
 
 type KeySource = { kind: 'wallet'; label: string; kp: ArShieldKeyPair } | { kind: 'keyfile'; label: string; kp: ArShieldKeyPair } | null;
@@ -32,6 +32,9 @@ export function AppClient() {
   // reads as moving into the app rather than a page replace.
   const screen = useScreenTransition(source ? 'workspace' : 'picker');
   const [tier, setTier] = useState<Tier>(TIER_BY_KEY.free);
+  // Balance and price alongside the tier, so the pill can show what the
+  // entitlement was derived from instead of asserting a level with no evidence.
+  const [holdings, setHoldings] = useState<{ balance: number; usd: number; priceSource: TierState['priceSource'] } | null>(null);
   const [tierBusy, setTierBusy] = useState(false);
 
   const tierBadge = tierBusy
@@ -54,8 +57,9 @@ export function AppClient() {
       // pre-launch (no token deployed yet).
       setTierBusy(true);
       try {
-        const t = await fetchTier(wallet.address);
-        setTier(t);
+        const state = await fetchTierState(wallet.address);
+        setTier(state.tier);
+        setHoldings({ balance: state.balance, usd: state.usd, priceSource: state.priceSource });
       } finally {
         setTierBusy(false);
       }
@@ -318,7 +322,12 @@ export function AppClient() {
           painted underneath while the outgoing one fades over it. */}
       {source && (
         <div className={screen.enteringClass}>
-          <AppWorkspace source={source} onReset={() => setSource(null)} tier={tier} />
+          <AppWorkspace
+            source={source}
+            onReset={() => { setSource(null); setHoldings(null); }}
+            tier={tier}
+            holdings={holdings}
+          />
         </div>
       )}
 
