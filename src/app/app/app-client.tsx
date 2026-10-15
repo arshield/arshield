@@ -25,6 +25,9 @@ export function AppClient() {
   // Which key-file flow is open, if any. Replaces the inline passphrase field
   // and the separate file picker that used to live in the card.
   const [dialog, setDialog] = useState<'create' | 'open' | null>(null);
+  // 0..1 while the KDF runs. Argon2id at production params takes ~5s, so the
+  // dialog needs to show something moving or it reads as a hang.
+  const [kdfProgress, setKdfProgress] = useState<number | null>(null);
   // Cross-fade between the key-source picker and the workspace, so switching
   // reads as moving into the app rather than a page replace.
   const screen = useScreenTransition(source ? 'workspace' : 'picker');
@@ -75,7 +78,7 @@ export function AppClient() {
     setBusy(true);
     try {
       const kp = ephemeralIdentity();
-      const kf = await wrapKeyfile(kp, passphrase, ARGON2ID_PARAMS_PROD);
+      const kf = await wrapKeyfile(kp, passphrase, ARGON2ID_PARAMS_PROD, setKdfProgress);
       const blob = new Blob([JSON.stringify(kf, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -89,6 +92,7 @@ export function AppClient() {
       setErr(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
+      setKdfProgress(null);
     }
   };
 
@@ -107,7 +111,7 @@ export function AppClient() {
       } catch {
         throw new Error('That file is not valid JSON, so it cannot be an ArShield key file.');
       }
-      const kp = await unwrapKeyfile(parsed as Parameters<typeof unwrapKeyfile>[0], passphrase);
+      const kp = await unwrapKeyfile(parsed as Parameters<typeof unwrapKeyfile>[0], passphrase, setKdfProgress);
       setSource({ kind: 'keyfile', label: 'keyfile (loaded)', kp });
       setDialog(null);
     } catch (e) {
@@ -119,6 +123,7 @@ export function AppClient() {
       );
     } finally {
       setBusy(false);
+      setKdfProgress(null);
     }
   };
 
@@ -298,6 +303,7 @@ export function AppClient() {
         onOpen={openKeyfile}
         busy={busy}
         error={err}
+        progress={kdfProgress}
       />
     </>
   );
