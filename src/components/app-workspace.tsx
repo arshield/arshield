@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import Link from 'next/link';
-import { Check, Copy, FileText, Loader2, RotateCcw, ShieldCheck, Upload } from 'lucide-react';
+import { Check, Copy, FileText, Loader2, ShieldCheck, Upload } from 'lucide-react';
 import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -10,6 +10,7 @@ import { SealingStepper } from '@/components/sealing-stepper';
 import { TypeOut } from '@/components/type-out';
 import { DownloadButton } from '@/components/download-button';
 import { CopyButton } from '@/components/copy-button';
+import { AccountPill } from '@/components/account-pill';
 import { playSteps } from '@/lib/play-steps';
 import { Button } from '@/components/button';
 import {
@@ -275,19 +276,14 @@ export function AppWorkspace({
         <header className="border-b border-white/[0.06] bg-[#020610]/70 backdrop-blur-xl">
           <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
             <Link href="/" aria-label="ArShield home"><Logo /></Link>
-            <div className="flex items-center gap-3">
-              <span className="hidden items-center gap-2 rounded-full border border-brand-gold/25 bg-brand-gold/[0.06] px-3 py-1 text-[12.5px] font-medium text-brand-gold sm:inline-flex">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                {tier.name} · {encryptionsLeft(tier) === 'unlimited' ? '∞' : encryptionsLeft(tier) + ' left'}
-              </span>
-              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] px-3 py-1 text-[12.5px] font-medium text-emerald-300">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                {source.label}
-              </span>
-              <button onClick={onReset} className="inline-flex items-center gap-1.5 text-[14.5px] text-[#aab3c1] hover:text-white">
-                <RotateCcw className="h-3.5 w-3.5" /> Change key
-              </button>
-            </div>
+            {/* One control, not three chips. See account-pill.tsx for why the
+                previous row of separate pills read as generated. */}
+            <AccountPill
+              tier={tier}
+              sourceLabel={source.label}
+              address={source.kind === 'wallet' ? source.label.split('· ')[1] : undefined}
+              onChangeKey={onReset}
+            />
           </div>
         </header>
 
