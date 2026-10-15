@@ -27,29 +27,21 @@ import { encryptionsLeft } from '@/lib/tiers';
  */
 
 /**
- * Identity mark for an address: the ArShield shield, with a generated interior.
+ * Identity marks for the account control.
  *
- * Why a shield and not an identicon, having built both. A bare identicon is
- * unique per address but carries no meaning — it reads as a generated avatar,
- * which is exactly the impression we were trying to get away from. Putting the
- * grid inside the product's own silhouette keeps the uniqueness and adds the
- * part that matters for a security tool: the shape itself says what the account
- * is for. The outer form is the brand, the interior is the identity.
+ * Two things are encoded, and they answer different questions:
  *
- * Deterministic end to end — the same address always produces the same mark, so
- * it is an identity rather than decoration. Two constraints that came out of
- * testing this at real size:
+ * - The tier, by how much of the shield is filled. That is the one that changes
+ *   what the app will do, so it is the one that is legible at a glance.
+ * - The account, by a deterministic hue derived from the address, so the same
+ *   wallet always renders the same colour and it becomes recognisable rather
+ *   than decorative.
  *
- * - The grid is 4x4, not finer. Thin lines disappear at 16px; blocks survive.
- * - The block layer is clipped to the shield path. Without the clip a square
- *   grid laid over a curved shield spills past the shoulders and the two
- *   geometries visibly fight. The outline is drawn after the blocks so it is
- *   never occluded by them.
- *
- * The hue is held inside the brand band (34-58deg, gold through amber). A
- * full-wheel hue produced a blue-purple badge sitting in a header that is
- * otherwise gold-on-near-black, and one element from a different palette is what
- * makes a row look assembled rather than designed.
+ * Why a shield and not an identicon, having built both: a bare identicon is
+ * unique per address but carries no meaning. It reads as a generated avatar,
+ * which was the impression we were trying to get away from. Keeping the
+ * product's own silhouette says what the account is for, which is the part that
+ * matters in a security tool.
  */
 
 /** The shield, in its own 32x32 coordinate space. */
@@ -65,76 +57,69 @@ function hash32(s: string): number {
   return h >>> 0;
 }
 
-type ShieldMark = {
-  /** Block rectangles as SVG `rect` children, in a 0-100 space. */
-  blocks: Array<{ x: number; y: number; w: number; h: number }>;
-  /** Brand-band hue for this address. */
-  hue: number;
-  /** Unique id for the clipPath — multiple marks can be on one page. */
-  clipId: string;
-};
-
 /**
  * The shield path lives in a 32x32 space but the SVG viewBox is 0-100, so the
- * path is scaled into place. The grid has to use the same box — an earlier
- * version scattered blocks across the full 0-100 and then clipped to a shield
- * occupying roughly 12-88, so most blocks were clipped away entirely and the
- * mark rendered as an empty outline.
+ * path is scaled into place. Anything drawn inside it has to use the same box —
+ * an earlier version scattered its interior across the full 0-100 and then
+ * clipped to a shield occupying roughly 12-88, so the mark rendered as an empty
+ * outline.
  */
 const SHIELD_BOX = { x: 12.4, y: 12.4, size: 75.2 };
 
-function markForAddress(address: string): ShieldMark {
+/**
+ * How much of the shield is filled, per tier.
+ *
+ * One language only: fill rises from the bottom and the amount of gold is the
+ * whole signal. An earlier pass mixed a sparse-block treatment for Free with
+ * partial fills for the others, and the result did not read as a ladder — Pro
+ * measured visually as less filled than Holder, and Free was closest to Pro
+ * rather than to empty. A single monotonic scale from 0 to 1 fixes that and
+ * keeps every tier directly comparable.
+ *
+ * The silhouette never changes. That is what holds the set together as a family
+ * instead of four unrelated icons, and it is why this still works at 24px where
+ * a detailed glyph would not.
+ */
+const TIER_FILL: Record<string, number> = {
+  free: 0,
+  holder: 0.34,
+  pro: 0.67,
+  whale: 1,
+};
+
+function markForAddress(address: string): { hue: number; clipId: string } {
   const s1 = hash32(address);
-  const s2 = hash32(address + 'a');
   const s3 = hash32(address.slice(-16) + 'b');
-
+  // Hue stays inside the brand band. A full-wheel hue produced a blue-purple
+  // badge in a header that is otherwise gold-on-near-black, and one element from
+  // a different palette is what makes a row look assembled rather than designed.
   const hue = 34 + (s3 % 22);
-  const cols = 3;
-  const rows = 3;
-  const inset = 1.6;   // gap between blocks; smaller = bolder blocks
-  // Inset the grid inside the shield so the outer ring of blocks is not clipped
-  // by the tapering shoulders, which is where the shield is narrowest.
-  const pad = { left: 7, right: 7, top: 8.5, bottom: 11 };
-  const gridW = SHIELD_BOX.size - pad.left - pad.right;
-  const gridH = SHIELD_BOX.size - pad.top - pad.bottom;
-  const cw = gridW / cols;
-  const ch = gridH / rows;
-
-  const blocks: ShieldMark['blocks'] = [];
-  for (let r = 0; r < rows; r++) {
-    // Only the left half is derived; the right half mirrors it, so the mark
-    // reads as a deliberate symbol rather than noise.
-    for (let c = 0; c < Math.ceil(cols / 2); c++) {
-      const on = ((s1 >>> (r * 2 + c)) ^ (s2 >>> (r + c))) & 1;
-      if (!on) continue;
-      const mirror = cols - 1 - c;
-      for (const cc of new Set([c, mirror])) {
-        blocks.push({
-          x: SHIELD_BOX.x + pad.left + cc * cw + inset / 2,
-          y: SHIELD_BOX.y + pad.top + r * ch + inset / 2,
-          w: cw - inset,
-          h: ch - inset,
-        });
-      }
-    }
-  }
-
-  // Stable per address, but needs to be unique in the document, so it is scoped
-  // by the address rather than a counter — a counter would differ between the
-  // server render and hydration.
-  return { blocks, hue, clipId: `ash-${s1.toString(36)}` };
+  // Scoped by the address rather than a counter: a counter would differ between
+  // the server render and hydration.
+  return { hue, clipId: `ash-${s1.toString(36)}` };
 }
 
 /**
  * Renders the mark. Sized in px, drawn in a 0-100 viewBox, so one path serves
  * every size the header may use.
  */
-function ShieldAvatar({ address, size = 24 }: { address: string; size?: number }) {
+function ShieldAvatar({
+  address,
+  tierKey,
+  size = 24,
+}: {
+  address: string;
+  /** Drives how much of the shield is filled. */
+  tierKey: string;
+  size?: number;
+}) {
   const mark = markForAddress(address);
   // The shield is 32 units wide; scale it to fill the box with a little margin.
-  const scale = (size === 24 ? 2.35 : 2.35);
+  const scale = 2.35;
   const tx = (100 - 32 * scale) / 2;
   const ty = (100 - 32 * scale) / 2;
+
+  const fillFraction = TIER_FILL[tierKey] ?? 0;
 
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true" className="flex-none">
@@ -144,30 +129,35 @@ function ShieldAvatar({ address, size = 24 }: { address: string; size?: number }
         </clipPath>
       </defs>
       <g clipPath={`url(#${mark.clipId})`}>
-        {/* A filled bed behind the blocks. Without it the gaps between blocks
-            show the page background, so the mark reads as gold shapes floating
-            in a void rather than as a filled emblem — and at larger sizes the
-            "pattern" is ambiguous about which part is the figure. */}
+        {/* A filled bed behind everything. Without it the page background shows
+            through the empty part of the shield and the mark reads as gold
+            floating in a void rather than as a filled emblem. */}
         <rect
           x={SHIELD_BOX.x}
           y={SHIELD_BOX.y}
           width={SHIELD_BOX.size}
           height={SHIELD_BOX.size}
-          fill={`hsl(${mark.hue} 30% 10%)`}
+          fill={`hsl(${mark.hue} 26% 7%)`}
         />
-        <g fill={`hsl(${mark.hue} 82% 64%)`}>
-          {mark.blocks.map((b, i) => (
-            <rect key={i} x={b.x} y={b.y} width={b.w} height={b.h} rx={1} />
-          ))}
-        </g>
+        {/* Fill rises from the bottom. The amount of gold is the entire signal,
+            so tiers stay comparable no matter which two are side by side. */}
+        {fillFraction > 0 && (
+          <rect
+            x={SHIELD_BOX.x}
+            y={SHIELD_BOX.y + SHIELD_BOX.size * (1 - fillFraction)}
+            width={SHIELD_BOX.size}
+            height={SHIELD_BOX.size * fillFraction}
+            fill={`hsl(${mark.hue} 88% 64%)`}
+          />
+        )}
       </g>
+      {/* Drawn after the fill so the outline is never occluded by it. */}
       <path
         d={SHIELD_PATH}
         fill="none"
-        stroke={`hsl(${mark.hue} 62% 52%)`}
-        strokeWidth={2.2}
+        stroke={`hsl(${mark.hue} 55% 42%)`}
+        strokeWidth={2}
         vectorEffect="non-scaling-stroke"
-        opacity={1}
         transform={`translate(${tx} ${ty}) scale(${scale})`}
       />
     </svg>
@@ -246,7 +236,7 @@ export function AccountPill({
             placeholder. The key-file path has no address to derive from, so it
             keeps a neutral key glyph. */}
         {isWallet ? (
-          <ShieldAvatar address={address!} size={24} />
+          <ShieldAvatar address={address!} tierKey={tier.key} size={24} />
         ) : (
           <span className="grid h-6 w-6 flex-none place-items-center rounded-full border border-white/[0.14] bg-white/[0.05]">
             <KeyRound className="h-3 w-3 text-[#aab3c1]" />
@@ -293,7 +283,7 @@ export function AccountPill({
                 directly above, and repeating it here made it ambiguous whether
                 "WHALE" was the account name or a plan. */}
             <div className="flex items-center gap-2.5">
-              {isWallet && <ShieldAvatar address={address!} size={28} />}
+              {isWallet && <ShieldAvatar address={address!} tierKey={tier.key} size={28} />}
               <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#7a8494]">
                 {sourceLabel.startsWith('keyfile') ? 'Key file' : 'Connected wallet'}
               </div>
