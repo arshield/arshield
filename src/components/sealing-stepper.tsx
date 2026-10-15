@@ -66,6 +66,9 @@ export function SealingStepper({
   const steps = stepsFor(mode);
   const total = steps.length;
   const finished = Math.min(done, total);
+  // The bar counts the running step as half done, so it moves the moment work
+  // starts rather than sitting at zero while the first row spins.
+  const barPct = Math.round((Math.min(finished + (running && finished < total ? 0.5 : 0), total) / total) * 100);
 
   const title = mode === 'encrypt' ? 'SEALING' : 'UNSEALING';
   const footerLabel = mode === 'encrypt' ? 'Sealing layers' : 'Unsealing layers';
@@ -120,6 +123,25 @@ export function SealingStepper({
           );
         })}
       </ul>
+
+      {/* Progress bar. The row list says which step is running; this says how
+          far through the whole sequence we are, at a glance, without reading.
+          The active step counts as partly done so the bar is never stuck at
+          zero while work is visibly happening. */}
+      <div className="h-[3px] w-full overflow-hidden bg-white/[0.05]">
+        <div
+          className={[
+            'h-full rounded-r-full transition-[width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]',
+            finished >= total ? 'bg-[var(--color-verified)]' : 'bg-[var(--color-action)]',
+          ].join(' ')}
+          style={{ width: `${barPct}%` }}
+          role="progressbar"
+          aria-valuenow={finished}
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-label={footerLabel}
+        />
+      </div>
 
       <div className="flex items-center justify-between border-t border-white/[0.06] px-5 py-3">
         <span className="text-[12px] text-[#7a8494]">
