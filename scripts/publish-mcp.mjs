@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Publish @arshield/mcp to npm.
+ * Publish arshield-mcp to npm.
  *
  * Runs the checks that matter before a release, because the failure modes here
  * are quiet: a tarball missing its bundle installs fine and then crashes on the
