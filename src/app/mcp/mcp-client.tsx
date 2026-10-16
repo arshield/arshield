@@ -57,7 +57,7 @@ const TOOLS: { name: string; desc: string; inputs: string; outputs: string }[] =
  */
 const META = [
   ['PACKAGE', 'arshield-mcp'],
-  ['VERSION', '0.1.2'],
+  ['VERSION', '0.1.4'],
   ['TRANSPORT', 'stdio'],
   ['RUNTIME', 'Node.js 18+'],
   ['TOOLS', '6'],

@@ -22,7 +22,7 @@ export default function ForAgentsPage() {
       <DocP>
         The same crypto core as the web app, exposed as a Model Context Protocol server over stdio.
         Everything runs locally — no network calls, no telemetry. The package is{' '}
-        <span className="font-mono text-[13px] text-brand-gold">arshield-mcp</span> (v0.1.2).
+        <span className="font-mono text-[13px] text-brand-gold">arshield-mcp</span> (v0.1.4).
       </DocP>
 
       <DocH2>Install</DocH2>
