@@ -35,7 +35,7 @@ export default function GettingStartedPage() {
       <DocH2>4 · Use it from an agent</DocH2>
       <DocP>Install the MCP server and give your agent the same wallet signature or key file:</DocP>
       <div className="rounded-xl border border-white/[0.08] bg-[#03070f] px-4 py-3 font-mono text-[13px] text-brand-gold">
-        npx -y @arshield/mcp
+        npx -y arshield-mcp
       </div>
     </DocsLayout>
   );

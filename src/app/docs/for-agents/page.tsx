@@ -22,16 +22,16 @@ export default function ForAgentsPage() {
       <DocP>
         The same crypto core as the web app, exposed as a Model Context Protocol server over stdio.
         Everything runs locally — no network calls, no telemetry. The package is{' '}
-        <span className="font-mono text-[13px] text-brand-gold">@arshield/mcp</span> (v0.1.0).
+        <span className="font-mono text-[13px] text-brand-gold">arshield-mcp</span> (v0.1.2).
       </DocP>
 
       <DocH2>Install</DocH2>
-      <DocP>Requires Node.js 20 or later. Works with Claude Desktop, Claude Code, Cursor or any MCP client.</DocP>
+      <DocP>Requires Node.js 18 or later. Works with Claude Desktop, Claude Code, Cursor or any MCP client.</DocP>
       <div className="mb-4 whitespace-pre rounded-xl border border-white/[0.08] bg-[#03070f] px-4 py-3 font-mono text-[12.5px] text-[#c7cdd8]">{`{
   "mcpServers": {
     "arshield": {
       "command": "npx",
-      "args": ["-y", "@arshield/mcp"]
+      "args": ["-y", "arshield-mcp"]
     }
   }
 }`}</div>
