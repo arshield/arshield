@@ -49,12 +49,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gumilang88/arshield.git",
+    "url": "git+https://github.com/arshield/arshield.git",
     "directory": "packages/mcp"
   },
   "homepage": "https://arc-shield.xyz",
   "bugs": {
-    "url": "https://github.com/gumilang88/arshield/issues"
+    "url": "https://github.com/arshield/arshield/issues"
   },
   "author": "ArShield",
   "publishConfig": {
