@@ -1,6 +1,6 @@
 {
   "name": "arshield-mcp",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "ArShield MCP server \u2014 post-quantum file encryption for AI agents. Hybrid ML-KEM-768 + X25519, ML-DSA-65 signatures, AES-256-GCM. Runs fully local over stdio: keys never leave the machine.",
   "type": "module",
   "bin": {
