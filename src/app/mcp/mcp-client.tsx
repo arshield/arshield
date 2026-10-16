@@ -242,7 +242,7 @@ export function McpClient() {
                   </li>
                   <li className="flex gap-2.5">
                     <span className="mt-[7px] h-1 w-1 flex-none rounded-full bg-[#5b6474]" />
-                    <span><span className="text-[#c7cdd8]">Not independently audited.</span> The cryptography follows the QSAFE-1 layout and the primitives are from audited libraries, but this release has not been through a third-party security review.</span>
+                    <span><span className="text-[#c7cdd8]">Not independently audited.</span> The primitives are from audited libraries, but this release has not been through a third-party security review.</span>
                   </li>
                 </ul>
               </div>
