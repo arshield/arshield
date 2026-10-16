@@ -1,4 +1,4 @@
-# @arshield/mcp
+# arshield-mcp
 
 Post-quantum file encryption for AI agents, over MCP.
 
@@ -22,7 +22,7 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
   "mcpServers": {
     "arshield": {
       "command": "npx",
-      "args": ["-y", "@arshield/mcp"]
+      "args": ["-y", "arshield-mcp"]
     }
   }
 }
@@ -31,7 +31,7 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
 **Cursor** — `~/.cursor/mcp.json`, same block.
 
 **VS Code / Cline / any stdio MCP client** — the pattern is identical: command
-`npx`, args `-y @arshield/mcp`.
+`npx`, args `-y arshield-mcp`.
 
 No install step, no global package, no account.
 
