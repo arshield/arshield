@@ -146,7 +146,7 @@ export function McpClient() {
                   View on npm <ExternalLink className="h-3.5 w-3.5" />
                 </a>
                 <a
-                  href="https://github.com/gumilang88/arshield/tree/master/packages/mcp"
+                  href="https://github.com/arshield/arshield/tree/master/packages/mcp"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#8a93a3] hover:text-[#c7cdd8]"

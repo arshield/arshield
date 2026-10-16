@@ -31,7 +31,7 @@ npm whoami
 
 | Output | Artinya |
 |---|---|
-| `gumilang88` (atau username lo) | ✓ udah login |
+| `<username-lo>` | ✓ udah login |
 | `npm error code ENEEDAUTH` | ✗ belum login → lihat Bagian 2 |
 
 ---

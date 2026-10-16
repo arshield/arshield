@@ -114,7 +114,7 @@ Portable: move the file, keep the passphrase, keep the keys.
 ## Links
 
 - Web app: <https://arc-shield.xyz>
-- Source: <https://github.com/gumilang88/arshield>
+- Source: <https://github.com/arshield/arshield>
 - Cryptography spec: <https://arc-shield.xyz/docs/security>
 
 ## License
