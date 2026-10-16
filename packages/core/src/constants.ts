@@ -70,5 +70,21 @@ export const ARSHIELD_DERIVATION_MESSAGE =
   'Domain: arc-shield.xyz';
 
 /** Base URL for shareable encrypted messages (data lives in the #fragment). */
-export const MESSAGE_URL_BASE = 'https://arc-shield.xyz/m/#';
+/**
+ * Base for shareable message URLs.
+ *
+ * Hardcoding the production domain here would mean every self-hosted instance
+ * generated links pointing at our site, and rotating the domain would break
+ * every link already shared. Read the origin from the environment and fall back
+ * to the public domain.
+ *
+ * The env var is an ORIGIN (`https://example.com`), not a path — the `/m/#`
+ * fragment is appended here so a value can never produce a doubled path.
+ */
+const MESSAGE_URL_ORIGIN = (
+  (typeof process !== 'undefined' && process.env?.ARSHIELD_MESSAGE_URL_BASE) ||
+  'https://arc-shield.xyz'
+).replace(/\/+$/, '');
+
+export const MESSAGE_URL_BASE = `${MESSAGE_URL_ORIGIN}/m/#`;
 export const MESSAGE_URL_PREFIX = 'v1.';

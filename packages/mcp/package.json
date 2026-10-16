@@ -1,24 +1,26 @@
 {
   "name": "@arshield/mcp",
   "version": "0.1.0",
-  "description": "ArShield MCP server — post-quantum encryption for AI agents: hybrid ML-KEM-768 + X25519, ML-DSA-65 signatures, run fully local via stdio.",
+  "description": "ArShield MCP server \u2014 post-quantum file encryption for AI agents. Hybrid ML-KEM-768 + X25519, ML-DSA-65 signatures, AES-256-GCM. Runs fully local over stdio: keys never leave the machine.",
   "type": "module",
   "bin": {
     "arshield-mcp": "dist/server.js"
   },
   "main": "./dist/server.js",
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
-    "node": ">=20"
+    "node": ">=18"
   },
   "scripts": {
-    "build": "tsup src/server.ts --format esm --clean",
-    "dev": "tsx src/server.ts"
+    "build": "tsup",
+    "dev": "tsx src/server.ts",
+    "pack:check": "npm pack --dry-run"
   },
   "dependencies": {
-    "@arshield/core": "file:../core",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "zod": "^4.4.3"
   },
@@ -26,7 +28,37 @@
     "@types/node": "^26.6.5",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "@arshield/core": "file:../core"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "post-quantum",
+    "ml-kem",
+    "ml-dsa",
+    "kyber",
+    "dilithium",
+    "encryption",
+    "cryptography",
+    "ai-agents",
+    "arc",
+    "arshield",
+    "quantum-safe"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gumilang88/arshield.git",
+    "directory": "packages/mcp"
+  },
+  "homepage": "https://arc-shield.xyz",
+  "bugs": {
+    "url": "https://github.com/gumilang88/arshield/issues"
+  },
+  "author": "ArShield",
+  "publishConfig": {
+    "access": "public"
+  },
+  "_comment_bundled": "@arshield/core is bundled into dist/server.js by tsup (noExternal). It is a devDependency only \u2014 publishing a file: reference would produce a package that installs and then crashes."
 }
