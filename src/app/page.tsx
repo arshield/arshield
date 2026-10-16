@@ -304,8 +304,8 @@ function McpInstall() {
         <div className="panel p-6">
           <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#5b6474]">Install</div>
           <div className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#03070f] px-4 py-3">
-            <code className="font-mono text-sm text-brand-gold">$ npx -y @arshield/mcp</code>
-            <CopyButton text="npx -y @arshield/mcp" />
+            <code className="font-mono text-sm text-brand-gold">$ npx -y arshield-mcp</code>
+            <CopyButton text="npx -y arshield-mcp" />
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {tools.map((t) => (
@@ -319,8 +319,8 @@ function McpInstall() {
               See the MCP server
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
-            <a href="https://www.npmjs.com/package/@arshield/mcp" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-[#5b6474] transition-colors hover:text-[#9aa3b2]">
-              npm · v0.1.0
+            <a href="https://www.npmjs.com/package/arshield-mcp" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-[#5b6474] transition-colors hover:text-[#9aa3b2]">
+              npm · v0.1.2
               <ArrowUpRight className="h-3.5 w-3.5" />
             </a>
           </div>
