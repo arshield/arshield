@@ -50,11 +50,16 @@ const TOOLS: { name: string; desc: string; inputs: string; outputs: string }[] =
   },
 ];
 
+/**
+ * Mirrors the published package. These drifted once already — the page announced
+ * arshield-mcp@0.1.0 with a Node 20 floor while the registry had arshield-mcp
+ * and a Node 18 floor — so keep this in step with packages/mcp/package.json.
+ */
 const META = [
-  ['PACKAGE', '@arshield/mcp'],
-  ['VERSION', '0.1.0'],
+  ['PACKAGE', 'arshield-mcp'],
+  ['VERSION', '0.1.2'],
   ['TRANSPORT', 'stdio'],
-  ['RUNTIME', 'Node.js 20+'],
+  ['RUNTIME', 'Node.js 18+'],
   ['TOOLS', '6'],
   ['LICENSE', 'MIT'],
 ];
@@ -63,25 +68,25 @@ const CONFIGS = [
   {
     eyebrow: 'Claude Code',
     title: 'Terminal',
-    code: 'claude mcp add arshield -- npx -y @arshield/mcp',
+    code: 'claude mcp add arshield -- npx -y arshield-mcp',
     caption: 'One line adds the server to Claude Code over stdio.',
   },
   {
     eyebrow: 'Claude Desktop',
     title: 'claude_desktop_config.json',
-    code: '{\n  "mcpServers": {\n    "arshield": {\n      "command": "npx",\n      "args": ["-y", "@arshield/mcp"]\n    }\n  }\n}',
+    code: '{\n  "mcpServers": {\n    "arshield": {\n      "command": "npx",\n      "args": ["-y", "arshield-mcp"]\n    }\n  }\n}',
     caption: 'Drop this snippet into your config and restart the client.',
   },
   {
     eyebrow: 'Cursor',
     title: '~/.cursor/mcp.json',
-    code: '{\n  "mcpServers": {\n    "arshield": {\n      "command": "npx",\n      "args": ["-y", "@arshield/mcp"]\n    }\n  }\n}',
+    code: '{\n  "mcpServers": {\n    "arshield": {\n      "command": "npx",\n      "args": ["-y", "arshield-mcp"]\n    }\n  }\n}',
     caption: 'Same shape, same server.',
   },
   {
     eyebrow: 'Any MCP client',
     title: 'stdio command',
-    code: 'command: npx\nargs: -y @arshield/mcp',
+    code: 'command: npx\nargs: -y arshield-mcp',
     caption: 'Works with any client that speaks Model Context Protocol over stdio.',
   },
 ];
@@ -115,11 +120,11 @@ export function McpClient() {
             <div className="panel mx-auto max-w-2xl p-6">
               <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#5b6474]">Install</div>
               <p className="mb-4 text-[14px] leading-relaxed text-[#8a93a3]">
-                Node.js 20 or later runs the server over stdio. Published as <span className="font-mono text-[13px] text-brand-gold">@arshield/mcp</span>.
+                Node.js 18 or later runs the server over stdio. Published as <span className="font-mono text-[13px] text-brand-gold">arshield-mcp</span> on npm.
               </p>
               <div className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.08] bg-[#03070f] px-4 py-3">
-                <code className="font-mono text-sm text-brand-gold">$ npx -y @arshield/mcp</code>
-                <CopyBtn text="npx -y @arshield/mcp" />
+                <code className="font-mono text-sm text-brand-gold">$ npx -y arshield-mcp</code>
+                <CopyBtn text="npx -y arshield-mcp" />
               </div>
 
               <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
@@ -131,14 +136,24 @@ export function McpClient() {
                 ))}
               </dl>
 
-              <a
-                href="https://www.npmjs.com/package/@arshield/mcp"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-gold hover:text-[#e9c35f]"
-              >
-                View on npm <ExternalLink className="h-3.5 w-3.5" />
-              </a>
+              <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2">
+                <a
+                  href="https://www.npmjs.com/package/arshield-mcp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[13px] font-medium text-brand-gold hover:text-[#e9c35f]"
+                >
+                  View on npm <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+                <a
+                  href="https://github.com/gumilang88/arshield/tree/master/packages/mcp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#8a93a3] hover:text-[#c7cdd8]"
+                >
+                  Source <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </div>
             </div>
           </Reveal>
 
@@ -208,6 +223,32 @@ export function McpClient() {
               </Reveal>
             ))}
           </div>
+          {/* Honest limits. A security tool that only lists what it does is
+              less believable than one that says where it stops. */}
+          <Reveal delay={0.12}>
+            <div className="mx-auto mt-6 max-w-3xl">
+              <div className="panel p-5">
+                <h3 className="mb-3 text-[13px] font-semibold uppercase tracking-[0.16em] text-[#5b6474]">
+                  What it does not do
+                </h3>
+                <ul className="space-y-2.5 text-[13px] leading-relaxed text-[#8a93a3]">
+                  <li className="flex gap-2.5">
+                    <span className="mt-[7px] h-1 w-1 flex-none rounded-full bg-[#5b6474]" />
+                    <span><span className="text-[#c7cdd8]">No key management.</span> Lose the keyfile or the passphrase and the data is gone. There is no recovery path and no backdoor.</span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <span className="mt-[7px] h-1 w-1 flex-none rounded-full bg-[#5b6474]" />
+                    <span><span className="text-[#c7cdd8]">No metadata protection.</span> Filenames are encrypted, but container size reveals the approximate plaintext size.</span>
+                  </li>
+                  <li className="flex gap-2.5">
+                    <span className="mt-[7px] h-1 w-1 flex-none rounded-full bg-[#5b6474]" />
+                    <span><span className="text-[#c7cdd8]">Not independently audited.</span> The cryptography follows the QSAFE-1 layout and the primitives are from audited libraries, but this release has not been through a third-party security review.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </Reveal>
+
           <Reveal delay={0.15}>
             <div className="mt-8 text-center">
               <Link href="/docs/for-agents" className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-gold hover:text-[#e9c35f]">

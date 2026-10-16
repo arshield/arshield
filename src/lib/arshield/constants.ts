@@ -1,5 +1,5 @@
 // ArShield .arshield constants — wire format of the container + key derivation.
-// Copied 1:1 from the audited @arshield/mcp package to make /app fully functional.
+// Copied 1:1 from the audited arshield-mcp package to make /app fully functional.
 
 export const MAGIC = new Uint8Array([0x41, 0x52, 0x53, 0x48, 0x44]); // "ARSHD"
 export const MAGIC_LEN = 5;
