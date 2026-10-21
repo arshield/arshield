@@ -82,9 +82,9 @@ function Section({
   action?: React.ReactNode;
 }) {
   return (
-    <section className="border-b border-white/[0.06] px-4 py-4 last:border-b-0">
+    <section className="border-b border-[var(--color-hairline)] px-5 py-5 last:border-b-0">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.16em] text-[#6d7787]">
+        <h3 className="flex items-center gap-2 text-[12px] font-medium text-[#8792a3]">
           <Icon className="h-3.5 w-3.5" />
           {title}
         </h3>
@@ -370,16 +370,19 @@ export function WorkspacePanel({
   const canRun = !!report?.action && !!identity && !busy;
 
   return (
-    <aside className="flex h-full flex-col overflow-y-auto rounded-2xl border border-white/[0.07] bg-[#04070f]/60 backdrop-blur-xl">
+    <aside
+      className="flex h-full flex-col overflow-y-auto rounded-2xl bg-[var(--color-card)] ring-1 ring-[var(--color-hairline)]"
+      style={{ boxShadow: 'var(--elevation-3), var(--highlight-top)' }}
+    >
       {/* Header strip: what this panel is, and the quota behind it. */}
-      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[var(--color-hairline)] px-5 py-4">
         <div className="flex items-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--color-action-soft)]">
             <ShieldCheck className="h-3.5 w-3.5 text-[var(--color-action)]" />
           </div>
           <div>
-            <p className="text-[12.5px] font-medium leading-tight text-[#e6e9ef]">Workspace</p>
-            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-[#6d7787]">
+            <p className="text-[13.5px] font-medium leading-tight text-[#eef1f6]">Workspace</p>
+            <p className="text-[11.5px] leading-tight text-[#7f8a9b]">
               {tierName} · {quota}
             </p>
           </div>
@@ -511,9 +514,9 @@ export function WorkspacePanel({
       </Section>
 
       {/* Standing claim, kept visible rather than in a footer footnote. */}
-      <div className="mt-auto border-t border-white/[0.06] px-4 py-3">
-        <p className="flex items-start gap-1.5 text-[10.5px] leading-relaxed text-[#5c6675]">
-          <ShieldCheck className="mt-0.5 h-3 w-3 flex-none text-[var(--color-verified)]/60" />
+      <div className="mt-auto border-t border-[var(--color-hairline)] px-5 py-4">
+        <p className="flex items-start gap-2 text-[11.5px] leading-relaxed text-[#6d7787]">
+          <ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-none text-[var(--color-verified)]/70" />
           Parsing, hashing and sealing all run in this tab. Nothing here is uploaded.
         </p>
       </div>

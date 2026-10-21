@@ -49,6 +49,7 @@ import {
   FileReportCard,
   Failure,
   IdentityOffers,
+  IdentitySettled,
   ResultCard,
   CopyRow,
   StatusStrip,
@@ -62,7 +63,7 @@ import { WorkspacePanel, type HistoryEntry } from '@/components/chat/workspace-p
 type Turn =
   | { id: number; role: 'user'; text: string }
   | { id: number; role: 'agent'; text: string }
-  | { id: number; role: 'agent'; node: React.ReactNode };
+  | { id: number; role: 'agent'; node: React.ReactNode; /** Marks the key-source picker turn. */ isPicker?: boolean };
 
 /**
  * A turn before it has an id.
@@ -74,7 +75,7 @@ type Turn =
 type TurnInput =
   | { role: 'user'; text: string }
   | { role: 'agent'; text: string }
-  | { role: 'agent'; node: React.ReactNode };
+  | { role: 'agent'; node: React.ReactNode; isPicker?: boolean };
 
 /** A pending action waiting on the user's confirmation. */
 type Pending =
@@ -128,6 +129,16 @@ export function ChatClient() {
   const idRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * Reset lives behind a ref.
+   *
+   * The settled card is rendered into the transcript as a React node, so the
+   * handler it carries is captured at render time. A ref keeps the latest
+   * implementation reachable without making the card a different element on
+   * every render — which would remount it and flicker.
+   */
+  const resetIdentityRef = useRef<() => void>(() => {});
+
   const nextId = () => ++idRef.current;
 
   const push = useCallback((t: TurnInput) => {
@@ -139,24 +150,94 @@ export function ChatClient() {
   const say = useCallback((text: string) => push({ role: 'agent', text }), [push]);
   const show = useCallback((node: React.ReactNode) => push({ role: 'agent', node }), [push]);
 
-  const addHistory = useCallback((e: Omit<HistoryEntry, 'id' | 'at'>) => {
-    setHistory((prev) => [{ ...e, id: ++idRef.current, at: new Date() }, ...prev].slice(0, 40));
+  /**
+   * Post the key-source picker and remember where it landed.
+   *
+   * Idempotent on purpose. React StrictMode runs effects twice in development, so
+   * an unconditional push produced two pickers while the ref only remembered the
+   * second — leaving the first on screen with nothing able to replace it, and the
+   * settled card appending below a question that had already been answered.
+   *
+   * Guarded on the ref rather than on a state read because the ref is written in
+   * the same tick as the push, so it is already set when the second call arrives.
+   */
+  const showPicker = useCallback((keyfileFirst = false) => {
+    const node = (
+      <IdentityOffers
+        onWallet={connectWalletRef.current}
+        onCreateKeyfile={() => openDialog('create')}
+        onLoadKeyfile={() => openDialog('open')}
+        recommended={keyfileFirst ? 'keyfile' : undefined}
+      />
+    );
+    // Replaces an existing picker instead of adding a second one, and refuses to
+    // add one at all once a key is held. Guarding here (rather than on an id ref
+    // held outside the transcript) keeps the decision and the rendered state in
+    // the same place, so the two cannot drift.
+    setTurns((prev) => {
+      const idx = prev.findIndex((t) => 'isPicker' in t && t.isPicker);
+      if (idx !== -1) {
+        const next = [...prev];
+        next[idx] = { ...next[idx], node, isPicker: true } as Turn;
+        return next;
+      }
+      return [...prev, { id: ++idRef.current, role: 'agent', node, isPicker: true } as Turn];
+    });
   }, []);
 
-  /** Open the conversation with the greeting, once. */
-  useEffect(() => {
-    if (turns.length === 0) {
-      say(greeting(false));
-      show(
-        <IdentityOffers
-          onWallet={connectWallet}
-          onCreateKeyfile={() => openDialog('create')}
-          onLoadKeyfile={() => openDialog('open')}
-        />,
+  /** Set to the live connectWallet once it exists; see the note there. */
+  const connectWalletRef = useRef<() => Promise<void>>(async () => {});
+
+  /**
+   * Post the settled identity card, replacing any open picker.
+   *
+   * Replacing rather than appending is the whole fix. Appending a settled card
+   * left the original choice card sitting above it in the scrollback, so the
+   * user saw "how do you want to hold your keys" followed by "wallet connected"
+   * \u2014 with the live Connect/Generate/Load buttons still clickable in between.
+   * The answer to a question should not remain on screen after it is answered.
+   */
+  const settledIdentity = useCallback(
+    (who: { kind: 'wallet' | 'keyfile'; label: string; address?: string }, detail: string) => {
+      const card = (
+        <IdentitySettled identity={who} detail={detail} onChangeKey={() => resetIdentityRef.current()} />
       );
-    }
+      setTurns((prev) => {
+        const idx = prev.findIndex((t) => 'isPicker' in t && t.isPicker);
+        // No picker open means a key was already held; replacing nothing is the
+        // right answer, because appending would put a second identity card in a
+        // transcript that already has one.
+        if (idx === -1) return prev;
+        const next = [...prev];
+        next[idx] = { id: next[idx].id, role: 'agent', node: card } as Turn;
+        return next;
+      });
+    },
+    [],
+  );
+
+  /**
+   * Open the conversation, once.
+   *
+   * Guarded by a ref rather than by `turns.length === 0`. Reading state here is
+   * unreliable under StrictMode: the effect body runs twice before either render
+   * commits, so both passes see an empty array and both post a greeting. The ref
+   * is written synchronously, so the second pass sees it and stops.
+   */
+  const openedRef = useRef(false);
+  useEffect(() => {
+    if (openedRef.current) return;
+    openedRef.current = true;
+    say(greeting(false));
+    // The picker is posted here and on an explicit reset — never after a
+    // successful setup.
+    showPicker();
     // Intentionally runs once: the opening turn must not re-append on re-render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const addHistory = useCallback((e: Omit<HistoryEntry, 'id' | 'at'>) => {
+    setHistory((prev) => [{ ...e, id: ++idRef.current, at: new Date() }, ...prev].slice(0, 40));
   }, []);
 
   useEffect(() => {
@@ -248,14 +329,7 @@ export function ChatClient() {
         say(
           `${det.walletName ?? 'This wallet'} uses smart-contract accounts (${det.reason}). A signature from it cannot derive keys, so the wallet path is closed here — but nothing is lost: a key file does the same job with no wallet involved.`,
         );
-        show(
-          <IdentityOffers
-            onWallet={connectWallet}
-            onCreateKeyfile={() => openDialog('create')}
-            onLoadKeyfile={() => openDialog('open')}
-            recommended="keyfile"
-          />,
-        );
+        showPicker(true);
         return;
       }
 
@@ -268,6 +342,12 @@ export function ChatClient() {
       })) as string;
       const kp: ArShieldKeyPair = identityFromWalletSignature(signatureHex);
       setIdentity({ kind: 'wallet', label: `wallet · ${address}`, kp });
+      // Settled card, not the picker again. The choice has been made; showing the
+      // two live buttons afterwards implied it had not taken.
+      settledIdentity(
+        { kind: 'wallet', label: `wallet · ${address}`, address },
+        'Your keys are derived from this wallet, so the same wallet on any device opens the same files. Nothing to back up.',
+      );
       say('Keys derived from that signature. Same wallet, same keys, on any device. Drop a file whenever you are ready.');
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -276,14 +356,7 @@ export function ChatClient() {
       } else if (/65-byte EOA|smart-contract/i.test(msg)) {
         setWalletError(msg);
         say('The wallet signed in a format that cannot be used for key derivation. A key file will work here.');
-        show(
-          <IdentityOffers
-            onWallet={connectWallet}
-            onCreateKeyfile={() => openDialog('create')}
-            onLoadKeyfile={() => openDialog('open')}
-            recommended="keyfile"
-          />,
-        );
+        showPicker(true);
       } else {
         setWalletError(msg);
         say(`Could not connect: ${msg}`);
@@ -292,7 +365,11 @@ export function ChatClient() {
       setBusy(false);
       setBusyLabel('Working…');
     }
-  }, [say, show]);
+  }, [say, settledIdentity, showPicker]);
+
+  // showPicker is declared above connectWallet, so it reaches that function
+  // through a ref rather than closing over a stale binding.
+  connectWalletRef.current = connectWallet;
 
   /* ───────────────────────── identity: key file ───────────────────────── */
 
@@ -308,6 +385,10 @@ export function ChatClient() {
         download(new TextEncoder().encode(JSON.stringify(wrapper, null, 2)), 'arshield-key.json', 'application/json');
         setIdentity({ kind: 'keyfile', label: 'keyfile (generated)', kp });
         setDialog(null);
+        settledIdentity(
+          { kind: 'keyfile', label: 'arshield-key.json' },
+          'Those keys exist only in the file you just downloaded. If it is lost, everything sealed to it is unrecoverable — there is no reset.',
+        );
         say('Key file generated and downloaded. This file is the only copy of your keys — lose it and sealed data cannot be recovered, by anyone, including us. Store it somewhere you would store a passport.');
       } catch (e) {
         setKeyfileError(e instanceof Error ? e.message : String(e));
@@ -315,7 +396,7 @@ export function ChatClient() {
         setKdfProgress(null);
       }
     },
-    [say],
+    [say, settledIdentity],
   );
 
   const loadKeyfile = useCallback(
@@ -329,6 +410,10 @@ export function ChatClient() {
         setKdfProgress(1);
         setIdentity({ kind: 'keyfile', label: 'keyfile (loaded)', kp });
         setDialog(null);
+        settledIdentity(
+          { kind: 'keyfile', label: 'arshield-key.json' },
+          'Unlocked from the file you supplied. Sealing and opening will use this key.',
+        );
         say('Key file unlocked. You can seal and open with it.');
       } catch (e) {
         setKeyfileError(e instanceof Error ? e.message : String(e));
@@ -336,7 +421,7 @@ export function ChatClient() {
         setKdfProgress(null);
       }
     },
-    [say],
+    [say, settledIdentity],
   );
 
   /* ───────────────────────── result rendering ───────────────────────── */
@@ -622,6 +707,23 @@ export function ChatClient() {
         setReport(null);
         setPending(null);
         say(greeting(!!identity));
+        // Clearing the transcript must not resurrect the setup question. If a
+        // key is already held, the conversation restarts with that fact, not
+        // with a request to choose one again.
+        if (identity) {
+          settledIdentity(
+            {
+              kind: identity.kind,
+              label: identity.label,
+              address: identity.kind === 'wallet' ? identity.label.split('· ')[1] : undefined,
+            },
+            identity.kind === 'wallet'
+              ? 'Still derived from this wallet. Nothing was reset.'
+              : 'Still the key file you loaded. Nothing was reset.',
+          );
+        } else {
+          showPicker();
+        }
         break;
 
       default:
@@ -637,7 +739,7 @@ export function ChatClient() {
     }
   }, [
     input, attached, busy, identity, tier, detection, report, history, lastResult,
-    push, say, show, renderResult, connectWallet, readFile, runAction,
+    push, say, show, renderResult, connectWallet, readFile, runAction, settledIdentity, showPicker,
   ]);
 
   /* ───────────────────────── panel wiring ───────────────────────── */
@@ -669,14 +771,10 @@ export function ChatClient() {
     setReport(null);
     setPending(null);
     say('Key source cleared. Pick how to hold your keys again.');
-    show(
-      <IdentityOffers
-        onWallet={connectWallet}
-        onCreateKeyfile={() => openDialog('create')}
-        onLoadKeyfile={() => openDialog('open')}
-      />,
-    );
+    showPicker();
   }
+  // Keep the ref pointing at the current closure so settled cards can call it.
+  resetIdentityRef.current = resetIdentity;
 
   /* ───────────────────────── view ───────────────────────── */
 
@@ -724,6 +822,20 @@ export function ChatClient() {
                     setReport(null);
                     setPending(null);
                     say(greeting(!!identity));
+                    if (identity) {
+                      settledIdentity(
+                        {
+                          kind: identity.kind,
+                          label: identity.label,
+                          address: identity.kind === 'wallet' ? identity.label.split('· ')[1] : undefined,
+                        },
+                        identity.kind === 'wallet'
+                          ? 'Still derived from this wallet. Nothing was reset.'
+                          : 'Still the key file you loaded. Nothing was reset.',
+                      );
+                    } else {
+                      showPicker();
+                    }
                   }}
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -743,9 +855,12 @@ export function ChatClient() {
           conversation rather than disappearing — dropping a file is a core
           action, not a large-screen convenience.
         */}
-        <div className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 gap-4 overflow-hidden px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:px-8 xl:grid-cols-[minmax(0,1fr)_480px]">
+        <div className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 gap-5 overflow-hidden px-4 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:px-8 xl:grid-cols-[minmax(0,1fr)_480px]">
           {/* ── Column 1: the conversation ── */}
-          <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-[#04070f]/40 backdrop-blur-xl">
+          <div
+            className="flex min-h-0 flex-col overflow-hidden rounded-2xl bg-[var(--color-card-inset)] ring-1 ring-[var(--color-hairline)]"
+            style={{ boxShadow: 'var(--elevation-3), var(--highlight-top)' }}
+          >
             {identity && (
               <div className="px-4 pt-3">
                 <StatusStrip
@@ -764,7 +879,14 @@ export function ChatClient() {
 
             <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
               {turns.map((t) => (
-                <Bubble key={t.id} role={t.role}>
+                <Bubble
+                  key={t.id}
+                  role={t.role}
+                  // A card the agent produces is an object, not a line of speech.
+                  // Rendering it bare keeps one raised surface per object instead
+                  // of a card floating inside a bubble of the same colour.
+                  settled={'node' in t && !('text' in t)}
+                >
                   {'text' in t ? t.text : t.node}
                 </Bubble>
               ))}
@@ -789,7 +911,7 @@ export function ChatClient() {
               {busy && !stage && <Working label={busyLabel} />}
 
               {pending && (
-                <Bubble role="agent">
+                <Bubble role="agent" settled>
                   <ConfirmGate
                     question={pending.kind === 'seal' ? `Seal ${pending.file.name}?` : `Open ${pending.file.name}?`}
                     detail={

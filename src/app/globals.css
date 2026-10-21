@@ -51,6 +51,32 @@
   --color-danger-soft: rgba(248, 113, 113, 0.12);
   --color-idle: #7c889c;
 
+  /* ---- Raised surfaces -------------------------------------------------
+     Cards used to sit on `white/[0.02]` over a near-black page, which put
+     them one hair above the background — so every panel read as the same
+     dark rectangle with a thin white outline, and the whole page flattened
+     into the "dark AI dashboard" default.
+
+     These tokens give the surface its own steps. `card` is a real raise (a
+     cool pane lit from above, not more black), `card-raised` is one step
+     further for the piece the eye should land on, and the border is warm
+     rather than neutral so edges read as material instead of as a 1px
+     stroke a generator drew around everything.
+     ---------------------------------------------------------------------- */
+  --color-card: #101725;
+  --color-card-raised: #161f30;
+  --color-card-inset: #0b1119;
+  --color-hairline: rgba(255, 255, 255, 0.09);
+  --color-hairline-warm: rgba(209, 164, 19, 0.16);
+
+  /* Elevation scale. Dark UIs need larger, softer shadows than light ones —
+     a light shadow under a dark card is invisible, so what sells the raise
+     here is a long ambient shadow plus a faint top highlight. */
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --elevation-2: 0 8px 24px -12px rgba(0, 0, 0, 0.7);
+  --elevation-3: 0 18px 44px -20px rgba(0, 0, 0, 0.8);
+  --highlight-top: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
   /* Raised surface for the one light-on-dark inversion used mid-page. */
   --color-paper: #f2f0ea;
   --color-paper-ink: #12131a;

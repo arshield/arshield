@@ -68,18 +68,28 @@ export function FileReportCard({
             ? 'Seal receipt'
             : 'Unknown';
 
-  const tone =
+  const ring =
     report.kind === 'container'
-      ? 'border-[var(--color-action)]/30 bg-[var(--color-action-soft)]'
+      ? 'ring-[var(--color-action)]/28'
       : report.kind === 'plain'
-        ? 'border-white/[0.10] bg-white/[0.03]'
-        : 'border-[var(--color-verified)]/25 bg-[var(--color-verified-soft)]';
+        ? 'ring-[var(--color-hairline)]'
+        : 'ring-[var(--color-verified)]/25';
+
+  const wash =
+    report.kind === 'container'
+      ? 'linear-gradient(180deg, rgba(209,164,19,0.07), rgba(209,164,19,0.015)), var(--color-card)'
+      : report.kind === 'plain'
+        ? 'var(--color-card)'
+        : 'linear-gradient(180deg, rgba(74,222,155,0.06), rgba(74,222,155,0.015)), var(--color-card)';
 
   return (
-    <div className={cn('mt-2 space-y-3 rounded-xl border p-3.5', tone)}>
+    <div
+      className={cn('mt-2.5 space-y-3.5 rounded-2xl p-4 ring-1', ring)}
+      style={{ background: wash, boxShadow: 'var(--elevation-2), var(--highlight-top)' }}
+    >
       <div className="flex items-start gap-2.5">
-        <div className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-black/25">
-          <FileText className="h-4 w-4 text-[#c3cad6]" />
+        <div className="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-[var(--color-card-inset)] ring-1 ring-[var(--color-hairline)]">
+          <FileText className="h-4 w-4 text-[#aab3c1]" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13.5px] font-medium text-[#eef1f6]" title={report.name}>
@@ -162,30 +172,51 @@ export type ChatRole = 'agent' | 'user';
 export function Bubble({
   role,
   wide = false,
+  settled = false,
   children,
 }: {
   role: ChatRole;
   /**
-   * Let this bubble exceed the usual 85% cap.
+   * Let this bubble exceed the usual cap.
    *
    * The stage list is a five-row table with a progress bar — at 85% the crypto
    * names and the detail text underneath them collapse into ellipses, which
    * defeats the point of showing the sequence at all.
    */
   wide?: boolean;
+  /**
+   * Render as a bare container rather than a chat bubble.
+   *
+   * Cards the agent produces — identity, file report, results — are objects, not
+   * speech. Putting them inside another bubble nested a raised surface in a
+   * raised surface, which is where the flatness came from: the card and its
+   * container ended up the same colour with two nearly identical outlines.
+   */
+  settled?: boolean;
   children: React.ReactNode;
 }) {
   const isUser = role === 'user';
+
+  if (settled) {
+    return <div className={cn('flex w-full', isUser ? 'justify-end' : 'justify-start')}>{children}</div>;
+  }
+
   return (
     <div className={cn('flex w-full', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
-          wide ? 'w-full' : 'max-w-[85%]',
+          'rounded-2xl px-4 py-3 text-[13.5px] leading-[1.6]',
+          wide ? 'w-full' : 'max-w-[78%]',
           isUser
-            ? 'rounded-br-sm bg-[var(--color-action-soft)] text-[#e6e9ef] ring-1 ring-[var(--color-action)]/25'
-            : 'rounded-bl-sm bg-white/[0.04] text-[#dfe3ea] ring-1 ring-white/[0.07]',
+            ? // The user's own words: a flat gold-tinted plate. No shadow — it is
+              // the lightest thing in the column so it carries no elevation.
+              'rounded-br-md bg-[var(--color-action-soft)] text-[#f0f3f8] ring-1 ring-[var(--color-action)]/25'
+            : // The agent's words: a real surface, one step up from the page, with
+              // a warm hairline. This is the difference between a panel and a
+              // dark rectangle with a border.
+              'rounded-bl-md bg-[var(--color-card)] text-[#dde3ec] ring-1 ring-[var(--color-hairline)]',
         )}
+        style={isUser ? undefined : { boxShadow: 'var(--elevation-1)' }}
       >
         {children}
       </div>
@@ -303,20 +334,36 @@ export function ResultCard({
     ) : (
       <Lock className="h-4 w-4 text-[var(--color-progress)]" />
     );
+  // The tint rides on top of the card colour rather than replacing it, so the
+  // surface stays a raised pane and the tint only says which kind of outcome it
+  // is. A flat wash made the card read as a coloured div rather than an object.
+  const wash =
+    tone === 'verified'
+      ? 'linear-gradient(180deg, rgba(74,222,155,0.07), rgba(74,222,155,0.02)), var(--color-card)'
+      : 'linear-gradient(180deg, rgba(240,161,58,0.07), rgba(240,161,58,0.02)), var(--color-card)';
+
   return (
     <div
       className={cn(
-        'mt-2 space-y-3 rounded-xl border p-3.5',
+        'mt-2.5 space-y-3.5 rounded-2xl p-4 ring-1',
         tone === 'verified'
-          ? 'border-[var(--color-verified)]/25 bg-[var(--color-verified-soft)]'
-          : 'border-[var(--color-progress)]/25 bg-[var(--color-progress-soft)]',
+          ? 'ring-[var(--color-verified)]/22'
+          : 'ring-[var(--color-progress)]/25',
       )}
+      style={{ background: wash, boxShadow: 'var(--elevation-2), var(--highlight-top)' }}
     >
-      <div className="flex items-center gap-2">
-        {mark}
-        <span className="text-sm font-medium text-[#e9edf3]">{title}</span>
+      <div className="flex items-center gap-2.5">
+        <span
+          className={cn(
+            'flex h-7 w-7 flex-none items-center justify-center rounded-lg',
+            tone === 'verified' ? 'bg-[var(--color-verified-soft)]' : 'bg-[var(--color-progress-soft)]',
+          )}
+        >
+          {mark}
+        </span>
+        <span className="text-[13.5px] font-medium text-[#eef1f6]">{title}</span>
       </div>
-      <div className="space-y-2 text-[13px] text-[#9aa3b2]">{children}</div>
+      <div className="space-y-2 text-[13px] text-[#98a2b3]">{children}</div>
       {actions && <div className="flex flex-wrap gap-2 pt-0.5">{actions}</div>}
     </div>
   );
@@ -433,15 +480,28 @@ export function ConfirmGate({
   );
 }
 
-/* ────────────────────────────── identity offers ────────────────────────────── */
+/* ────────────────────────────── identity ────────────────────────────── */
+
+/** Small monospace address, both ends kept so two addresses stay comparable. */
+function shortAddr(a: string): string {
+  return `${a.slice(0, 8)}…${a.slice(-6)}`;
+}
 
 /**
- * The two key paths, offered together.
+ * The identity card.
  *
- * Both are always shown. The old picker presented "Wallet — FASTEST" as the
- * default, so the path that fails for smart-contract wallets looked like the
- * recommended one. Here the wallet path states its own requirement up front, and
- * the key-file path states that it has none.
+ * Two states, and the difference between them is the whole point:
+ *
+ *   open      a choice. Wallet or key file, side by side, each stating what it
+ *             needs and what it costs. Shown only while there is no key.
+ *   settled   a fact. One key, what kind it is, where it lives, and what that
+ *             implies about recovery. Shown once a key exists.
+ *
+ * The previous version drew the choice card again after a successful connect,
+ * so the answer to "how do you want to hold your keys" stayed on screen after
+ * the user had answered it — and the two live buttons sitting there implied the
+ * setup had not taken. A settled state has no competing buttons: the only
+ * control is changing the key, which is an escape hatch, not a peer option.
  */
 export function IdentityOffers({
   onWallet,
@@ -458,54 +518,159 @@ export function IdentityOffers({
   recommended?: 'keyfile' | null;
 }) {
   return (
-    <div className="mt-2 grid gap-2.5 sm:grid-cols-2">
-      {/* Wallet path */}
+    <div className="mt-2.5 grid gap-3 sm:grid-cols-2">
+      {/* Wallet path. The requirement is stated before the button, not after it
+          fails — a wallet that cannot derive keys should not look like the
+          default recommendation. */}
       <div
         className={cn(
-          'space-y-2.5 rounded-xl border p-3.5',
+          'flex flex-col gap-3 rounded-2xl p-4 transition-colors',
           recommended === 'keyfile'
-            ? 'border-white/[0.07] bg-white/[0.02] opacity-70'
-            : 'border-[var(--color-action)]/30 bg-[var(--color-action-soft)]',
+            ? 'bg-[var(--color-card-inset)] ring-1 ring-[var(--color-hairline)]'
+            : 'bg-[var(--color-card)] ring-1 ring-[var(--color-hairline-warm)]',
         )}
+        style={{ boxShadow: 'var(--elevation-2), var(--highlight-top)' }}
       >
-        <div className="flex items-center gap-2">
-          <Wallet className="h-4 w-4 text-[var(--color-action)]" />
-          <span className="text-sm font-medium text-[#e9edf3]">Wallet signature</span>
+        <div className="flex items-center gap-2.5">
+          <span
+            className={cn(
+              'flex h-8 w-8 flex-none items-center justify-center rounded-xl',
+              recommended === 'keyfile'
+                ? 'bg-white/[0.05] text-[#8a93a3]'
+                : 'bg-[var(--color-action-soft)] text-[var(--color-action)]',
+            )}
+          >
+            <Wallet className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[14px] font-medium leading-tight text-[#eef1f6]">
+              Wallet signature
+            </p>
+            <p className="text-[11.5px] leading-tight text-[#7f8a9b]">
+              Same keys on any device, from one signature
+            </p>
+          </div>
         </div>
-        <p className="text-[12.5px] leading-relaxed text-[#9aa3b2]">
-          Derives the same keys on every device from one signature. Needs a standard
-          EOA wallet — smart-contract wallets cannot be used for key derivation.
+
+        <p className="text-[12.5px] leading-relaxed text-[#98a2b3]">
+          No passphrase to remember and nothing to back up. Needs a standard EOA
+          wallet — smart-contract wallets sign in a format that cannot derive keys.
         </p>
-        <Button size="sm" variant="outline" onClick={onWallet} disabled={busy} className="w-full">
+
+        <Button
+          size="sm"
+          variant={recommended === 'keyfile' ? 'ghost' : 'primary'}
+          onClick={onWallet}
+          disabled={busy}
+          className="mt-auto w-full"
+        >
           Connect wallet
         </Button>
       </div>
 
-      {/* Key-file path */}
+      {/* Key-file path. Always available, which is what makes the "everyone can
+          use this" claim true — no wallet, no chain, no extension. */}
       <div
         className={cn(
-          'space-y-2.5 rounded-xl border p-3.5',
+          'flex flex-col gap-3 rounded-2xl p-4 transition-colors',
           recommended === 'keyfile'
-            ? 'border-[var(--color-verified)]/30 bg-[var(--color-verified-soft)]'
-            : 'border-white/[0.07] bg-white/[0.02]',
+            ? 'bg-[var(--color-card-raised)] ring-1 ring-[var(--color-verified)]/30'
+            : 'bg-[var(--color-card)] ring-1 ring-[var(--color-hairline)]',
         )}
+        style={{ boxShadow: 'var(--elevation-2), var(--highlight-top)' }}
       >
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-[var(--color-verified)]" />
-          <span className="text-sm font-medium text-[#e9edf3]">Key file</span>
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 flex-none items-center justify-center rounded-xl bg-[var(--color-verified-soft)] text-[var(--color-verified)]">
+            <KeyRound className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[14px] font-medium leading-tight text-[#eef1f6]">Key file</p>
+            <p className="text-[11.5px] leading-tight text-[#7f8a9b]">
+              Works with no wallet at all
+            </p>
+          </div>
         </div>
-        <p className="text-[12.5px] leading-relaxed text-[#9aa3b2]">
-          Random keys locked under a passphrase. Works with no wallet at all. The file
-          is the only copy — lose it and the data is gone for good.
+
+        <p className="text-[12.5px] leading-relaxed text-[#98a2b3]">
+          Keys are random and locked under a passphrase you choose. The file is the
+          only copy — lose it and sealed data cannot be recovered, by anyone.
         </p>
-        <div className="flex gap-2">
-          <Button size="sm" variant="ghost" onClick={onCreateKeyfile} disabled={busy} className="flex-1">
+
+        <div className="mt-auto flex gap-2">
+          <Button
+            size="sm"
+            variant={recommended === 'keyfile' ? 'primary' : 'ghost'}
+            onClick={onCreateKeyfile}
+            disabled={busy}
+            className="flex-1"
+          >
             Generate
           </Button>
           <Button size="sm" variant="ghost" onClick={onLoadKeyfile} disabled={busy} className="flex-1">
             Load
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The settled identity, shown once a key exists.
+ *
+ * States what the key is, not how it was chosen. Designed to sit in the
+ * conversation as a receipt: the user should be able to scroll back later and
+ * see which key sealed which file.
+ */
+export function IdentitySettled({
+  identity,
+  detail,
+  onChangeKey,
+}: {
+  identity: { kind: 'wallet' | 'keyfile'; address?: string; label: string };
+  /** One line on what this key means for recovery — different per kind. */
+  detail?: string;
+  onChangeKey: () => void;
+}) {
+  const isWallet = identity.kind === 'wallet';
+  return (
+    <div
+      className="mt-2.5 flex items-start gap-3.5 rounded-2xl p-4 ring-1 ring-[var(--color-verified)]/22"
+      style={{
+        background:
+          'linear-gradient(180deg, rgba(74,222,155,0.055), rgba(74,222,155,0.015)), var(--color-card)',
+        boxShadow: 'var(--elevation-2), var(--highlight-top)',
+      }}
+    >
+      <span className="flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-[var(--color-verified-soft)] text-[var(--color-verified)] ring-1 ring-[var(--color-verified)]/25">
+        <ShieldCheck className="h-4.5 w-4.5" />
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
+          <p className="text-[14px] font-medium text-[#eef1f6]">
+            {isWallet ? 'Wallet connected' : 'Key file loaded'}
+          </p>
+          <span className="inline-flex items-center gap-1 text-[11.5px] text-[var(--color-verified)]">
+            <Check className="h-3 w-3" />
+            ready
+          </span>
+        </div>
+
+        <p className="mt-1 font-mono text-[12px] text-[#aab3c1]">
+          {identity.address ? shortAddr(identity.address) : identity.label}
+        </p>
+
+        {detail && (
+          <p className="mt-1.5 text-[12px] leading-relaxed text-[#8a93a3]">{detail}</p>
+        )}
+
+        <button
+          onClick={onChangeKey}
+          className="mt-2 text-[11.5px] text-[#7f8a9b] underline-offset-2 transition-colors hover:text-[#e6e9ef] hover:underline"
+        >
+          Use a different key
+        </button>
       </div>
     </div>
   );
