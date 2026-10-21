@@ -235,6 +235,45 @@ export function Working({ label }: { label: string }) {
 }
 
 /**
+ * The agent is composing a reply.
+ *
+ * Three dots that rise in sequence, plus the label. A spinner says "the machine
+ * is busy"; a rising dot sequence says "someone is typing", which is the thing
+ * being imitated. The dots are staggered by animation-delay so the movement
+ * travels left to right instead of pulsing as one block — a block reads as a
+ * loading bar, a travelling wave reads as speech.
+ *
+ * The label carries the meaning for anyone who cannot see the motion, and the
+ * whole element is aria-live so the wait is announced rather than silently
+ * occupying space.
+ */
+export function Thinking({ label }: { label: string }) {
+  return (
+    <div
+      className="flex items-center gap-2.5 text-[13px] text-[var(--color-progress)]"
+      role="status"
+      aria-live="polite"
+    >
+      <span className="flex items-center gap-1" aria-hidden>
+        <Dot delay="0ms" />
+        <Dot delay="160ms" />
+        <Dot delay="320ms" />
+      </span>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function Dot({ delay }: { delay: string }) {
+  return (
+    <span
+      className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-[as-dot_1200ms_ease-in-out_infinite]"
+      style={{ animationDelay: delay }}
+    />
+  );
+}
+
+/**
  * A failure with a next step.
  *
  * When there is an offer attached, the message says what happened and the button

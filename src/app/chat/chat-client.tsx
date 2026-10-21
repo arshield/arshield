@@ -37,6 +37,7 @@ import { KeyfileDialog } from '@/components/keyfile-dialog';
 import { download } from '@/lib/agent/message';
 import { greeting, route, type FileRef } from '@/lib/agent/router';
 import { converse, confusedReply, replyText, type Reply } from '@/lib/agent/converse';
+import { think, thinkLabel } from '@/lib/agent/think';
 import { openFile, sealFile, sealMessage, type AgentResult, type Identity } from '@/lib/agent/actions';
 import { detectWalletKind, isUnsupported, type Detection } from '@/lib/agent/detect';
 import { describeReport, inspectFile, type FileReport } from '@/lib/agent/inspect';
@@ -55,6 +56,7 @@ import {
   IdentitySettled,
   ResultCard,
   CopyRow,
+  Thinking,
   Working,
   shortHash,
 } from '@/components/chat/chat-parts';
@@ -86,6 +88,16 @@ export function ChatClient() {
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [busy, setBusy] = useState(false);
   const [busyLabel, setBusyLabel] = useState('Working…');
+
+  /**
+   * The agent is composing a conversational reply.
+   *
+   * Separate from `busy` because they mean different things: `busy` is a file
+   * operation in flight and shows the stage list, while this is the agent
+   * finding words and shows typing dots.
+   */
+  const [composing, setComposing] = useState(false);
+  const [thinkLabelText, setThinkLabelText] = useState('Thinking…');
 
   /**
    * The file sitting in the composer, attached but not yet submitted.
@@ -138,6 +150,35 @@ export function ChatClient() {
 
   const say = useCallback((text: string) => push({ role: 'agent', text }), [push]);
   const show = useCallback((node: React.ReactNode) => push({ role: 'agent', node }), [push]);
+
+  /**
+   * Say something, but at the pace of someone composing it.
+   *
+   * A reply that lands in the same frame as the keypress reads as a lookup, not
+   * as a response — the words can be right and the exchange still feels wrong.
+   * This shows the typing indicator, waits a span proportional to the length of
+   * the reply, then posts it. See lib/agent/think.ts for the bounds.
+   *
+   * Reserved for conversational turns. Results — a report card, a sealed file —
+   * must not be delayed: the user asked for something to be done, not to be
+   * talked to, and padding that would read as the tool being slow.
+   */
+  const compose = useCallback(
+    async (text: string) => {
+      setComposing(true);
+      setThinkLabelText(thinkLabel());
+      const t = think(text);
+      try {
+        await t.promise;
+      } catch {
+        return;
+      } finally {
+        setComposing(false);
+      }
+      say(text);
+    },
+    [say],
+  );
 
   /**
    * The one function that decides what "signed in" looks like.
@@ -539,7 +580,9 @@ export function ChatClient() {
   const handleSubmit = useCallback(async () => {
     const raw = input.trim();
     if (!raw && !attached) return;
-    if (busy) return;
+    // A turn already in flight — whether an operation or a reply being composed —
+    // must finish first, or two replies arrive out of order.
+    if (busy || composing) return;
 
     const file = attached;
     setInput('');
@@ -549,7 +592,7 @@ export function ChatClient() {
     //    command reads worse than a command answered conversationally.
     const reply: Reply | null = converse(raw, !!file);
     if (reply && !file) {
-      say(replyText(reply));
+      await compose(replyText(reply));
       return;
     }
 
@@ -571,7 +614,7 @@ export function ChatClient() {
         break;
 
       case 'help':
-        say(
+        await compose(
           'Attach a file and I read it first: type, size, hash, and what is inside. Then I offer the one action that fits — an envelope can be opened, a plain file can be sealed. Say `seal this message "..."` to get a link carrying encrypted text. Everything runs in this tab.',
         );
         break;
@@ -686,18 +729,19 @@ export function ChatClient() {
 
       default:
         if (reply) {
-          say(replyText(reply));
+          await compose(replyText(reply));
         } else if (report?.action) {
           say(
             `I did not find a command in that. ${report.name} can be ${report.action === 'encrypt' ? 'sealed' : 'opened'} — press the button above, or say "${report.action === 'encrypt' ? 'encrypt it' : 'decrypt it'}".`,
           );
         } else {
-          say(confusedReply);
+          await compose(confusedReply);
         }
     }
   }, [
     input, attached, busy, identity, tier, detection, report, lastResult,
-    push, say, show, renderResult, connectWallet, readAttached, runAction, settledIdentity, showPicker,
+    push, say, show, renderResult, connectWallet, readAttached, runAction, settledIdentity,
+    showPicker, compose, composing,
   ]);
 
   /* ───────────────────────── attaching ───────────────────────── */
@@ -826,6 +870,7 @@ export function ChatClient() {
               </Bubble>
             )}
 
+            {composing && !busy && <Thinking label={thinkLabelText} />}
             {busy && !stage && <Working label={busyLabel} />}
           </div>
 
