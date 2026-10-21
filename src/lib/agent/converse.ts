@@ -47,21 +47,37 @@ type Rule = { test: RegExp; reply: Reply };
  */
 const RULES: Rule[] = [
   {
-    test: /\b(who are you|what are you|siapa (kamu|lo|lu)|kamu siapa|lo siapa)\b/,
+    test: /\b(who are you|what are you|siapa ?(kamu|lo|lu|kah)|kamu siapa|lo siapa)\b/,
     reply: {
       kind: 'about',
       text: 'I am the ArShield agent. I do four things: read what a file is, seal it into a post-quantum container, open a container, and build a shareable secret message. I run in this tab — no server sees your file or your key.',
     },
   },
   {
-    test: /\b(what can you do|bisa apa|apa yang bisa|help me with|kemampuan|capabilities?)\b/,
+    test: /\b(what can you do|bisa apa|apa yang bisa|help me with|kemampu|capabilities?)\b/,
     reply: {
       kind: 'capabilities',
       text: 'Attach a file and I will tell you what it is — type, size, hash, and what is inside it. If it is a plain file I offer to seal it; if it is an envelope I offer to open it. Say `seal this message "..."` for a link that carries encrypted text. Nothing is uploaded at any point.',
     },
   },
   {
-    test: /\b(how does it work|how do you work|gimana cara kerja|cara kerjanya|kok bisa|caranya)\b/,
+    // Asked in Indonesian or English, and answered the same way. The question is
+    // "why should I use this", so the reply leads with the property that is
+    // actually unusual and then names the limits — an answer that only lists
+    // strengths is the kind of thing a user stops trusting.
+    // Stems, not whole words. Indonesian attaches possessives and particles
+    // directly to the noun — "kelebihanmu", "keunggulannya", "unggulnya" — so a
+    // trailing \b after "kelebihan" never matches and the question falls through
+    // to "I did not catch that". Matching the stem without a trailing boundary is
+    // what makes these forms reachable.
+    test: /(kelebih|keunggul|unggul|kenapa (harus|pakai|pilih)|mengapa|bedanya|advantages?|benefits?|why (use|choose|you)|strengths?|better than|what.s special|what makes)/,
+    reply: {
+      kind: 'about',
+      text: 'Three things, and one honest limit. Post-quantum by default — ML-KEM-768 and X25519 together for key exchange, ML-DSA-65 for signatures, so a file sealed today is not readable by a quantum computer later. It runs in your browser, so nothing is uploaded and no server ever holds your key. And it works without a wallet: a key file covers anyone who does not have one. The limit: if you use a key file and lose it, the data is gone — there is no reset and no recovery, by design.',
+    },
+  },
+  {
+    test: /\b(how does it work|how do you work|gimana cara|kerja(nya)?|kok bisa|cara(nya)?)\b/,
     reply: {
       kind: 'about',
       text: 'Files are sealed with ML-KEM-768 and X25519 together, then encrypted with AES-256-GCM and signed with ML-DSA-65. Your keys come either from a wallet signature or from a key file you hold. The container is the only thing produced — no copy is kept anywhere.',

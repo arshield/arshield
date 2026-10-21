@@ -45,7 +45,14 @@ import { playSteps } from '@/lib/play-steps';
 import { SealingStepper } from '@/components/sealing-stepper';
 import { ARGON2ID_PARAMS_PROD } from '@/lib/arshield/constants';
 import { ephemeralIdentity, unwrapKeyfile, wrapKeyfile, type ArShieldKeyPair } from '@/lib/arshield';
-import { canEncrypt, encryptionsLeft, incrementEncryptionsUsed, TIER_BY_KEY, type Tier } from '@/lib/tiers';
+import {
+  canEncrypt,
+  encryptionsLeft,
+  fetchTierState,
+  incrementEncryptionsUsed,
+  TIER_BY_KEY,
+  type Tier,
+} from '@/lib/tiers';
 import {
   Bubble,
   Composer,
@@ -117,7 +124,21 @@ export function ChatClient() {
     | null
   >(null);
 
-  const [tier] = useState<Tier>(TIER_BY_KEY.free);
+  /**
+   * Tier, resolved from the connected address.
+   *
+   * Chat used to sit on Free permanently, so an address on the unrestricted list
+   * still hit the daily cap here — the same address behaved differently in /app
+   * and in /chat, and nothing on screen explained the difference. It now reads
+   * the same tier source the workspace does.
+   */
+  const [tier, setTier] = useState<Tier>(TIER_BY_KEY.free);
+  /** Balance and price source behind the tier, so the status card shows evidence. */
+  const [holdings, setHoldings] = useState<{
+    balance: number;
+    usd: number;
+    priceSource: string;
+  } | null>(null);
   const [detection, setDetection] = useState<Detection | null>(null);
   const [walletError, setWalletError] = useState<string | null>(null);
 
@@ -167,7 +188,7 @@ export function ChatClient() {
     async (text: string) => {
       setComposing(true);
       setThinkLabelText(thinkLabel());
-      const t = think(text);
+      const t = think();
       try {
         await t.promise;
       } catch {
@@ -340,6 +361,19 @@ export function ChatClient() {
       })) as string;
       const kp: ArShieldKeyPair = identityFromWalletSignature(signatureHex);
       setIdentity({ kind: 'wallet', label: `wallet · ${address}`, kp });
+
+      // Resolve the tier from the same source the workspace uses, so an address
+      // entitled to more is not quietly capped here. Deliberately after the
+      // identity is set: a tier is a property of the key, not a prerequisite
+      // for having one, and a failed read must not block setup.
+      void fetchTierState(address)
+        .then((st) => {
+          setTier(st.tier);
+          setHoldings({ balance: st.balance, usd: st.usd, priceSource: st.priceSource });
+        })
+        .catch(() => {
+          /* Stays on Free; the cap is the safe direction to fail in. */
+        });
       settledIdentity(
         { kind: 'wallet', label: `wallet · ${address}`, address },
         'Keys come from this wallet, so the same wallet on any device opens the same files. Nothing to back up.',
@@ -623,12 +657,26 @@ export function ChatClient() {
         show(
           <ResultCard title="Status" tone="progress">
             <Fact label="key" value={identity ? identity.label : 'none yet'} mono />
-            <Fact label="tier" value={tier.name} />
+            <Fact
+              label="tier"
+              value={tier.name}
+              tone={Number.isFinite(tier.encryptionsPerDay) ? undefined : 'verified'}
+            />
             <Fact label="seals left today" value={String(encryptionsLeft(tier))} tone="verified" />
             <Fact
               label="max file size"
               value={Number.isFinite(tier.maxFileBytes) ? `${Math.round(tier.maxFileBytes / (1024 * 1024))} MB` : 'unlimited'}
             />
+            {/* The evidence behind the tier, when it was read. A level with no
+                balance next to it invites the question it should answer. */}
+            {holdings && (
+              <Fact
+                label="balance"
+                value={`${holdings.balance.toLocaleString()} $arshield · $${holdings.usd.toFixed(2)}`}
+                mono
+                tone="idle"
+              />
+            )}
             <Fact label="file in play" value={file ? file.name : 'none'} mono />
             {detection && (
               <Fact label="wallet check" value={detection.kind.toUpperCase()} tone={detection.kind === 'smart' ? 'danger' : 'verified'} />
@@ -739,7 +787,7 @@ export function ChatClient() {
         }
     }
   }, [
-    input, attached, busy, identity, tier, detection, report, lastResult,
+    input, attached, busy, identity, tier, holdings, detection, report, lastResult,
     push, say, show, renderResult, connectWallet, readAttached, runAction, settledIdentity,
     showPicker, compose, composing,
   ]);
