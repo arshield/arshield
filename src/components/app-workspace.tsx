@@ -12,6 +12,9 @@ import { DownloadButton } from '@/components/download-button';
 import { CopyButton } from '@/components/copy-button';
 import { AccountPill } from '@/components/account-pill';
 import { playSteps } from '@/lib/play-steps';
+// Seal rendering moved to lib/agent/message so chat and workspace emit the
+// same bytes — /verify reads both.
+import { buildSealPng } from '@/lib/agent/message';
 import { Button } from '@/components/button';
 import {
   encryptFile,
@@ -36,66 +39,6 @@ function download(bytes: Uint8Array, name: string, type = 'application/octet-str
   const a = document.createElement('a');
   a.href = url; a.download = name; a.click();
   URL.revokeObjectURL(url);
-}
-
-/** Build a Quantum Seal PNG that carries the envelope sha256 in a tEXt chunk. */
-async function buildSealPng(fileHash: string, filename: string, address?: string): Promise<Uint8Array> {
-  const canvas = document.createElement('canvas');
-  canvas.width = 720; canvas.height = 480;
-  const ctx = canvas.getContext('2d')!;
-  const g = ctx.createLinearGradient(0, 0, 720, 480);
-  g.addColorStop(0, '#0a1220'); g.addColorStop(1, '#020610');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, 720, 480);
-  ctx.strokeStyle = 'rgba(209,164,19,0.35)'; ctx.lineWidth = 2; ctx.strokeRect(24, 24, 672, 432);
-  ctx.fillStyle = '#d1a413'; ctx.font = 'bold 30px ui-monospace, monospace';
-  ctx.fillText('QUANTUM SEAL', 56, 96);
-  ctx.fillStyle = '#8a93a3'; ctx.font = '15px ui-monospace, monospace';
-  ctx.fillText('ArShield · post-quantum receipt', 56, 128);
-  ctx.fillStyle = '#e6e9ef'; ctx.font = '14px ui-monospace, monospace';
-  const lines = [
-    `file      ${filename}`,
-    `algo      ML-KEM-768 + X25519 / ML-DSA-65`,
-    `sha256    ${fileHash.slice(0, 40)}`,
-    `${fileHash.slice(40, 72)}`,
-    `time      ${new Date().toISOString()}`,
-    address ? `wallet    ${address}` : `signer    ephemeral`,
-    `chain     ARC (5042)`,
-  ];
-  lines.forEach((l, i) => ctx.fillText(l, 56, 190 + i * 30));
-  ctx.fillStyle = 'rgba(209,164,19,0.6)'; ctx.font = '11px ui-monospace, monospace';
-  ctx.fillText('those metadata fields are also embedded as PNG tEXt chunks', 56, 420);
-
-  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/png'));
-  const buf = new Uint8Array(await blob!.arrayBuffer());
-  return injectTextChunk(buf, 'arshield', JSON.stringify({ version: 1, timestamp: new Date().toISOString(), algo: 'ML-KEM-768+X25519/ML-DSA-65', file_hash: fileHash, wallet: address ?? null }));
-}
-
-/** Insert a tEXt chunk right after IHDR so /verify can parse file_hash. */
-function injectTextChunk(png: Uint8Array, keyword: string, text: string): Uint8Array {
-  const data = new TextEncoder().encode(keyword + '\0' + text);
-  const chunk = new Uint8Array(12 + data.length);
-  const dv = new DataView(chunk.buffer);
-  dv.setUint32(0, data.length);
-  chunk.set([0x74, 0x45, 0x58, 0x74], 4); // "tEXt"
-  chunk.set(data, 8);
-  const crc = crc32(chunk.subarray(4, 8 + data.length));
-  dv.setUint32(8 + data.length, crc);
-  // splice after IHDR (8 sig + 25 IHDR chunk)
-  const insertAt = 8 + 25;
-  const out = new Uint8Array(png.length + chunk.length);
-  out.set(png.subarray(0, insertAt), 0);
-  out.set(chunk, insertAt);
-  out.set(png.subarray(insertAt), insertAt + chunk.length);
-  return out;
-}
-
-function crc32(bytes: Uint8Array): number {
-  let c = 0xffffffff;
-  for (let i = 0; i < bytes.length; i++) {
-    c ^= bytes[i];
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-  }
-  return (c ^ 0xffffffff) >>> 0;
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
@@ -526,7 +469,32 @@ export function AppWorkspace({
           </motion.div>
 
 
-          {status && <p className="mt-4 text-center text-[14.5px] text-brand-gold">{status}</p>}
+          {/*
+            Status line.
+
+            One class for every outcome used to mean every outcome was gold —
+            including the failure the smart-contract-wallet guard produces. Gold
+            is this site's action colour, so an error printed in it reads as a
+            caption rather than as something that went wrong, and a user who
+            cannot tell that something failed blames the app.
+
+            The tone is chosen from the message itself because the callers set
+            `status` as a plain string. It is a small inference, but the
+            alternative is threading a variant through nine setStatus calls for
+            one line of output.
+          */}
+          {status && (
+            <p
+              className={
+                'mt-4 text-center text-[14.5px] ' +
+                (/too large|limit reached|failed|could not|not supported|must be|error/i.test(status)
+                  ? 'text-[var(--color-danger)]'
+                  : 'text-brand-gold')
+              }
+            >
+              {status}
+            </p>
+          )}
 
           {/* Live stage list.
               While a run is in flight it is the only thing here. Once the result
