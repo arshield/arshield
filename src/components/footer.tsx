@@ -6,6 +6,7 @@ const COLS = [
   {
     title: 'PRODUCT',
     links: [
+      { href: '/chat', label: 'Agents' },
       { href: '/app', label: 'Launch app' },
       { href: '/mcp', label: 'MCP server' },
       { href: '/m', label: 'Messages' },

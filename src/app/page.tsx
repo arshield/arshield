@@ -38,7 +38,7 @@ const TIERS = [
 ];
 
 const FAQS = [
-  { q: 'Who is ArShield for, humans or agents?', a: "Both. Humans use the web app at /app: drag a file, get a .arshield envelope. Agents use the MCP server, a local stdio process that Claude Desktop, Cursor or your own runtime calls as arshield_encrypt_file, arshield_sign_x402 and four more tools. Same crypto, same envelope, same .arshield binary format." },
+  { q: 'Who is ArShield for, humans or agents?', a: "Both, and there are three ways in. The agent at /chat takes instructions in plain language: drop a file, say what to do, get a .arshield envelope or the opened file back. The workspace at /app does the same thing without a conversation, as a form. And the MCP server is a local stdio process that Claude Desktop, Cursor or your own runtime calls as arshield_encrypt_file, arshield_sign_x402 and four more tools. Same crypto, same envelope, same .arshield binary format." },
   { q: 'What is bunker mode, and where does ArShield fit?', a: 'Bunker mode is a plan being discussed across crypto: move coins to addresses whose public key has never been revealed, in case elliptic curves fall early, to AI or to quantum computers. It protects coins. It does nothing for data: a file copied today stays copied. ArShield seals your files post-quantum, on your device. Seal them to a freshly generated key file and a copy taken today still needs ML-KEM-768 broken to open.' },
   { q: 'What’s x402?', a: 'HTTP 402 Payment Required, brought back by Coinbase as a protocol for agents to pay APIs in stablecoins. The MCP tool arshield_sign_x402 signs any x402 payment payload with ML-DSA-65 under its own context, so anyone holding the agent’s public key and the payload can check which key signed a receipt; /mcp documents the exact bytes that are signed and where the signing key sits in the public key. Sealing every paid call on its own is what Shield is for, and Shield is on the roadmap.' },
   { q: 'How do I use the MCP server?', a: 'The server runs over stdio inside your own agent runtime and exposes six tools: arshield_encrypt_file, arshield_decrypt_file, arshield_send_message, arshield_decrypt_message, arshield_verify_seal and arshield_sign_x402. Keys come from a passphrase-protected key file (keyfile_path, which the server reads from disk, or keyfile_json, plus its passphrase), or from signature_hex plus the address that made it: your EOA wallet’s 65-byte signature of the ArShield derivation message, passed only over local stdio. So a file you encrypt in /app with your wallet opens in your agent with that wallet’s signature, no key export needed.' },
@@ -118,7 +118,12 @@ function Hero() {
           <HeroItem delay={0.45}>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
               <Magnetic strength={5}>
-                <Link href="/app" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'bg-gold-gradient text-brand-ink shadow-gold-glow hover:shadow-gold-glow-lg')}>
+                {/* The primary CTA points at the agent, not the workspace.
+                    Sealing a file is the thing a visitor came to do, and the
+                    agent is the shortest path to it: no wallet, no form, drop a
+                    file and say what to do. Sending them to /app first asks them
+                    to choose a key before they have seen what the product does. */}
+                <Link href="/chat" className={cn('group relative inline-flex h-12 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full px-7 text-base font-medium transition-all duration-300', 'bg-gold-gradient text-brand-ink shadow-gold-glow hover:shadow-gold-glow-lg')}>
                   Seal a file
                   <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </Link>
@@ -244,7 +249,7 @@ function CopyButton({ text }: { text: string }) {
 
 function ThreeSurfaces() {
   const items = [
-    { n: '01', t: 'Humans', tag: 'WEB APP · /APP', b: 'Drop a file in the browser. Out comes a .arshield envelope that only your wallet or your key file can open, plus a Quantum Seal receipt. Store it anywhere and open it on any device with the same keys.', cta: 'Launch app', href: '/app' },
+    { n: '01', t: 'Humans', tag: 'AGENT · /CHAT', b: 'Drop a file and tell the agent what to do — it reads the file first, then offers the one action that applies. Out comes a .arshield envelope only your wallet or your key file can open, plus a Quantum Seal receipt. The same thing as a form at /app if you prefer.', cta: 'Open the agent', href: '/chat' },
     { n: '02', t: 'Agents (MCP)', tag: 'MCP · STDIO', b: 'Call arshield_encrypt_file from Claude, Cursor, or any MCP-aware agent. Same envelope, same crypto, same signer model. Zero browser.', cta: 'MCP server', href: '/mcp' },
     { n: '03', t: 'Payments (x402)', tag: 'MCP · arshield_sign_x402', b: 'Agents sign x402 payment payloads with ML-DSA-65 over MCP, under their own context, so anyone holding the agent’s post-quantum public key can check which key signed. Every paid call gets its own Seal once Shield ships.', cta: 'See arshield_sign_x402', href: '/mcp' },
   ];

@@ -828,7 +828,11 @@ export function ChatClient() {
       <Background />
       <div className="relative flex h-svh flex-col">
         <header className="border-b border-[var(--color-hairline)] bg-[#020610]/70 backdrop-blur-xl">
-          <div className="mx-auto flex h-16 w-full max-w-3xl items-center justify-between px-4 sm:px-6">
+          {/* Wider than the conversation column on purpose: the header carries
+              nav that the column does not, and at max-w-3xl five labels started
+              crowding the logo. The transcript stays narrow; the chrome does
+              not have to follow it. */}
+          <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
             <div className="flex items-center gap-3">
               <Link href="/" aria-label="ArShield home">
                 <Logo />
@@ -838,18 +842,40 @@ export function ChatClient() {
                 agent
               </span>
             </div>
+            {/*
+              The same nav as the rest of the site, minus the Agents entry —
+              this is that page, and a link to where you already are is noise.
+
+              It used to be two small text links, which meant leaving this page
+              for MCP or Messages required going home first. The header is the
+              one piece of chrome that should not differ between pages.
+            */}
+            <nav className="hidden items-center gap-5 lg:flex">
+              {[
+                { href: '/app', label: 'Workspace' },
+                { href: '/mcp', label: 'MCP' },
+                { href: '/m', label: 'Messages' },
+                { href: '/verify', label: 'Verify' },
+                { href: '/docs', label: 'Docs' },
+              ].map((n) => (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  className="text-[13px] text-[#9aa3b2] transition-colors hover:text-[#e6e9ef]"
+                >
+                  {n.label}
+                </Link>
+              ))}
+            </nav>
             <div className="flex items-center gap-3">
+              {/* Below lg the nav collapses to the one destination that matters
+                  most from here: the workspace, where the same crypto runs
+                  without a conversation in the way. */}
               <Link
                 href="/app"
-                className="text-[12px] text-[#8792a3] underline-offset-2 hover:text-[#e6e9ef] hover:underline"
+                className="text-[12px] text-[#8792a3] underline-offset-2 hover:text-[#e6e9ef] hover:underline lg:hidden"
               >
                 workspace
-              </Link>
-              <Link
-                href="/verify"
-                className="hidden text-[12px] text-[#8792a3] underline-offset-2 hover:text-[#e6e9ef] hover:underline sm:inline"
-              >
-                verify
               </Link>
               {turns.length > 1 && (
                 <Button

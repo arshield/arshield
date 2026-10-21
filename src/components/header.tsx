@@ -43,6 +43,10 @@ export function Logo({ className = '' }: { className?: string }) {
 }
 
 const NAV = [
+  // Agents leads the nav. It is the surface a first-time visitor can actually
+  // use — no wallet, no setup, drop a file and it reads it — so it belongs
+  // before the reference pages rather than after them.
+  { href: '/chat', label: 'Agents' },
   { href: '/mcp', label: 'MCP' },
   { href: '/m', label: 'Messages' },
   { href: '/verify', label: 'Verify' },

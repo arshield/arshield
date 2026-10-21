@@ -22,6 +22,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const routes: Array<{ path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'] }> = [
     { path: '', priority: 1, changeFrequency: 'weekly' },
+    // Agents is the highest-intent destination: it is the one surface a visitor
+    // can use with no wallet and no setup, so it outranks the workspace here.
+    { path: '/chat', priority: 0.97, changeFrequency: 'weekly' },
     { path: '/app', priority: 0.95, changeFrequency: 'weekly' },
     { path: '/mcp', priority: 0.9, changeFrequency: 'weekly' },
     { path: '/m', priority: 0.8, changeFrequency: 'monthly' },
