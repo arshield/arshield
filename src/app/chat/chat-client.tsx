@@ -256,7 +256,10 @@ export function ChatClient() {
   useEffect(() => {
     if (openedRef.current) return;
     openedRef.current = true;
-    say(greeting(false));
+    // The greeting that used to open the conversation is gone on request — the
+    // picker states what it needs, and a sentence above it explaining the same
+    // thing was doing the card's job for it. The agent still speaks the moment
+    // it has something to say.
     showPicker();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -758,7 +761,7 @@ export function ChatClient() {
         setAttached(null);
         setReport(null);
         setLastResult(null);
-        say(greeting(!!identity));
+        say(greeting());
         if (identity) {
           settledIdentity(
             {
@@ -886,7 +889,7 @@ export function ChatClient() {
                     setAttached(null);
                     setReport(null);
                     setLastResult(null);
-                    say(greeting(!!identity));
+                    say(greeting());
                     if (identity) {
                       settledIdentity(
                         {

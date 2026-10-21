@@ -154,11 +154,12 @@ export function route(raw: string, attached: FileRef | null = null): Intent {
  * question is first because every operation below it is blocked without an
  * answer, and finding that out at the drop zone is worse than being asked.
  */
-export function greeting(hasIdentity: boolean): string {
-  if (hasIdentity) {
-    return 'Identity ready. Drop a file and I will read it first — then tell you exactly what it is and what can be done with it.';
-  }
-  return 'I can seal files, open envelopes, and read what a file is before touching it. All of it happens here in the tab; nothing is uploaded. First — how should I hold your keys?';
+export function greeting(): string {
+  // One line, and only for a conversation that is being restarted with a key
+  // already held. The opening greeting was removed: the picker states what it
+  // needs, and a sentence above it explaining the same thing was doing the
+  // card's job for it.
+  return 'Ready. Drop a file and I will read it first — then tell you exactly what it is and what can be done with it.';
 }
 
 /** Human-readable name for an intent, used in receipts and confirmation copy. */
