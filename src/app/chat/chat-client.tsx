@@ -1,12 +1,18 @@
 'use client';
 
 /**
- * The chat agent.
+ * The chat agent, two columns.
  *
- * One text box in front of the same crypto the /app workspace exposes. The
- * difference is that a conversation can ask a question, and the workspace
- * cannot: when a wallet turns out to be unsupported, this surface offers the
- * path that works instead of printing a reason the user has no answer to.
+ * Left is the conversation; right is the workspace. They are one state, not two
+ * views of separate things: dropping a file in the panel makes the agent read it
+ * and describe it in the conversation, and pressing a button in the conversation
+ * updates the panel. That is what makes the split useful rather than decorative
+ * — the agent's reading of a file and the controls over it are never out of sync.
+ *
+ * The behaviour that makes this more than a text box is that it reads before it
+ * asks. Attaching a file produces a report — kind, size, hash, what is inside —
+ * and the applicable action as a button. The user never has to know which files
+ * can be opened; the report says so.
  *
  * Every action still goes through the same confirmation gate, and the rule about
  * key material is unchanged — nothing here is uploaded, and no server reads the
@@ -15,7 +21,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
+import { Plus, ShieldCheck } from 'lucide-react';
 import { Background } from '@/components/background';
 import { Logo } from '@/components/header';
 import { Button } from '@/components/button';
@@ -24,6 +30,11 @@ import { download } from '@/lib/agent/message';
 import { greeting, route, type FileRef } from '@/lib/agent/router';
 import { openFile, sealFile, sealMessage, type AgentResult, type Identity } from '@/lib/agent/actions';
 import { detectWalletKind, isUnsupported, type Detection } from '@/lib/agent/detect';
+import {
+  describeReport,
+  inspectFile,
+  type FileReport,
+} from '@/lib/agent/inspect';
 import { playSteps } from '@/lib/play-steps';
 import { SealingStepper } from '@/components/sealing-stepper';
 import { ARGON2ID_PARAMS_PROD } from '@/lib/arshield/constants';
@@ -35,6 +46,7 @@ import {
   ConfirmGate,
   Fact,
   FileChip,
+  FileReportCard,
   Failure,
   IdentityOffers,
   ResultCard,
@@ -43,6 +55,7 @@ import {
   Working,
   shortHash,
 } from '@/components/chat/chat-parts';
+import { WorkspacePanel, type HistoryEntry } from '@/components/chat/workspace-panel';
 
 /* ────────────────────────────── turn model ────────────────────────────── */
 
@@ -79,13 +92,21 @@ export function ChatClient() {
   const [busy, setBusy] = useState(false);
   const [busyLabel, setBusyLabel] = useState('Working…');
   const [attached, setAttached] = useState<FileRef | null>(null);
+  const [report, setReport] = useState<FileReport | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [lastResult, setLastResult] = useState<
+    | { kind: 'sealed'; name: string; bytes: Uint8Array; seal: Uint8Array; hash: string }
+    | { kind: 'opened'; name: string; bytes: Uint8Array }
+    | { kind: 'message'; url: string }
+    | null
+  >(null);
+
   /**
    * Tier is read-only here for now.
    *
    * The workspace writes it from a live $arshield balance; chat has no balance
    * read yet, so it runs on Free and the status card reports the real quota
-   * rather than a level it cannot substantiate. The setter stays so the token
-   * gate can be wired in without reshaping this component.
+   * rather than a level it cannot substantiate.
    */
   const [tier] = useState<Tier>(TIER_BY_KEY.free);
   const [detection, setDetection] = useState<Detection | null>(null);
@@ -99,10 +120,8 @@ export function ChatClient() {
    * Live stage list for a sealing or opening run.
    *
    * The crypto finishes in milliseconds, so without this the whole operation is
-   * over before a single frame paints and the user sees a result appear from
-   * nowhere. `app` solves this with the same component; chat uses it too so the
-   * two surfaces read as the same product rather than two speeds of the same
-   * operation.
+   * over before a single frame paints. `app` solves this with the same component;
+   * chat uses it too so the two surfaces read as the same product.
    */
   const [stage, setStage] = useState<{ mode: 'encrypt' | 'decrypt'; done: number } | null>(null);
 
@@ -111,13 +130,6 @@ export function ChatClient() {
 
   const nextId = () => ++idRef.current;
 
-  /**
-   * Append a turn and return its id.
-   *
-   * Typed as the union without `id` rather than via Omit: Omit over a union
-   * collapses it to the shared keys, which erases both `text` and `node` and
-   * makes every call site an excess-property error.
-   */
   const push = useCallback((t: TurnInput) => {
     const id = nextId();
     setTurns((prev) => [...prev, { ...t, id } as Turn]);
@@ -127,17 +139,26 @@ export function ChatClient() {
   const say = useCallback((text: string) => push({ role: 'agent', text }), [push]);
   const show = useCallback((node: React.ReactNode) => push({ role: 'agent', node }), [push]);
 
+  const addHistory = useCallback((e: Omit<HistoryEntry, 'id' | 'at'>) => {
+    setHistory((prev) => [{ ...e, id: ++idRef.current, at: new Date() }, ...prev].slice(0, 40));
+  }, []);
+
   /** Open the conversation with the greeting, once. */
   useEffect(() => {
     if (turns.length === 0) {
       say(greeting(false));
-      show(<IdentityOffers onWallet={connectWallet} onCreateKeyfile={() => openDialog('create')} onLoadKeyfile={() => openDialog('load' as Dialog)} />);
+      show(
+        <IdentityOffers
+          onWallet={connectWallet}
+          onCreateKeyfile={() => openDialog('create')}
+          onLoadKeyfile={() => openDialog('open')}
+        />,
+      );
     }
     // Intentionally runs once: the opening turn must not re-append on re-render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** Keep the newest turn in view. */
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [turns]);
@@ -147,6 +168,56 @@ export function ChatClient() {
     setKdfProgress(null);
     setDialog(which);
   }
+
+  /* ───────────────────────── file reading ───────────────────────── */
+
+  /**
+   * Read a file and tell the user what it is.
+   *
+   * This is the turn that makes the agent useful: instead of waiting to be told
+   * which verb to apply, it parses the header, hashes the bytes, and states both
+   * the identity of the file and the single action it admits.
+   */
+  const readFile = useCallback(
+    async (f: File) => {
+      const buf = await f.arrayBuffer();
+      const ref: FileRef = { name: f.name, bytes: new Uint8Array(buf), size: buf.byteLength };
+      setAttached(ref);
+      setBusy(true);
+      setBusyLabel('Reading the file…');
+      try {
+        const rep = await inspectFile(ref);
+        setReport(rep);
+        say(`Read ${rep.name}.`);
+        show(
+          <FileReportCard
+            report={rep}
+            busy={busy}
+            onRun={(a) => void runAction(a === 'encrypt' ? { kind: 'seal', file: ref } : { kind: 'open', file: ref })}
+          />,
+        );
+        for (const line of describeReport(rep)) say(line);
+        if (rep.action === 'decrypt') {
+          say('This is an envelope. The Decrypt button above is the only thing that applies to it.');
+        } else if (rep.action === 'encrypt') {
+          say('Nothing sealed about it yet. The Encrypt button above will produce a .arshield container and a seal.');
+        } else if (rep.kind === 'keyfile') {
+          say('I will not seal or open a key file — it is the thing that does the opening. Keep it somewhere safe.');
+        } else if (rep.kind === 'seal-png') {
+          say('A seal is a receipt, not an envelope. Its hash is what /verify compares against.');
+        }
+      } catch (e) {
+        say(`Could not read that file: ${e instanceof Error ? e.message : String(e)}`);
+      } finally {
+        setBusy(false);
+        setBusyLabel('Working…');
+      }
+    },
+    // runAction is declared below; the reference is stable per render and this
+    // callback is only invoked from an event handler.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [say, show, busy],
+  );
 
   /* ───────────────────────── identity: wallet ───────────────────────── */
 
@@ -181,7 +252,7 @@ export function ChatClient() {
           <IdentityOffers
             onWallet={connectWallet}
             onCreateKeyfile={() => openDialog('create')}
-            onLoadKeyfile={() => openDialog('load' as Dialog)}
+            onLoadKeyfile={() => openDialog('open')}
             recommended="keyfile"
           />,
         );
@@ -196,17 +267,10 @@ export function ChatClient() {
         params: [ARSHIELD_DERIVATION_MESSAGE, address],
       })) as string;
       const kp: ArShieldKeyPair = identityFromWalletSignature(signatureHex);
-      const id: Identity = {
-        kind: 'wallet',
-        label: `wallet · ${address}`,
-        kp,
-      };
-      setIdentity(id);
-      say('Keys derived from that signature. Same wallet, same keys, on any device. Drop a file, or ask for a message.');
+      setIdentity({ kind: 'wallet', label: `wallet · ${address}`, kp });
+      say('Keys derived from that signature. Same wallet, same keys, on any device. Drop a file whenever you are ready.');
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      // A rejected signature is a decision, not an error. Say so, and leave the
-      // door open rather than treating it as a failure to recover from.
       if (/reject|denied|User rejected/i.test(msg)) {
         say('Signature request cancelled — that is fine, nothing was derived. Try again whenever, or use a key file.');
       } else if (/65-byte EOA|smart-contract/i.test(msg)) {
@@ -216,7 +280,7 @@ export function ChatClient() {
           <IdentityOffers
             onWallet={connectWallet}
             onCreateKeyfile={() => openDialog('create')}
-            onLoadKeyfile={() => openDialog('load' as Dialog)}
+            onLoadKeyfile={() => openDialog('open')}
             recommended="keyfile"
           />,
         );
@@ -237,17 +301,12 @@ export function ChatClient() {
       setKeyfileError(null);
       setKdfProgress(0.05);
       try {
-        // Argon2id at production params takes seconds; the dialog shows a bar so
-        // the wait does not read as a hang.
         setKdfProgress(0.3);
         const kp = ephemeralIdentity();
         const wrapper = await wrapKeyfile(kp, passphrase, ARGON2ID_PARAMS_PROD);
         setKdfProgress(1);
-        const bytes = new TextEncoder().encode(JSON.stringify(wrapper, null, 2));
-        download(bytes, 'arshield-key.json', 'application/json');
-
-        const id: Identity = { kind: 'keyfile', label: 'keyfile (generated)', kp };
-        setIdentity(id);
+        download(new TextEncoder().encode(JSON.stringify(wrapper, null, 2)), 'arshield-key.json', 'application/json');
+        setIdentity({ kind: 'keyfile', label: 'keyfile (generated)', kp });
         setDialog(null);
         say('Key file generated and downloaded. This file is the only copy of your keys — lose it and sealed data cannot be recovered, by anyone, including us. Store it somewhere you would store a passport.');
       } catch (e) {
@@ -268,8 +327,7 @@ export function ChatClient() {
         const parsed = JSON.parse(json) as Parameters<typeof unwrapKeyfile>[0];
         const kp = await unwrapKeyfile(parsed, passphrase);
         setKdfProgress(1);
-        const id: Identity = { kind: 'keyfile', label: 'keyfile (loaded)', kp };
-        setIdentity(id);
+        setIdentity({ kind: 'keyfile', label: 'keyfile (loaded)', kp });
         setDialog(null);
         say('Key file unlocked. You can seal and open with it.');
       } catch (e) {
@@ -287,8 +345,6 @@ export function ChatClient() {
     (res: AgentResult, sourceLabel: string) => {
       if (!res.ok) {
         if (res.kind === 'wallet-unsupported') {
-          // The guard fired, which means detection was wrong or did not run.
-          // Offer the recovery rather than restate the failure.
           show(
             <Failure
               message="Keys could not be derived from this wallet's signature."
@@ -299,11 +355,14 @@ export function ChatClient() {
           );
           return;
         }
+        addHistory({ kind: 'failed', name: 'operation', bytes: 0, note: res.message });
         show(<Failure message={res.message} />);
         return;
       }
 
       if (res.kind === 'sealed') {
+        setLastResult({ kind: 'sealed', name: res.name, bytes: res.bytes, seal: res.seal, hash: res.hash });
+        addHistory({ kind: 'sealed', name: res.name, bytes: res.bytes.length, hash: res.hash });
         show(
           <ResultCard
             title={`Sealed · ${res.name}`}
@@ -312,11 +371,7 @@ export function ChatClient() {
                 <Button size="sm" variant="ghost" onClick={() => download(res.bytes, res.name)}>
                   Envelope
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => download(res.seal, `${res.name}.seal.png`, 'image/png')}
-                >
+                <Button size="sm" variant="ghost" onClick={() => download(res.seal, `${res.name}.seal.png`, 'image/png')}>
                   Seal PNG
                 </Button>
                 <CopyRow value={res.hash} label="Copy hash" />
@@ -333,6 +388,8 @@ export function ChatClient() {
       }
 
       if (res.kind === 'opened') {
+        setLastResult({ kind: 'opened', name: res.name, bytes: res.bytes });
+        addHistory({ kind: 'opened', name: res.name, bytes: res.bytes.length });
         show(
           <ResultCard
             title={`Opened · ${res.name}`}
@@ -349,21 +406,20 @@ export function ChatClient() {
         return;
       }
 
-      // Message link.
+      setLastResult({ kind: 'message', url: res.url });
+      addHistory({ kind: 'message', name: 'secret message', bytes: res.chars });
       show(
         <ResultCard title="Secret message ready" tone="progress">
           <Fact label="characters" value={String(res.chars)} />
           <Fact label="carried in" value="the link itself — nothing is stored server-side" />
-          <p className="break-all rounded-lg bg-black/30 p-2 font-mono text-[11.5px] text-[#b9c1cf]">
-            {res.url}
-          </p>
+          <p className="break-all rounded-lg bg-black/30 p-2 font-mono text-[11.5px] text-[#b9c1cf]">{res.url}</p>
           <div className="flex gap-2">
             <CopyRow value={res.url} label="Copy link" />
           </div>
         </ResultCard>,
       );
     },
-    [show],
+    [show, addHistory],
   );
 
   /* ───────────────────────── the run itself ───────────────────────── */
@@ -398,9 +454,7 @@ export function ChatClient() {
         // finish, before the result appears. Whichever is slower sets the wait —
         // a fast seal still gets the full walk, a slow one is never rushed.
         const work: Promise<AgentResult> =
-          action.kind === 'seal'
-            ? sealFile(action.file, identity)
-            : openFile(action.file, identity);
+          action.kind === 'seal' ? sealFile(action.file, identity) : openFile(action.file, identity);
 
         const [, res] = await Promise.all([
           playSteps((n) => setStage({ mode, done: n }), 5, 0),
@@ -408,65 +462,117 @@ export function ChatClient() {
         ]);
 
         if (res.ok && res.kind === 'sealed') incrementEncryptionsUsed();
-        renderResult(
-          res,
-          identity.label.includes('· ') ? identity.label.split('· ')[1] : identity.label,
-        );
+        renderResult(res, identity.label.includes('· ') ? identity.label.split('· ')[1] : identity.label);
       } catch (e) {
         show(<Failure message={e instanceof Error ? e.message : String(e)} />);
       } finally {
         setStage(null);
         setBusy(false);
         setBusyLabel('Working…');
-        setAttached(null);
       }
     },
     [identity, tier, say, show, renderResult],
   );
 
-  /** Route one turn and act on it, or ask before acting. */
+  /**
+   * Route an action to the confirmation gate.
+   *
+   * Both the chat buttons and the panel buttons land here, so there is exactly
+   * one path to a run and one place where confirmation is required.
+   */
+  const runAction = useCallback(
+    (action: Pending) => {
+      if (!identity) {
+        say('Set up a key first — pick wallet or key file above, then this will run.');
+        return;
+      }
+      setPending(action);
+    },
+    [identity, say],
+  );
+
+  /* ───────────────────────── turn handling ───────────────────────── */
+
   const handleSubmit = useCallback(async () => {
     const raw = input.trim();
     if (!raw && !attached) return;
-    if (busy || !identity) return;
+    if (busy) return;
 
     setInput('');
     if (raw) push({ role: 'user', text: raw });
 
-    const intent = route(raw || (attached ? 'seal this' : ''), attached);
+    if (!identity && !/^(help|status|connect|wallet|keyfile|generate|load)$/i.test(raw)) {
+      // Still allow a file to be read without a key: reading needs no key, and
+      // refusing early hides the most useful turn the agent has.
+      if (!attached) {
+        say('Almost — I need keys before I can seal or open. Pick wallet or key file, or just drop a file and I will read it first.');
+        return;
+      }
+    }
+
+    const intent = route(raw || 'inspect this file', attached);
 
     switch (intent.kind) {
+      case 'inspect':
+        if (!intent.fileRef) {
+          say('Nothing attached yet. Drop a file in the panel on the right, or use the paperclip — then I will tell you exactly what it is.');
+          break;
+        }
+        await readFile(new File([intent.fileRef.bytes as unknown as BlobPart], intent.fileRef.name));
+        break;
+
       case 'help':
         say(
-          'Drop a file and say seal or open it. For a message, put the text in quotes — seal this message "meet at eight". Ask for status anytime to see your tier and remaining quota. Everything runs in this tab; nothing is uploaded.',
+          'Drop a file and I read it first: type, size, hash, and what is inside. Then I offer the one action that applies — an envelope can be opened, a plain file can be sealed. For a message, put the text in quotes. Ask for status anytime. Everything runs in this tab; nothing is uploaded.',
         );
         break;
 
       case 'status':
         show(
           <ResultCard title="Status" tone="progress">
-            <Fact label="identity" value={identity.label} mono />
+            <Fact label="identity" value={identity ? identity.label : 'none yet'} mono />
             <Fact label="tier" value={tier.name} />
-            <Fact
-              label="encryptions left today"
-              value={String(encryptionsLeft(tier))}
-              tone="verified"
-            />
+            <Fact label="encryptions left today" value={String(encryptionsLeft(tier))} tone="verified" />
             <Fact
               label="max file size"
               value={Number.isFinite(tier.maxFileBytes) ? `${Math.round(tier.maxFileBytes / (1024 * 1024))} MB` : 'unlimited'}
             />
-            {detection && <Fact label="wallet check" value={detection.kind.toUpperCase()} tone={detection.kind === 'smart' ? 'danger' : 'verified'} />}
+            <Fact label="file in play" value={report ? report.name : 'none'} mono />
+            {detection && (
+              <Fact label="wallet check" value={detection.kind.toUpperCase()} tone={detection.kind === 'smart' ? 'danger' : 'verified'} />
+            )}
           </ResultCard>,
         );
         break;
 
-      case 'seal':
-        if (!intent.fileRef) {
-          say('Attach the file you want sealed first — the paperclip, or drop it on this box — then say seal it.');
+      case 'history':
+        if (history.length === 0) {
+          say('Nothing done yet in this session.');
+        } else {
+          say(`${history.length} operation${history.length === 1 ? '' : 's'} so far — the full list with sizes and timestamps is in the History section on the right.`);
+        }
+        break;
+
+      case 'download':
+        if (!lastResult) {
+          say('Nothing to download yet — seal or open something first.');
           break;
         }
-        setPending({ kind: 'seal', file: intent.fileRef });
+        if (intent.target === 'seal' && lastResult.kind === 'sealed') {
+          download(lastResult.seal, `${lastResult.name}.seal.png`, 'image/png');
+        } else if (intent.target === 'envelope' && lastResult.kind === 'sealed') {
+          download(lastResult.bytes, lastResult.name);
+        } else if (lastResult.kind !== 'message') {
+          download(lastResult.bytes, lastResult.name);
+        }
+        break;
+
+      case 'seal':
+        if (!intent.fileRef) {
+          say('Attach the file you want sealed first — the paperclip, or drop it in the panel on the right.');
+          break;
+        }
+        runAction({ kind: 'seal', file: intent.fileRef });
         break;
 
       case 'open':
@@ -474,10 +580,20 @@ export function ChatClient() {
           say('Attach the .arshield file you want opened, then say open it.');
           break;
         }
-        setPending({ kind: 'open', file: intent.fileRef });
+        if (report && report.kind !== 'container') {
+          // Reading already established this is not an envelope. Say so rather
+          // than let the decrypt fail on a file that could never have worked.
+          say(`${intent.fileRef.name} is not an envelope (${report.kind === 'plain' ? 'it is a plain file' : 'it is a ' + report.kind}). There is nothing to open — it can be sealed instead.`);
+          break;
+        }
+        runAction({ kind: 'open', file: intent.fileRef });
         break;
 
       case 'message': {
+        if (!identity) {
+          say('Need a key before I can build a message.');
+          break;
+        }
         if (!intent.text) {
           say('Put the text you want sealed in quotes — seal this message "meet at eight".');
           break;
@@ -496,51 +612,68 @@ export function ChatClient() {
 
       case 'identity':
         if (intent.action === 'keyfile-create') openDialog('create');
-        else if (intent.action === 'keyfile-load') openDialog('load' as Dialog);
+        else if (intent.action === 'keyfile-load') openDialog('open');
         else void connectWallet();
         break;
 
+      case 'clear':
+        setTurns([]);
+        setAttached(null);
+        setReport(null);
+        setPending(null);
+        say(greeting(!!identity));
+        break;
+
       default:
-        if (attached) {
-          // A file is waiting; the most useful reading of an unclear turn is
-          // "do something with this". Ask which, rather than guessing.
-          say('I have your file. Do you want it sealed, or opened?');
+        if (attached && !report) {
+          await readFile(new File([attached.bytes as unknown as BlobPart], attached.name));
+        } else if (report?.action) {
+          say(
+            `I did not catch a command. ${report.name} can be ${report.action === 'encrypt' ? 'sealed' : 'opened'} — press the button, or say "${report.action === 'encrypt' ? 'encrypt it' : 'decrypt it'}".`,
+          );
         } else {
-          say('I did not follow that. Try "seal this file", "open this file", "seal this message \\"…\\"", or ask for help.');
+          say('I did not follow that. Try "read this file", "encrypt it", "decrypt it", or ask for help.');
         }
     }
-  }, [input, attached, busy, identity, tier, detection, push, say, show, renderResult, connectWallet]);
+  }, [
+    input, attached, busy, identity, tier, detection, report, history, lastResult,
+    push, say, show, renderResult, connectWallet, readFile, runAction,
+  ]);
 
-  /* ───────────────────────── attach handling ───────────────────────── */
+  /* ───────────────────────── panel wiring ───────────────────────── */
 
-  const attachFile = useCallback(
-    (f: File) => {
-      void f.arrayBuffer().then((b) => {
-        const bytes = new Uint8Array(b);
-        setAttached({ name: f.name, bytes, size: bytes.length });
-        // An .arshield container is unambiguous — say what it is and offer the
-        // matching action, so the user does not have to remember the rule.
-        if (f.name.endsWith('.arshield')) {
-          say(`${f.name} is an envelope. Say open it when you are ready.`);
-        } else {
-          say(`${f.name} attached. Say seal it when you are ready.`);
-        }
-      });
+  const onPanelFile = useCallback((f: File) => void readFile(f), [readFile]);
+
+  const onPanelDownload = useCallback(
+    (target: 'envelope' | 'seal' | 'file') => {
+      if (!lastResult || lastResult.kind === 'message') return;
+      if (target === 'seal' && lastResult.kind === 'sealed') {
+        download(lastResult.seal, `${lastResult.name}.seal.png`, 'image/png');
+      } else {
+        download(lastResult.bytes, lastResult.name);
+      }
     },
-    [say],
+    [lastResult],
   );
+
+  const onClearFile = useCallback(() => {
+    setAttached(null);
+    setReport(null);
+    say('File cleared. Drop another whenever.');
+  }, [say]);
 
   function resetIdentity() {
     setIdentity(null);
     setDetection(null);
     setAttached(null);
+    setReport(null);
     setPending(null);
     say('Key source cleared. Pick how to hold your keys again.');
     show(
       <IdentityOffers
         onWallet={connectWallet}
         onCreateKeyfile={() => openDialog('create')}
-        onLoadKeyfile={() => openDialog('load' as Dialog)}
+        onLoadKeyfile={() => openDialog('open')}
       />,
     );
   }
@@ -552,125 +685,168 @@ export function ChatClient() {
       <Background />
       <div className="relative flex h-svh flex-col">
         <header className="border-b border-white/[0.06] bg-[#020610]/70 backdrop-blur-xl">
-          <div className="mx-auto flex h-16 w-full max-w-4xl items-center justify-between px-4 sm:px-6">
+          <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <Link href="/" aria-label="ArShield home">
                 <Logo />
               </Link>
-              <span className="hidden text-[12px] text-[var(--color-idle)] sm:inline">
-                agent · seals files, opens envelopes
+              <span className="hidden items-center gap-1.5 rounded-full border border-white/[0.08] px-2.5 py-1 text-[11px] text-[#8a93a3] sm:inline-flex">
+                <ShieldCheck className="h-3 w-3 text-[var(--color-verified)]" />
+                agent
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <Link
                 href="/app"
-                className="hidden text-[12px] text-[var(--color-idle)] underline-offset-2 hover:text-[#e6e9ef] hover:underline sm:inline"
+                className="text-[12px] text-[#8a93a3] underline-offset-2 hover:text-[#e6e9ef] hover:underline"
               >
                 workspace
               </Link>
-              {identity && (
-                <Link
-                  href="/mcp"
-                  className="hidden text-[12px] text-[var(--color-idle)] underline-offset-2 hover:text-[#e6e9ef] hover:underline sm:inline"
+              <Link
+                href="/mcp"
+                className="hidden text-[12px] text-[#8a93a3] underline-offset-2 hover:text-[#e6e9ef] hover:underline sm:inline"
+              >
+                mcp
+              </Link>
+              <Link
+                href="/verify"
+                className="hidden text-[12px] text-[#8a93a3] underline-offset-2 hover:text-[#e6e9ef] hover:underline sm:inline"
+              >
+                verify
+              </Link>
+              {history.length > 0 && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setTurns([]);
+                    setAttached(null);
+                    setReport(null);
+                    setPending(null);
+                    say(greeting(!!identity));
+                  }}
                 >
-                  mcp
-                </Link>
+                  <Plus className="h-3.5 w-3.5" />
+                  New
+                </Button>
               )}
             </div>
           </div>
         </header>
 
-        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col overflow-hidden px-4 sm:px-6">
-          {identity && (
-            <StatusStrip
-              identity={{
-                kind: identity.kind,
-                label: identity.label,
-                address: identity.kind === 'wallet' ? identity.label.split('· ')[1] : undefined,
-              }}
-              tierName={tier.name}
-              quota={`${encryptionsLeft(tier)} seals left today`}
-              chainNote={detection?.kind === 'eoa' ? 'EOA verified' : undefined}
-              onReset={resetIdentity}
-            />
-          )}
+        {/*
+          Two columns on large screens, one on small.
 
-          <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto py-4">
-            {turns.map((t) => (
-              <Bubble key={t.id} role={t.role}>
-                {'text' in t ? t.text : t.node}
-              </Bubble>
-            ))}
-
-            {attached && (
-              <div className="flex justify-end">
-                <FileChip
-                  name={attached.name}
-                  size={attached.size}
-                  busy={busy}
-                  onRemove={() => setAttached(null)}
+          The panel is the reason the page can be this wide: a conversation alone
+          at 1600px is unreadable, but a conversation next to the artifact it is
+          talking about is exactly right. Below lg the panel moves under the
+          conversation rather than disappearing — dropping a file is a core
+          action, not a large-screen convenience.
+        */}
+        <div className="mx-auto grid w-full max-w-[1600px] flex-1 grid-cols-1 gap-4 overflow-hidden px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:px-8 xl:grid-cols-[minmax(0,1fr)_480px]">
+          {/* ── Column 1: the conversation ── */}
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-[#04070f]/40 backdrop-blur-xl">
+            {identity && (
+              <div className="px-4 pt-3">
+                <StatusStrip
+                  identity={{
+                    kind: identity.kind,
+                    label: identity.label,
+                    address: identity.kind === 'wallet' ? identity.label.split('· ')[1] : undefined,
+                  }}
+                  tierName={tier.name}
+                  quota={`${encryptionsLeft(tier)} seals left today`}
+                  chainNote={detection?.kind === 'eoa' ? 'EOA verified' : undefined}
+                  onReset={resetIdentity}
                 />
               </div>
             )}
 
-            {stage && (
-              <Bubble role="agent" wide>
-                <SealingStepper
-                  mode={stage.mode}
-                  done={stage.done}
-                  running={stage.done < 5}
-                />
-              </Bubble>
-            )}
+            <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+              {turns.map((t) => (
+                <Bubble key={t.id} role={t.role}>
+                  {'text' in t ? t.text : t.node}
+                </Bubble>
+              ))}
 
-            {busy && !stage && <Working label={busyLabel} />}
+              {attached && (
+                <div className="flex justify-end">
+                  <FileChip
+                    name={attached.name}
+                    size={attached.size}
+                    busy={busy}
+                    onRemove={onClearFile}
+                  />
+                </div>
+              )}
 
-            {pending && (
-              <Bubble role="agent">
-                <ConfirmGate
-                  question={
-                    pending.kind === 'seal'
-                      ? `Seal ${pending.file.name}?`
-                      : `Open ${pending.file.name}?`
-                  }
-                  detail={
-                    pending.kind === 'seal'
-                      ? 'Sealing uses one of today’s encryptions and produces a .arshield container plus a seal PNG. The original file is untouched.'
-                      : 'Opening verifies the ML-DSA-65 signature first, then decrypts. A wrong key reveals nothing and uses no quota.'
-                  }
-                  confirmLabel={pending.kind === 'seal' ? 'Seal it' : 'Open it'}
-                  busy={busy}
-                  onConfirm={() => void execute(pending)}
-                  onCancel={() => {
-                    setPending(null);
-                    say('Cancelled — nothing was done.');
-                  }}
-                />
-              </Bubble>
-            )}
+              {stage && (
+                <Bubble role="agent" wide>
+                  <SealingStepper mode={stage.mode} done={stage.done} running={stage.done < 5} />
+                </Bubble>
+              )}
+
+              {busy && !stage && <Working label={busyLabel} />}
+
+              {pending && (
+                <Bubble role="agent">
+                  <ConfirmGate
+                    question={pending.kind === 'seal' ? `Seal ${pending.file.name}?` : `Open ${pending.file.name}?`}
+                    detail={
+                      pending.kind === 'seal'
+                        ? 'Sealing uses one of today’s encryptions and produces a .arshield container plus a seal PNG. The original file is untouched.'
+                        : 'Opening verifies the ML-DSA-65 signature first, then decrypts. A wrong key reveals nothing and uses no quota.'
+                    }
+                    confirmLabel={pending.kind === 'seal' ? 'Seal it' : 'Open it'}
+                    busy={busy}
+                    onConfirm={() => void execute(pending)}
+                    onCancel={() => {
+                      setPending(null);
+                      say('Cancelled — nothing was done.');
+                    }}
+                  />
+                </Bubble>
+              )}
+            </div>
+
+            <div className="px-4 pb-4 pt-1">
+              <Composer
+                value={input}
+                onChange={setInput}
+                onSubmit={() => void handleSubmit()}
+                onAttach={(f) => void readFile(f)}
+                onDropFile={(f) => void readFile(f)}
+                disabled={false}
+                busy={busy}
+                attached={attached}
+              />
+              <p className="px-1 pt-2 text-[11.5px] text-[#5c6675]">
+                Runs entirely in your browser. No file, message, or key is sent anywhere.
+                {walletError && <span className="text-[var(--color-danger)]"> · wallet note recorded</span>}
+              </p>
+            </div>
           </div>
 
-          <div className="pb-5 pt-1">
-            <Composer
-              value={input}
-              onChange={setInput}
-              onSubmit={() => void handleSubmit()}
-              onAttach={attachFile}
-              onDropFile={attachFile}
-              disabled={!identity}
+          {/* ── Column 2: the workspace ── */}
+          <div className="min-h-0 max-lg:h-[560px]">
+            <WorkspacePanel
+              identity={identity}
+              report={report}
               busy={busy}
-              attached={attached}
+              stage={stage}
+              history={history}
+              lastResult={lastResult}
+              onFile={onPanelFile}
+              onClearFile={onClearFile}
+              onRun={(a) => (attached ? runAction(a === 'encrypt' ? { kind: 'seal', file: attached } : { kind: 'open', file: attached }) : say('Drop a file into the panel first.'))}
+              onDownload={onPanelDownload}
+              tierName={tier.name}
+              quota={`${encryptionsLeft(tier)} seals left`}
             />
-            <p className="px-1 pt-2 text-[11.5px] text-[var(--color-idle)]">
-              Runs entirely in your browser. No file, message, or key is sent anywhere.
-              {walletError && <span className="text-[var(--color-danger)]"> · wallet note recorded</span>}
-            </p>
           </div>
         </div>
       </div>
 
-      {/* The dialog is remounted per open (via key) so its internal state resets
-          without a reset effect — the same pattern the workspace uses. */}
       <KeyfileDialog
         key={dialog ?? 'closed'}
         mode={dialog === 'create' ? 'create' : 'open'}
@@ -685,12 +861,6 @@ export function ChatClient() {
         error={keyfileError}
         progress={kdfProgress}
       />
-
-      {/* Menu placeholder keeps the header height stable on narrow screens,
-          where the two text links are hidden. */}
-      <span className="hidden" aria-hidden>
-        <Menu className="h-4 w-4" />
-      </span>
     </>
   );
 }

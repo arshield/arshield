@@ -23,6 +23,7 @@ import {
   Check,
   Copy,
   FileText,
+  KeyRound,
   Loader2,
   Lock,
   ShieldCheck,
@@ -33,6 +34,126 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/button';
+import type { FileReport } from '@/lib/agent/inspect';
+
+/* ────────────────────────────── file report card ────────────────────────────── */
+
+/**
+ * The card the agent produces when it reads a file.
+ *
+ * This is the answer to "decrypt file": before any button is pressed, the agent
+ * says what the file is, how big it is, what is inside it, and which action
+ * applies — with that action as a button. The user never has to know the rule
+ * about which files can be opened; the report states it.
+ */
+export function FileReportCard({
+  report,
+  onRun,
+  onInspectSeal,
+  busy,
+}: {
+  report: FileReport;
+  onRun: (action: 'encrypt' | 'decrypt') => void;
+  onInspectSeal?: () => void;
+  busy?: boolean;
+}) {
+  const kindLabel =
+    report.kind === 'container'
+      ? 'Envelope'
+      : report.kind === 'plain'
+        ? 'Plain file'
+        : report.kind === 'keyfile'
+          ? 'Key file'
+          : report.kind === 'seal-png'
+            ? 'Seal receipt'
+            : 'Unknown';
+
+  const tone =
+    report.kind === 'container'
+      ? 'border-[var(--color-action)]/30 bg-[var(--color-action-soft)]'
+      : report.kind === 'plain'
+        ? 'border-white/[0.10] bg-white/[0.03]'
+        : 'border-[var(--color-verified)]/25 bg-[var(--color-verified-soft)]';
+
+  return (
+    <div className={cn('mt-2 space-y-3 rounded-xl border p-3.5', tone)}>
+      <div className="flex items-start gap-2.5">
+        <div className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-black/25">
+          <FileText className="h-4 w-4 text-[#c3cad6]" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13.5px] font-medium text-[#eef1f6]" title={report.name}>
+            {report.name}
+          </p>
+          <p className="font-mono text-[10.5px] uppercase tracking-[0.1em] text-[#8a93a3]">
+            {kindLabel}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-1.5 text-[13px]">
+        <Fact label="size" value={formatBytes(report.bytes)} mono />
+        {report.container?.plaintextBytes != null && (
+          <Fact label="plaintext inside" value={`~${formatBytes(report.container.plaintextBytes)}`} mono />
+        )}
+        {report.container && (
+          <Fact
+            label="format"
+            value={`v${report.container.version} · hybrid post-quantum`}
+            tone="verified"
+          />
+        )}
+        {report.seal?.file_hash && (
+          <Fact label="claims hash" value={shortHash(report.seal.file_hash)} mono />
+        )}
+        {report.seal?.algo && <Fact label="algorithm" value={report.seal.algo} />}
+        <Fact label="sha256" value={shortHash(report.sha256)} mono tone="idle" />
+      </div>
+
+      {report.warnings.length > 0 && (
+        <ul className="space-y-1">
+          {report.warnings.map((w) => (
+            <li key={w} className="flex items-start gap-2 text-[12px] leading-relaxed text-[var(--color-progress)]">
+              <AlertTriangle className="mt-0.5 h-3 w-3 flex-none" />
+              {w}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* The action, as a button. This is the part that replaces "say the magic
+          word" — the report already knows what applies. */}
+      {report.action && (
+        <div className="flex flex-wrap items-center gap-2 border-t border-white/[0.07] pt-2.5">
+          <Button size="sm" onClick={() => onRun(report.action!)} disabled={busy}>
+            {busy ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : report.action === 'encrypt' ? (
+              <Lock className="h-3.5 w-3.5" />
+            ) : (
+              <KeyRound className="h-3.5 w-3.5" />
+            )}
+            {report.action === 'encrypt' ? 'Encrypt' : 'Decrypt'}
+          </Button>
+          <span className="text-[11.5px] text-[#8a93a3]">
+            {report.action === 'encrypt'
+              ? 'seals it into a .arshield container'
+              : 'verifies the signature, then decrypts'}
+          </span>
+        </div>
+      )}
+
+      {report.kind === 'seal-png' && onInspectSeal && (
+        <div className="border-t border-white/[0.07] pt-2.5">
+          <Button size="sm" variant="ghost" onClick={onInspectSeal}>
+            <ShieldCheck className="h-3.5 w-3.5" />
+            Open in verifier
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ────────────────────────────── messages ────────────────────────────── */
 

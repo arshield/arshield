@@ -21,10 +21,14 @@
 export type Intent =
   | { kind: 'seal'; fileRef: FileRef | null }
   | { kind: 'open'; fileRef: FileRef | null }
+  | { kind: 'inspect'; fileRef: FileRef | null; what: 'any' | 'file' }
   | { kind: 'message'; text: string }
   | { kind: 'identity'; action: 'wallet' | 'keyfile-create' | 'keyfile-load' | null }
   | { kind: 'status' }
   | { kind: 'help' }
+  | { kind: 'history' }
+  | { kind: 'download'; target: 'envelope' | 'seal' | 'file' }
+  | { kind: 'clear' }
   | { kind: 'unknown'; raw: string };
 
 /** A file the user has attached to the conversation, not yet acted on. */
@@ -45,17 +49,28 @@ type Rule = {
  *
  * Word-boundary anchored and case-insensitive. `\b` matters: without it "unseal"
  * matches "seal" and a user asking to open a file gets it sealed again.
+ *
+ * Order is the whole design. "open" is tested before "seal" so "unseal" cannot
+ * match "seal". "inspect" is tested before both, because "what is in this file"
+ * contains neither verb but is the most common first turn after an attach —
+ * getting that wrong means the user is asked a question the file already
+ * answers.
  */
 const RULES: Rule[] = [
-  // Opening first. "decrypt", "unseal", "open" all read as the same request, and
-  // checking them before sealing is what stops "unseal" from matching "seal".
-  { kind: 'open', test: /\b(decrypt|unseal|unseal|unlock|open|buka|dekripsi|descifrar)\b/i },
+  // Info first: "info about this file", "cek file ini", "what is this".
+  { kind: 'inspect', test: /\b(info|details?|detail|describe|what is (this|it|inside)|tell me about|cek|periksa|lihat|apa ini|isi file|metadat?a|size only)\b/i },
+  // Downloading a produced artifact.
+  { kind: 'download', test: /\b(download|unduh|simpan|save)\b/i },
+  // Opening — checked before sealing so "unseal" cannot match "seal".
+  { kind: 'open', test: /\b(decrypt|unseal|unlock|open|buka|dekripsi)\b/i },
   { kind: 'seal', test: /\b(encrypt|seal|lock|protect|secure|kunci|enkripsi|sandi)\b/i },
   // Messages are their own action: they produce a shareable link, not a file.
   { kind: 'message', test: /\b(message|note|secret text|pesan|kirim teks|catatan)\b/i },
   // Identity setup. Verbs that only make sense before any operation runs.
   { kind: 'identity', test: /\b(connect|wallet|sign in|login|key ?file|keypair|identity|hubungkan|dompet)\b/i },
   { kind: 'status', test: /\b(status|tier|quota|limit|left|sisa|kuota|berapa)\b/i },
+  { kind: 'history', test: /\b(history|riwayat|log|last|sebelumnya|recent)\b/i },
+  { kind: 'clear', test: /\b(clear|reset|hapus|bersihkan|mulai ulang|start over)\b/i },
   { kind: 'help', test: /\b(help|what can|bisa apa|gimana|how do|tutorial|command|cara)\b/i },
 ];
 
@@ -88,6 +103,13 @@ function extractMessageText(raw: string): string | null {
   return null;
 }
 
+/** Which artifact the user wants downloaded, when they said so. */
+function extractDownloadTarget(raw: string): 'envelope' | 'seal' | 'file' {
+  if (/\bseal\b|\bpn(g|j)\b|receipt|bukti/i.test(raw)) return 'seal';
+  if (/\b(envelope|container|arshield|hasil|result)\b/i.test(raw)) return 'envelope';
+  return 'file';
+}
+
 /**
  * Route one user turn.
  *
@@ -103,8 +125,10 @@ export function route(raw: string, attached: FileRef | null = null): Intent {
   for (const rule of RULES) {
     if (!rule.test.test(text)) continue;
 
+    if (rule.kind === 'inspect') return { kind: 'inspect', fileRef: attached, what: attached ? 'file' : 'any' };
     if (rule.kind === 'open') return { kind: 'open', fileRef: attached };
     if (rule.kind === 'seal') return { kind: 'seal', fileRef: attached };
+    if (rule.kind === 'download') return { kind: 'download', target: extractDownloadTarget(text) };
     if (rule.kind === 'message') {
       const payload = extractMessageText(text);
       return { kind: 'message', text: payload ?? '' };
@@ -114,6 +138,8 @@ export function route(raw: string, attached: FileRef | null = null): Intent {
       return { kind: 'identity', action: hit?.action ?? null };
     }
     if (rule.kind === 'status') return { kind: 'status' };
+    if (rule.kind === 'history') return { kind: 'history' };
+    if (rule.kind === 'clear') return { kind: 'clear' };
     if (rule.kind === 'help') return { kind: 'help' };
   }
 
@@ -130,9 +156,9 @@ export function route(raw: string, attached: FileRef | null = null): Intent {
  */
 export function greeting(hasIdentity: boolean): string {
   if (hasIdentity) {
-    return 'Identity ready. Drop a file and tell me to seal or open it — or ask for a message.';
+    return 'Identity ready. Drop a file and I will read it first — then tell you exactly what it is and what can be done with it.';
   }
-  return 'I can seal files, open envelopes, and build shareable secret messages. All of it happens here in the tab; nothing is uploaded. First — how should I hold your keys?';
+  return 'I can seal files, open envelopes, and read what a file is before touching it. All of it happens here in the tab; nothing is uploaded. First — how should I hold your keys?';
 }
 
 /** Human-readable name for an intent, used in receipts and confirmation copy. */
@@ -142,6 +168,8 @@ export function intentLabel(intent: Intent): string {
       return 'Seal a file';
     case 'open':
       return 'Open an envelope';
+    case 'inspect':
+      return 'Read a file';
     case 'message':
       return 'Build a secret message';
     case 'identity':
@@ -154,6 +182,12 @@ export function intentLabel(intent: Intent): string {
             : 'Set up identity';
     case 'status':
       return 'Show tier and quota';
+    case 'history':
+      return 'Show history';
+    case 'download':
+      return 'Download a result';
+    case 'clear':
+      return 'Clear the conversation';
     case 'help':
       return 'Explain what I can do';
     case 'unknown':
