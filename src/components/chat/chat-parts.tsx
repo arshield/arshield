@@ -692,6 +692,7 @@ export function Composer({
   onSubmit,
   onAttach,
   onDropFile,
+  onRemoveAttached,
   disabled,
   busy,
   attached,
@@ -701,6 +702,8 @@ export function Composer({
   onSubmit: () => void;
   onAttach: (f: File) => void;
   onDropFile: (f: File) => void;
+  /** Clears the pending attachment without submitting anything. */
+  onRemoveAttached?: () => void;
   disabled?: boolean;
   busy?: boolean;
   attached?: { name: string; size: number } | null;
@@ -743,10 +746,19 @@ export function Composer({
           : 'border-white/[0.08]',
       )}
     >
+      {/* The pending attachment. Shows the file is attached and not yet acted
+          on — nothing has been read, hashed or sealed at this point. */}
       {attached && (
-        <div className="px-1 pb-2 pt-1">
-          <span className="text-[12px] text-[var(--color-idle)]">Attached · </span>
-          <span className="text-[12px] text-[#dfe3ea]">{attached.name}</span>
+        <div className="flex items-center gap-2 px-1 pb-2.5 pt-1.5">
+          <FileChip
+            name={attached.name}
+            size={attached.size}
+            busy={busy}
+            onRemove={() => onRemoveAttached?.()}
+          />
+          <span className="text-[11.5px] text-[var(--color-idle)]">
+            not read yet — press Send
+          </span>
         </div>
       )}
 
@@ -791,7 +803,16 @@ export function Composer({
           }}
           className="max-h-40 flex-1 resize-none bg-transparent py-2 text-sm text-[#e6e9ef] outline-none placeholder:text-[var(--color-idle)] disabled:opacity-50"
         />
-        <Button type="submit" size="sm" disabled={disabled || busy || value.trim().length === 0}>
+        {/*
+          Send is enabled when there is something to send: text, or an attached
+          file. Requiring text meant a dropped file could not be submitted on its
+          own, which is the most natural way to ask the agent to look at it.
+        */}
+        <Button
+          type="submit"
+          size="sm"
+          disabled={disabled || busy || (value.trim().length === 0 && !attached)}
+        >
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowDownToLine className="h-3.5 w-3.5" />}
           Send
         </Button>
