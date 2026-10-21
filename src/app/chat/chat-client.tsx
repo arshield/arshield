@@ -24,6 +24,8 @@ import { download } from '@/lib/agent/message';
 import { greeting, route, type FileRef } from '@/lib/agent/router';
 import { openFile, sealFile, sealMessage, type AgentResult, type Identity } from '@/lib/agent/actions';
 import { detectWalletKind, isUnsupported, type Detection } from '@/lib/agent/detect';
+import { playSteps } from '@/lib/play-steps';
+import { SealingStepper } from '@/components/sealing-stepper';
 import { ARGON2ID_PARAMS_PROD } from '@/lib/arshield/constants';
 import { ephemeralIdentity, unwrapKeyfile, wrapKeyfile, type ArShieldKeyPair } from '@/lib/arshield';
 import { canEncrypt, encryptionsLeft, incrementEncryptionsUsed, TIER_BY_KEY, type Tier } from '@/lib/tiers';
@@ -92,6 +94,17 @@ export function ChatClient() {
   const [dialog, setDialog] = useState<Dialog>(null);
   const [kdfProgress, setKdfProgress] = useState<number | null>(null);
   const [keyfileError, setKeyfileError] = useState<string | null>(null);
+
+  /**
+   * Live stage list for a sealing or opening run.
+   *
+   * The crypto finishes in milliseconds, so without this the whole operation is
+   * over before a single frame paints and the user sees a result appear from
+   * nowhere. `app` solves this with the same component; chat uses it too so the
+   * two surfaces read as the same product rather than two speeds of the same
+   * operation.
+   */
+  const [stage, setStage] = useState<{ mode: 'encrypt' | 'decrypt'; done: number } | null>(null);
 
   const idRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -360,28 +373,49 @@ export function ChatClient() {
     async (action: Pending) => {
       if (!identity) return;
       setPending(null);
+
+      // Guards run before the stage list, so a refusal is immediate rather than
+      // five animated rows followed by "actually, no".
+      if (action.kind === 'seal') {
+        if (!canEncrypt(tier)) {
+          say(`Daily limit reached on ${tier.name} (${tier.encryptionsPerDay}/24h). Resets at 00:00 UTC — or hold more $arshield for a higher tier.`);
+          return;
+        }
+        if (action.file.size > tier.maxFileBytes) {
+          say(`That file is too large for ${tier.name}. The cap is ${Math.round(tier.maxFileBytes / (1024 * 1024))} MB.`);
+          return;
+        }
+      }
+
+      const mode = action.kind === 'seal' ? 'encrypt' : 'decrypt';
       setBusy(true);
       setBusyLabel(action.kind === 'seal' ? 'Sealing…' : 'Opening…');
+      setStage({ mode, done: 0 });
+
       try {
-        if (action.kind === 'seal') {
-          if (!canEncrypt(tier)) {
-            say(`Daily limit reached on ${tier.name} (${tier.encryptionsPerDay}/24h). Resets at 00:00 UTC — or hold more $arshield for a higher tier.`);
-            return;
-          }
-          if (action.file.size > tier.maxFileBytes) {
-            say(`That file is too large for ${tier.name}. The cap is ${Math.round(tier.maxFileBytes / (1024 * 1024))} MB.`);
-            return;
-          }
-          const res = await sealFile(action.file, identity);
-          if (res.ok && res.kind === 'sealed') incrementEncryptionsUsed();
-          renderResult(res, identity.label.includes('· ') ? identity.label.split('· ')[1] : identity.label);
-        } else {
-          const res = await openFile(action.file, identity);
-          renderResult(res, identity.label);
-        }
+        // Start the real work, and play the stage list at a readable pace in
+        // parallel. Both are awaited: the rows must finish, and the crypto must
+        // finish, before the result appears. Whichever is slower sets the wait —
+        // a fast seal still gets the full walk, a slow one is never rushed.
+        const work: Promise<AgentResult> =
+          action.kind === 'seal'
+            ? sealFile(action.file, identity)
+            : openFile(action.file, identity);
+
+        const [, res] = await Promise.all([
+          playSteps((n) => setStage({ mode, done: n }), 5, 0),
+          work,
+        ]);
+
+        if (res.ok && res.kind === 'sealed') incrementEncryptionsUsed();
+        renderResult(
+          res,
+          identity.label.includes('· ') ? identity.label.split('· ')[1] : identity.label,
+        );
       } catch (e) {
         show(<Failure message={e instanceof Error ? e.message : String(e)} />);
       } finally {
+        setStage(null);
         setBusy(false);
         setBusyLabel('Working…');
         setAttached(null);
@@ -579,7 +613,17 @@ export function ChatClient() {
               </div>
             )}
 
-            {busy && <Working label={busyLabel} />}
+            {stage && (
+              <Bubble role="agent" wide>
+                <SealingStepper
+                  mode={stage.mode}
+                  done={stage.done}
+                  running={stage.done < 5}
+                />
+              </Bubble>
+            )}
+
+            {busy && !stage && <Working label={busyLabel} />}
 
             {pending && (
               <Bubble role="agent">

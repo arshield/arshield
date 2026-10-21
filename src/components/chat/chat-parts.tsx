@@ -40,9 +40,18 @@ export type ChatRole = 'agent' | 'user';
 
 export function Bubble({
   role,
+  wide = false,
   children,
 }: {
   role: ChatRole;
+  /**
+   * Let this bubble exceed the usual 85% cap.
+   *
+   * The stage list is a five-row table with a progress bar — at 85% the crypto
+   * names and the detail text underneath them collapse into ellipses, which
+   * defeats the point of showing the sequence at all.
+   */
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   const isUser = role === 'user';
@@ -50,7 +59,8 @@ export function Bubble({
     <div className={cn('flex w-full', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+          'rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+          wide ? 'w-full' : 'max-w-[85%]',
           isUser
             ? 'rounded-br-sm bg-[var(--color-action-soft)] text-[#e6e9ef] ring-1 ring-[var(--color-action)]/25'
             : 'rounded-bl-sm bg-white/[0.04] text-[#dfe3ea] ring-1 ring-white/[0.07]',
